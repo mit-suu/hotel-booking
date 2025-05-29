@@ -1,0 +1,51 @@
+server:
+  port: ${BE_PORT:8080}
+  servlet:
+    context-path: /
+spring:
+  application:
+    name: booking-service
+  datasource:
+    url: ${DB_MYSQL_URL:jdbc:mysql://localhost:3306/booking3?createDatabaseIfNotExist=true}
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:hiepdzpr1}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  mail:
+    default-encoding: UTF-8
+    host: ${EMAIL_HOST:smtp.larksuite.com}
+    username: ${EMAIL_ADDRESS:notification@blwsmartware.net}
+    password: ${EMAIL_PASSWORD:XgZC3ehR2k6db30U}
+    port: ${EMAIL_PORT:465}
+    protocol: smtp
+    test-connection: false
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.ssl.enable: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 1080645398579-rubp4bq65u82rompf4iu9l0vdv1knjul.apps.googleusercontent.com
+            client-secret: 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
+            redirect-uri: "{baseUrl}/login/oauth2/code/google"
+            scope:
+              - email
+              - profile
+jwt:
+  secret: ${JWT_SECRET:JWT_SECRET_KEY_MUST_BE_32_DIGITS}
+  expiration-minutes: 30
+  expiration-day: 90
+config:
+  cors: ${URL_CORS:http://localhost:5173}
+  file:
+    upload-dir: ${UPLOAD_DIR:C:\temp}
+  admin:
+    name: ${ADMIN_NAME:adminadmin}
+    password: ${ADMIN_PASSWORD:adminadmin123}
+    email: ${ADMIN_EMAIL:adminadmin@blwsmartware.net}
+    username: ${ADMIN_USERNAME:adminadmin}
