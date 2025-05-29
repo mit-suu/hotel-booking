@@ -12,7 +12,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserUpdate {
+public class ProfileUpdateRequest {
     @NotNull(message = "NAME_NOT_NULL")
     String name;
 
@@ -22,10 +22,7 @@ public class UserUpdate {
     @Email(message = "EMAIL_INVALID")
     String email;
 
-    String tel,address;
+    String tel, address;
 
     LocalDate dob;
-
-    boolean isActive;
-    boolean emailVerified;
-}
+} 

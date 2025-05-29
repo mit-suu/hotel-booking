@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
-import { userAPI, UserUpdateRequest } from '../services/api';
+import { userAPI, ProfileUpdateRequest, PasswordUpdateRequest } from '../services/api';
 
 const ProfilePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -112,17 +112,16 @@ const ProfilePage: React.FC = () => {
     setLoading(true);
     
     try {
-      const updateData: UserUpdateRequest = {
+      const updateData: ProfileUpdateRequest = {
         name: formData.name,
         username: formData.username,
         email: user.email, // Use original email (cannot be changed)
-        password: user.username, // Keep current password for profile update
         tel: formData.phone,
         address: formData.address,
         dob: formData.dateOfBirth
       };
 
-      await userAPI.updateUser(user.id, updateData);
+      await userAPI.updateMyProfile(updateData);
       
       // Refresh user info
       await fetchUserInfo();
@@ -149,17 +148,12 @@ const ProfilePage: React.FC = () => {
     setPasswordLoading(true);
     
     try {
-      const updateData: UserUpdateRequest = {
-        name: user.name,
-        username: user.username,
-        email: user.email,
-        password: passwordData.newPassword,
-        tel: user.tel,
-        address: user.address,
-        dob: user.dob
+      const passwordUpdateData: PasswordUpdateRequest = {
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword
       };
 
-      await userAPI.updateUser(user.id, updateData);
+      await userAPI.updateMyPassword(passwordUpdateData);
       
       showToast('success', 'Thành công', 'Mật khẩu đã được thay đổi thành công!');
       

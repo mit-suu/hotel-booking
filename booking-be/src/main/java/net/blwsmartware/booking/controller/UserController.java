@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import net.blwsmartware.booking.constant.PagePrepare;
+import net.blwsmartware.booking.dto.request.AdminPasswordUpdateRequest;
+import net.blwsmartware.booking.dto.request.PasswordUpdateRequest;
+import net.blwsmartware.booking.dto.request.ProfileUpdateRequest;
 import net.blwsmartware.booking.dto.request.RoleOfUpdate;
 import net.blwsmartware.booking.dto.response.DataResponse;
 import net.blwsmartware.booking.dto.response.MessageResponse;
@@ -78,7 +81,21 @@ public class UserController {
                 );
     }
 
+    @PutMapping("/profile")
+    public ResponseEntity<MessageResponse<UserResponse>> updateMyProfile(@RequestBody @Valid ProfileUpdateRequest request) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        UUID userId = UUID.fromString(authentication.getName());
+        
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(MessageResponse.<UserResponse>builder()
+                    .result(userService.updateProfile(userId, request))
+                    .build()
+                );
+    }
+
     @PutMapping("/{id}")
+    @IsAdmin
     public ResponseEntity<MessageResponse<UserResponse>> updateUser(@RequestBody @Valid  UserUpdate user, @PathVariable UUID id) {
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -87,6 +104,55 @@ public class UserController {
                     .build()
                 );
     }
+
+    @PutMapping("/me/password")
+    public ResponseEntity<MessageResponse<UserResponse>> updateMyPassword(@RequestBody @Valid PasswordUpdateRequest request) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        UUID userId = UUID.fromString(authentication.getName());
+        
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(MessageResponse.<UserResponse>builder()
+                    .result(userService.updatePassword(userId, request))
+                    .build()
+                );
+    }
+
+    @PutMapping("/password")
+    public ResponseEntity<MessageResponse<UserResponse>> updateMyPasswordAlternative(@RequestBody @Valid PasswordUpdateRequest request) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        UUID userId = UUID.fromString(authentication.getName());
+        
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(MessageResponse.<UserResponse>builder()
+                    .result(userService.updatePassword(userId, request))
+                    .build()
+                );
+    }
+
+    @PutMapping("/{id}/password")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<UserResponse>> updatePassword(@RequestBody @Valid PasswordUpdateRequest request, @PathVariable UUID id) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(MessageResponse.<UserResponse>builder()
+                    .result(userService.updatePassword(id, request))
+                    .build()
+                );
+    }
+
+    @PutMapping("/admin/{id}/password")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<UserResponse>> adminUpdatePassword(@RequestBody @Valid AdminPasswordUpdateRequest request, @PathVariable UUID id) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(MessageResponse.<UserResponse>builder()
+                    .result(userService.adminUpdatePassword(id, request))
+                    .build()
+                );
+    }
+    
     @PutMapping("/role/{id}")
     public ResponseEntity<MessageResponse<UserResponse>> updateRoleOfUser(@RequestBody RoleOfUpdate roles, @PathVariable UUID id) {
         return ResponseEntity
