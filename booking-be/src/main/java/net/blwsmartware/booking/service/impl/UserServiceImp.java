@@ -24,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -32,7 +33,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class UserServiceImpl implements UserService {
+public class UserServiceImp implements UserService {
 
     UserRepository userRepository;
     RoleRepository roleRepository;
@@ -57,7 +58,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse createUser(UserRequest request) {
 
         if(userRepository.findByEmail(request.getEmail()).isPresent() ) {
-            throw  new IdentityRuntimeException(ErrorResponse.EMAIL_EXISTED);
+           throw  new IdentityRuntimeException(ErrorResponse.EMAIL_EXISTED);
         }
         else if (userRepository.findByUsername(request.getUsername()).isPresent() ) {
             throw  new IdentityRuntimeException(ErrorResponse.USERNAME_EXISTED);
@@ -204,13 +205,46 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND));
 
         userMapper.updateUser(request,old);
+        
+        return userMapper.toUserResponse(userRepository.save(old));
+    }
 
-        // Only update password if provided
-        if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
-            old.setPassword(passwordEncoder.encode(request.getPassword()));
+    @Override
+    public UserResponse updateProfile(UUID id, ProfileUpdateRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND));
+
+        userMapper.updateProfile(request, user);
+        
+        return userMapper.toUserResponse(userRepository.save(user));
+    }
+
+    @Override
+    public UserResponse updatePassword(UUID id, PasswordUpdateRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND));
+
+        // Verify current password
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new IdentityRuntimeException(ErrorResponse.PASSWORD_INCORRECT);
         }
 
-        return userMapper.toUserResponse(userRepository.save(old));
+        // Update password
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        
+        return userMapper.toUserResponse(userRepository.save(user));
+    }
+
+    @Override
+    @IsAdmin
+    public UserResponse adminUpdatePassword(UUID id, AdminPasswordUpdateRequest request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND));
+
+        // Admin can update password without current password verification
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 
     @Override

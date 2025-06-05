@@ -53,10 +53,10 @@ public class AuthenticationImpl implements AuthenticationService {
         Instant expr = jwtTokenProvider.getExpireDate(token);
 
         return VerifyResponse.builder()
-                .isValid(true)
-                .username(username)
-                .expiration(expr)
-                .build();
+                    .isValid(true)
+                    .username(username)
+                    .expiration(expr)
+                    .build();
     }
 
     @Override

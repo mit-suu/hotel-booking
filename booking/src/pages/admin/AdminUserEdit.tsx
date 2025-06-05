@@ -4,7 +4,7 @@ import {
   ArrowLeft, Save, User, Mail, Phone, MapPin, Calendar, 
   Shield, Eye, EyeOff, AlertCircle, MailCheck, MailX 
 } from 'lucide-react';
-import { userAPI, UserUpdateRequest } from '../../services/api';
+import { userAPI, UserUpdateRequest, AdminPasswordUpdateRequest } from '../../services/api';
 import { useToast } from '../../contexts/ToastContext';
 
 interface User {
@@ -182,11 +182,11 @@ const AdminUserEdit: React.FC = () => {
     setSaving(true);
     
     try {
+      // First, update user profile information
       const updateData: UserUpdateRequest = {
         name: formData.name,
         username: formData.username,
         email: formData.email,
-        password: formData.changePassword ? formData.password : user.username, // Use new password or keep current
         tel: formData.tel || undefined,
         address: formData.address || undefined,
         dob: formData.dob || undefined,
@@ -196,6 +196,23 @@ const AdminUserEdit: React.FC = () => {
 
       await userAPI.updateUser(user.id, updateData);
       
+      // Handle password update separately if requested
+      if (formData.changePassword && formData.password) {
+        // For admin, we'll use a special admin password update endpoint
+        // Note: Admin doesn't need current password verification
+        const passwordUpdateData: AdminPasswordUpdateRequest = {
+          newPassword: formData.password
+        };
+        
+        try {
+          await userAPI.adminUpdatePassword(user.id, passwordUpdateData);
+        } catch (passwordError: any) {
+          // If password update fails, still show success for profile update
+          console.error('Password update error:', passwordError);
+          showToast('warning', 'Cảnh báo', 'Thông tin đã được cập nhật nhưng có lỗi khi thay đổi mật khẩu');
+        }
+      }
+      
       let successMessage = 'Thông tin người dùng đã được cập nhật thành công!';
       if (updateData.active !== user.active) {
         const statusText = updateData.active ? 'kích hoạt' : 'vô hiệu hóa';
@@ -204,6 +221,9 @@ const AdminUserEdit: React.FC = () => {
       if (updateData.emailVerified !== user.emailVerified) {
         const verificationText = updateData.emailVerified ? 'đã được xác thực' : 'đã bị hủy xác thực';
         successMessage += ` Email ${verificationText}.`;
+      }
+      if (formData.changePassword && formData.password) {
+        successMessage += ' Mật khẩu đã được thay đổi.';
       }
       
       showToast('success', 'Thành công', successMessage);

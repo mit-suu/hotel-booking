@@ -55,8 +55,8 @@ const AdminHotels: React.FC = () => {
       if (cityFilter) filterParams.city = cityFilter;
       if (countryFilter) filterParams.country = countryFilter;
       if (starRatingFilter !== undefined) filterParams.starRating = starRatingFilter;
-      if (statusFilter !== undefined) filterParams.isActive = statusFilter;
-      if (featuredFilter !== undefined) filterParams.isFeatured = featuredFilter;
+      if (statusFilter !== undefined) filterParams.active = statusFilter;
+      if (featuredFilter !== undefined) filterParams.featured = featuredFilter;
       if (minPrice !== undefined) filterParams.minPrice = minPrice;
       if (maxPrice !== undefined) filterParams.maxPrice = maxPrice;
 
@@ -203,8 +203,8 @@ const AdminHotels: React.FC = () => {
     }
   };
 
-  const getStatusBadge = (isActive: boolean) => {
-    if (isActive) {
+  const getStatusBadge = (active: boolean) => {
+    if (active) {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
           <Check size={12} className="mr-1" />
@@ -221,8 +221,8 @@ const AdminHotels: React.FC = () => {
     }
   };
 
-  const getFeaturedBadge = (isFeatured: boolean) => {
-    if (isFeatured) {
+  const getFeaturedBadge = (featured: boolean) => {
+    if (featured) {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
           <Award size={12} className="mr-1" />
@@ -259,7 +259,7 @@ const AdminHotels: React.FC = () => {
           >
             <RefreshCw size={20} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
             Làm mới
-          </button>
+          </button> 
           <button
             onClick={handleAddHotel}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
@@ -511,7 +511,7 @@ const AdminHotels: React.FC = () => {
                                 ))}
                               </div>
                             )}
-                            {getFeaturedBadge(hotel.isFeatured)}
+                            {getFeaturedBadge(hotel.featured)}
                           </div>
                         </div>
                       </div>
@@ -544,7 +544,7 @@ const AdminHotels: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="space-y-1">
-                        {getStatusBadge(hotel.isActive)}
+                        {getStatusBadge(hotel.active)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -569,16 +569,16 @@ const AdminHotels: React.FC = () => {
                         <button
                           onClick={() => handleToggleStatus(hotel.id)}
                           disabled={actionLoading === hotel.id}
-                          className={`p-1 rounded ${hotel.isActive ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}`}
-                          title={hotel.isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}
+                          className={`p-1 rounded ${hotel.active ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}`}
+                          title={hotel.active ? 'Vô hiệu hóa' : 'Kích hoạt'}
                         >
-                          {hotel.isActive ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+                          {hotel.active ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
                         </button>
                         <button
                           onClick={() => handleToggleFeatured(hotel.id)}
                           disabled={actionLoading === hotel.id}
-                          className={`p-1 rounded ${hotel.isFeatured ? 'text-yellow-600 hover:text-yellow-900' : 'text-gray-600 hover:text-gray-900'}`}
-                          title={hotel.isFeatured ? 'Bỏ nổi bật' : 'Đặt nổi bật'}
+                          className={`p-1 rounded ${hotel.featured ? 'text-yellow-600 hover:text-yellow-900' : 'text-gray-600 hover:text-gray-900'}`}
+                          title={hotel.featured ? 'Bỏ nổi bật' : 'Đặt nổi bật'}
                         >
                           <Award size={16} />
                         </button>

@@ -16,10 +16,13 @@ public interface UserService {
     UserResponse getUserByEmail(String email);
     UserResponse getUserByUsername(String username);
     UserResponse updateUser(UUID id, UserUpdate request);
+    UserResponse updateProfile(UUID id, ProfileUpdateRequest request);
+    UserResponse updatePassword(UUID id, PasswordUpdateRequest request);
+    UserResponse adminUpdatePassword(UUID id, AdminPasswordUpdateRequest request);
     UserResponse updateRoleOfUser(UUID id, RoleOfUpdate request);
     UserResponse toggleEmailVerification(UUID id);
     void deleteUser(UUID id);
-
+    
     // Statistics
     Long getTotalUsersCount();
 }
