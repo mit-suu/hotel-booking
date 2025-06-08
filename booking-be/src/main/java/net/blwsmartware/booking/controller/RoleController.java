@@ -45,9 +45,9 @@ public class RoleController {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                    .body(MessageResponse.<DataResponse<RoleResponse>>builder()
-                    .result(roleService.getAll(pageNumber,pageSize,sortBy))
-                .build());
+                .body(MessageResponse.<DataResponse<RoleResponse>>builder()
+                        .result(roleService.getAll(pageNumber,pageSize,sortBy))
+                        .build());
     }
     @IsAdmin
     @GetMapping("/name/{name}")
@@ -55,9 +55,9 @@ public class RoleController {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                    .body(MessageResponse.<RoleResponse>builder()
-                    .result(roleService.getRoleByName(name))
-                .build());
+                .body(MessageResponse.<RoleResponse>builder()
+                        .result(roleService.getRoleByName(name))
+                        .build());
     }
     @IsAdmin
     @GetMapping("/{id}")
@@ -65,9 +65,9 @@ public class RoleController {
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                    .body(MessageResponse.<RoleResponse>builder()
-                    .result(roleService.getRoleByID(id))
-                .build());
+                .body(MessageResponse.<RoleResponse>builder()
+                        .result(roleService.getRoleByID(id))
+                        .build());
     }
     @IsAdmin
     @PutMapping("/{id}")
@@ -75,8 +75,8 @@ public class RoleController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(MessageResponse.<RoleResponse>builder()
-                    .result(roleService.updateRole(id,role))
-                    .build()
+                        .result(roleService.updateRole(id,role))
+                        .build()
                 );
     }
     @IsAdmin

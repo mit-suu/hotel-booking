@@ -93,7 +93,7 @@ public class AuthenController {
 
     @PostMapping("/login")
     public ResponseEntity<MessageResponse<AuthenResponse>> authen(@RequestBody AuthenRequest authen) {
-                return ResponseEntity
+        return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(MessageResponse.<AuthenResponse>
                                 builder()
@@ -105,7 +105,7 @@ public class AuthenController {
 
     @PostMapping("/refresh")
     public ResponseEntity<MessageResponse<AuthenResponse>> refresh(@RequestBody RefreshRequest request){
-         return ResponseEntity
+        return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(MessageResponse.<AuthenResponse>builder()
                         .result(authenService.refreshToken(request))
