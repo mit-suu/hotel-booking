@@ -148,7 +148,24 @@ public class RoomTypeController {
                         .result(response)
                         .build());
     }
-
+    
+    @GetMapping("/hotel/{hotelId}/active")
+    public ResponseEntity<MessageResponse<DataResponse<RoomTypeResponse>>> getActiveRoomTypesByHotel(
+            @PathVariable UUID hotelId,
+            @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
+            @RequestParam(defaultValue = "name") String sortBy) {
+        
+        DataResponse<RoomTypeResponse> response = roomTypeService.getRoomTypesByHotel(hotelId, pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<RoomTypeResponse>>builder()
+                        .message("Active room types by hotel retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+    
     @GetMapping("/hotel/{hotelId}/available")
     public ResponseEntity<MessageResponse<DataResponse<RoomTypeResponse>>> getAvailableRoomTypesByHotel(
             @PathVariable UUID hotelId,
@@ -165,7 +182,41 @@ public class RoomTypeController {
                         .result(response)
                         .build());
     }
-
+    
+    @GetMapping("/search")
+    public ResponseEntity<MessageResponse<DataResponse<RoomTypeResponse>>> searchRoomTypes(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
+            @RequestParam(defaultValue = "name") String sortBy) {
+        
+        DataResponse<RoomTypeResponse> response = roomTypeService.searchRoomTypes(keyword, pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<RoomTypeResponse>>builder()
+                        .message("Room types search completed successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @GetMapping("/occupancy/{minOccupancy}")
+    public ResponseEntity<MessageResponse<DataResponse<RoomTypeResponse>>> getRoomTypesByOccupancy(
+            @PathVariable Integer minOccupancy,
+            @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
+            @RequestParam(defaultValue = "maxOccupancy") String sortBy) {
+        
+        DataResponse<RoomTypeResponse> response = roomTypeService.getRoomTypesByOccupancy(minOccupancy, pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<RoomTypeResponse>>builder()
+                        .message("Room types by occupancy retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+    
     @GetMapping("/price-range")
     public ResponseEntity<MessageResponse<DataResponse<RoomTypeResponse>>> getRoomTypesByPriceRange(
             @RequestParam BigDecimal minPrice,

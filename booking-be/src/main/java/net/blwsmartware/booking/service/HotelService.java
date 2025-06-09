@@ -21,7 +21,9 @@ public interface HotelService {
 
     // ===== HOST OPERATIONS =====
     DataResponse<HotelResponse> getMyHotels(Integer pageNumber, Integer pageSize, String sortBy);
-
+    DataResponse<HotelResponse> getMyHotelsWithFilters(
+            String city, String country, Integer starRating, Boolean isActive,
+            Integer pageNumber, Integer pageSize, String sortBy);
     HotelResponse getMyHotelById(UUID id);
     HotelResponse createMyHotel(HotelCreateRequest request);
     HotelResponse updateMyHotel(UUID id, HotelUpdateRequest request);
@@ -35,7 +37,12 @@ public interface HotelService {
     // ===== PUBLIC OPERATIONS =====
     HotelResponse getHotelById(UUID id);
     DataResponse<HotelResponse> searchHotels(String keyword, Integer pageNumber, Integer pageSize, String sortBy);
-
+    DataResponse<HotelResponse> getHotelsByCity(String city, Integer pageNumber, Integer pageSize, String sortBy);
+    DataResponse<HotelResponse> getHotelsByCountry(String country, Integer pageNumber, Integer pageSize, String sortBy);
+    DataResponse<HotelResponse> getHotelsByStarRating(Integer starRating, Integer pageNumber, Integer pageSize, String sortBy);
+    DataResponse<HotelResponse> getActiveHotels(Integer pageNumber, Integer pageSize, String sortBy);
+    DataResponse<HotelResponse> getFeaturedHotels(Integer pageNumber, Integer pageSize, String sortBy);
+    
     // New search with filters method
     DataResponse<HotelResponse> searchHotelsWithFilters(
             String city, String country, Integer starRating,

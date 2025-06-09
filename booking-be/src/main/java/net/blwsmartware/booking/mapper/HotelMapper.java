@@ -8,7 +8,7 @@ import org.mapstruct.*;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {RoomTypeMapper.class, ReviewMapper.class})
 public interface HotelMapper {
 
     // Convert Hotel entity to HotelResponse with full details

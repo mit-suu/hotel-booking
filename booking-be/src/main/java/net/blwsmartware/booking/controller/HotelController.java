@@ -110,7 +110,29 @@ public class HotelController {
                         .result(response)
                         .build());
     }
-
+    
+    @GetMapping("/host/filter")
+    @IsHost
+    public ResponseEntity<MessageResponse<DataResponse<HotelResponse>>> getMyHotelsWithFilters(
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) Integer starRating,
+            @RequestParam(required = false) Boolean isActive,
+            @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
+            @RequestParam(defaultValue = PagePrepare.SORT_BY) String sortBy) {
+        
+        DataResponse<HotelResponse> response = hotelService.getMyHotelsWithFilters(
+                city, country, starRating, isActive, pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<HotelResponse>>builder()
+                        .message("My filtered hotels retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+    
     @GetMapping("/host/{id}")
     @IsHost
     public ResponseEntity<MessageResponse<HotelResponse>> getMyHotelById(@PathVariable UUID id) {
@@ -163,7 +185,20 @@ public class HotelController {
                         .message("Hotel deleted successfully")
                         .build());
     }
-
+    
+    @PutMapping("/host/{id}/toggle-status")
+    @IsHost
+    public ResponseEntity<MessageResponse<HotelResponse>> toggleMyHotelStatus(@PathVariable UUID id) {
+        HotelResponse response = hotelService.toggleMyHotelStatus(id);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<HotelResponse>builder()
+                        .message("Hotel status updated successfully")
+                        .result(response)
+                        .build());
+    }
+    
     // Host Statistics endpoints
     @GetMapping("/host/stats/total")
     @IsHost
@@ -177,7 +212,20 @@ public class HotelController {
                         .result(count)
                         .build());
     }
-
+    
+    @GetMapping("/host/stats/active")
+    @IsHost
+    public ResponseEntity<MessageResponse<Long>> getMyActiveHotelsCount() {
+        Long count = hotelService.getMyActiveHotelsCount();
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<Long>builder()
+                        .message("My active hotels count retrieved successfully")
+                        .result(count)
+                        .build());
+    }
+    
     // ===== PUBLIC ENDPOINTS =====
     @GetMapping("/{id}")
     public ResponseEntity<MessageResponse<HotelResponse>> getHotelById(@PathVariable UUID id) {
@@ -204,6 +252,112 @@ public class HotelController {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<HotelResponse>>builder()
                         .message("Hotels search completed successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @GetMapping("/city/{city}")
+    public ResponseEntity<MessageResponse<DataResponse<HotelResponse>>> getHotelsByCity(
+            @PathVariable String city,
+            @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
+            @RequestParam(defaultValue = "name") String sortBy) {
+        
+        DataResponse<HotelResponse> response = hotelService.getHotelsByCity(city, pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<HotelResponse>>builder()
+                        .message("Hotels by city retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @GetMapping("/country/{country}")
+    public ResponseEntity<MessageResponse<DataResponse<HotelResponse>>> getHotelsByCountry(
+            @PathVariable String country,
+            @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
+            @RequestParam(defaultValue = "name") String sortBy) {
+        
+        DataResponse<HotelResponse> response = hotelService.getHotelsByCountry(country, pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<HotelResponse>>builder()
+                        .message("Hotels by country retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @GetMapping("/rating/{starRating}")
+    public ResponseEntity<MessageResponse<DataResponse<HotelResponse>>> getHotelsByStarRating(
+            @PathVariable Integer starRating,
+            @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
+            @RequestParam(defaultValue = "name") String sortBy) {
+        
+        DataResponse<HotelResponse> response = hotelService.getHotelsByStarRating(starRating, pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<HotelResponse>>builder()
+                        .message("Hotels by star rating retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @GetMapping("/active")
+    public ResponseEntity<MessageResponse<DataResponse<HotelResponse>>> getActiveHotels(
+            @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
+            @RequestParam(defaultValue = "name") String sortBy) {
+        
+        DataResponse<HotelResponse> response = hotelService.getActiveHotels(pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<HotelResponse>>builder()
+                        .message("Active hotels retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @GetMapping("/featured")
+    public ResponseEntity<MessageResponse<DataResponse<HotelResponse>>> getFeaturedHotels(
+            @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
+            @RequestParam(defaultValue = "name") String sortBy) {
+        
+        DataResponse<HotelResponse> response = hotelService.getFeaturedHotels(pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<HotelResponse>>builder()
+                        .message("Featured hotels retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+
+    @GetMapping("/search/filters")
+    public ResponseEntity<MessageResponse<DataResponse<HotelResponse>>> searchHotelsWithFilters(
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) Integer starRating,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) String amenities,
+            @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
+            @RequestParam(defaultValue = "name") String sortBy) {
+        
+        DataResponse<HotelResponse> response = hotelService.searchHotelsWithFilters(
+                city, country, starRating, minPrice, maxPrice, amenities, pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<HotelResponse>>builder()
+                        .message("Hotels search with filters completed successfully")
                         .result(response)
                         .build());
     }

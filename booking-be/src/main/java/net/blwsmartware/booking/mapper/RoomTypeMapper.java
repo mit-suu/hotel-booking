@@ -42,5 +42,12 @@ public interface RoomTypeMapper {
     @Mapping(target = "updatedBy", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(@MappingTarget RoomType roomType, RoomTypeCreateRequest request);
-
-}
+    
+    // Convert list of RoomType entities to list of RoomTypeResponse with full details
+    @IterableMapping(qualifiedByName = "toResponse")
+    List<RoomTypeResponse> toResponseList(List<RoomType> roomTypes);
+    
+    // Convert list of RoomType entities to list of RoomTypeResponse without hotel info
+    @IterableMapping(qualifiedByName = "toResponseWithoutHotel")
+    List<RoomTypeResponse> toResponseListWithoutHotel(List<RoomType> roomTypes);
+} 
