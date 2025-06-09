@@ -25,7 +25,8 @@ public enum ErrorCode {
     HOTEL_NAME_ALREADY_EXISTS(2002, "Hotel name already exists for this owner", HttpStatus.BAD_REQUEST),
     HOTEL_HAS_ROOM_TYPES(2003, "Cannot delete hotel that has room types", HttpStatus.BAD_REQUEST),
     HOTEL_HAS_BOOKINGS(2004, "Cannot delete hotel that has bookings", HttpStatus.BAD_REQUEST),
-    
+    HOTEL_ACCESS_DENIED(2005, "You do not have permission to access this hotel", HttpStatus.FORBIDDEN),
+
     // Room type-related errors
     ROOM_TYPE_NOT_FOUND(3001, "Room type not found", HttpStatus.NOT_FOUND),
     ROOM_TYPE_NAME_ALREADY_EXISTS(3002, "Room type name already exists for this hotel", HttpStatus.BAD_REQUEST),
