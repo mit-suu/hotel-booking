@@ -74,7 +74,98 @@ public class HotelController {
                         .result(response)
                         .build());
     }
-
+    
+    @GetMapping("/admin/filter")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<DataResponse<HotelResponse>>> getAllHotelsWithFilters(
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String country,
+            @RequestParam(required = false) Integer starRating,
+            @RequestParam(required = false) Boolean isActive,
+            @RequestParam(required = false) Boolean isFeatured,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
+            @RequestParam(defaultValue = PagePrepare.SORT_BY) String sortBy) {
+        
+        DataResponse<HotelResponse> response = hotelService.getAllHotelsWithFilters(
+                city, country, starRating, isActive, isFeatured, minPrice, maxPrice, pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<HotelResponse>>builder()
+                        .message("Filtered hotels retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @PostMapping("/admin")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<HotelResponse>> createHotelByAdmin(@Valid @RequestBody HotelCreateRequest request) {
+        HotelResponse response = hotelService.createHotelByAdmin(request);
+        
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<HotelResponse>builder()
+                        .message("Hotel created successfully by admin")
+                        .result(response)
+                        .build());
+    }
+    
+    @PutMapping("/admin/{id}")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<HotelResponse>> updateHotelByAdmin(
+            @PathVariable UUID id,
+            @Valid @RequestBody HotelUpdateRequest request) {
+        HotelResponse response = hotelService.updateHotelByAdmin(id, request);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<HotelResponse>builder()
+                        .message("Hotel updated successfully by admin")
+                        .result(response)
+                        .build());
+    }
+    
+    @DeleteMapping("/admin/{id}")
+    @IsAdmin
+    public ResponseEntity<?> deleteHotelByAdmin(@PathVariable UUID id) {
+        hotelService.deleteHotelByAdmin(id);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.builder()
+                        .message("Hotel deleted successfully by admin")
+                        .build());
+    }
+    
+    @PutMapping("/admin/{id}/toggle-status")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<HotelResponse>> toggleHotelStatus(@PathVariable UUID id) {
+        HotelResponse response = hotelService.toggleHotelStatus(id);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<HotelResponse>builder()
+                        .message("Hotel status toggled successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @PutMapping("/admin/{id}/toggle-featured")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<HotelResponse>> toggleFeaturedStatus(@PathVariable UUID id) {
+        HotelResponse response = hotelService.toggleFeaturedStatus(id);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<HotelResponse>builder()
+                        .message("Hotel featured status toggled successfully")
+                        .result(response)
+                        .build());
+    }
+    
     @GetMapping("/admin/owner/{ownerId}")
     @IsAdmin
     public ResponseEntity<MessageResponse<DataResponse<HotelResponse>>> getHotelsByOwner(
@@ -92,7 +183,60 @@ public class HotelController {
                         .result(response)
                         .build());
     }
-
+    
+    // Admin Statistics endpoints
+    @GetMapping("/admin/stats/total")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<Long>> getTotalHotelsCount() {
+        Long count = hotelService.getTotalHotelsCount();
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<Long>builder()
+                        .message("Total hotels count retrieved successfully")
+                        .result(count)
+                        .build());
+    }
+    
+    @GetMapping("/admin/stats/active")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<Long>> getActiveHotelsCount() {
+        Long count = hotelService.getActiveHotelsCount();
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<Long>builder()
+                        .message("Active hotels count retrieved successfully")
+                        .result(count)
+                        .build());
+    }
+    
+    @GetMapping("/admin/stats/featured")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<Long>> getFeaturedHotelsCount() {
+        Long count = hotelService.getFeaturedHotelsCount();
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<Long>builder()
+                        .message("Featured hotels count retrieved successfully")
+                        .result(count)
+                        .build());
+    }
+    
+    @GetMapping("/admin/stats/owner/{ownerId}")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<Long>> getHotelsCountByOwner(@PathVariable UUID ownerId) {
+        Long count = hotelService.getHotelsCountByOwner(ownerId);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<Long>builder()
+                        .message("Hotels count by owner retrieved successfully")
+                        .result(count)
+                        .build());
+    }
+    
     // ===== HOST ENDPOINTS =====
     @GetMapping("/host")
     @IsHost
