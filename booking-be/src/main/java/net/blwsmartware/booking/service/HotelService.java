@@ -13,10 +13,20 @@ public interface HotelService {
 
     // ===== ADMIN OPERATIONS =====
     DataResponse<HotelResponse> getAllHotels(Integer pageNumber, Integer pageSize, String sortBy);
+    DataResponse<HotelResponse> getAllHotelsWithFilters(
+            String city, String country, Integer starRating, Boolean isActive, Boolean isFeatured,
+            BigDecimal minPrice, BigDecimal maxPrice, Integer pageNumber, Integer pageSize, String sortBy);
+    HotelResponse createHotelByAdmin(HotelCreateRequest request);
+    HotelResponse updateHotelByAdmin(UUID id, HotelUpdateRequest request);
+    void deleteHotelByAdmin(UUID id);
+    HotelResponse toggleHotelStatus(UUID id);
     HotelResponse toggleFeaturedStatus(UUID id);
     DataResponse<HotelResponse> getHotelsByOwner(UUID ownerId, Integer pageNumber, Integer pageSize, String sortBy);
 
     // Admin Statistics
+    Long getTotalHotelsCount();
+    Long getActiveHotelsCount();
+    Long getFeaturedHotelsCount();
     Long getHotelsCountByOwner(UUID ownerId);
 
     // ===== HOST OPERATIONS =====
