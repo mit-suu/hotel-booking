@@ -9,9 +9,11 @@ import net.blwsmartware.booking.constant.PagePrepare;
 import net.blwsmartware.booking.dto.request.ApplyVoucherRequest;
 import net.blwsmartware.booking.dto.request.VoucherCreateRequest;
 import net.blwsmartware.booking.dto.request.VoucherUpdateRequest;
+import net.blwsmartware.booking.dto.request.VoucherValidationRequest;
 import net.blwsmartware.booking.dto.response.DataResponse;
 import net.blwsmartware.booking.dto.response.MessageResponse;
 import net.blwsmartware.booking.dto.response.VoucherResponse;
+import net.blwsmartware.booking.dto.response.VoucherValidationResponse;
 import net.blwsmartware.booking.enums.VoucherStatus;
 import net.blwsmartware.booking.service.VoucherService;
 import net.blwsmartware.booking.validator.IsAdmin;
@@ -235,9 +237,20 @@ public class VoucherController {
     }
 
     // ===== PUBLIC ENDPOINTS =====
-
-
-
+    
+    @PostMapping("/validate")
+    public ResponseEntity<MessageResponse<VoucherValidationResponse>> validateVoucher(
+            @Valid @RequestBody VoucherValidationRequest request) {
+        VoucherValidationResponse response = voucherService.validateVoucher(request);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<VoucherValidationResponse>builder()
+                        .message("Voucher validation completed")
+                        .result(response)
+                        .build());
+    }
+    
     @GetMapping("/hotel/{hotelId}/available")
     public ResponseEntity<MessageResponse<List<VoucherResponse>>> getAvailableVouchersForHotel(@PathVariable UUID hotelId) {
         List<VoucherResponse> response = voucherService.getAvailableVouchersForHotel(hotelId);
