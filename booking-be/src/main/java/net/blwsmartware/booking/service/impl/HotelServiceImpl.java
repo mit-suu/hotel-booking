@@ -10,10 +10,11 @@ import net.blwsmartware.booking.dto.response.DataResponse;
 import net.blwsmartware.booking.dto.response.HotelResponse;
 import net.blwsmartware.booking.entity.Hotel;
 import net.blwsmartware.booking.entity.User;
-import net.blwsmartware.booking.exception.AppException;
-import net.blwsmartware.booking.exception.ErrorCode;
+import net.blwsmartware.booking.exception.AppRuntimeException;
+import net.blwsmartware.booking.enums.ErrorResponse;
 import net.blwsmartware.booking.mapper.HotelMapper;
 import net.blwsmartware.booking.repository.HotelRepository;
+import net.blwsmartware.booking.repository.ReviewRepository;
 import net.blwsmartware.booking.repository.UserRepository;
 import net.blwsmartware.booking.service.HotelService;
 import net.blwsmartware.booking.util.DataResponseUtils;
@@ -40,6 +41,7 @@ public class HotelServiceImpl implements HotelService {
 
     HotelRepository hotelRepository;
     UserRepository userRepository;
+    ReviewRepository reviewRepository;
     HotelMapper hotelMapper;
 
     @Override
@@ -63,7 +65,10 @@ public class HotelServiceImpl implements HotelService {
         List<HotelResponse> hotelResponses = hotelPage.getContent().stream()
                 .map(hotelMapper::toResponse)
                 .toList();
-
+        
+        // Populate review data
+        populateReviewData(hotelResponses);
+        
         // Debug: Log mapped responses
         log.info("=== MAPPED RESPONSES DEBUG ===");
         log.info("Total hotel responses: {}", hotelResponses.size());
@@ -75,19 +80,173 @@ public class HotelServiceImpl implements HotelService {
             log.info("  - averageRating: {}", response.getAverageRating());
             log.info("  - totalReviews: {}", response.getTotalReviews());
         });
-
+        
+        return DataResponseUtils.convertPageInfo(hotelPage, hotelResponses);
+    }
+    
+    @Override
+    @IsAdmin
+    public DataResponse<HotelResponse> getAllHotelsWithFilters(
+            String city, String country, Integer starRating, Boolean isActive, Boolean isFeatured,
+            BigDecimal minPrice, BigDecimal maxPrice, Integer pageNumber, Integer pageSize, String sortBy) {
+        log.info("Getting hotels with filters - city: {}, country: {}, stars: {}, active: {}, featured: {}", 
+                city, country, starRating, isActive, isFeatured);
+        
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
+        Page<Hotel> hotelPage = hotelRepository.findWithFilters(
+                city, country, starRating, isActive, isFeatured, minPrice, maxPrice, pageable);
+        
+        List<HotelResponse> hotelResponses = hotelPage.getContent().stream()
+                .map(hotelMapper::toResponse)
+                .toList();
+        
+        // Populate review data
+        populateReviewData(hotelResponses);
+        
         return DataResponseUtils.convertPageInfo(hotelPage, hotelResponses);
     }
 
     @Override
     public HotelResponse getHotelById(UUID id) {
-        log.info("Getting hotel by ID: {}", id);
+        log.info("Getting hotel by ID: {} (public API)", id);
+        
+        Hotel hotel = hotelRepository.findById(id)
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
+        
+        // Public API should only return active hotels
+        if (!hotel.isActive()) {
+            log.warn("Attempt to access inactive hotel: {} (ID: {})", hotel.getName(), hotel.getId());
+            throw new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND);
+        }
+        
+        HotelResponse response = hotelMapper.toResponse(hotel);
+        populateReviewData(response);
+        
+        return response;
+    }
+    
+    @Override
+    @IsAdmin
+    @Transactional
+    public HotelResponse createHotelByAdmin(HotelCreateRequest request) {
+        log.info("Admin creating new hotel: {}", request.getName());
+        
+        // Determine owner - use provided ownerId or current user
+        User owner;
+        if (request.getOwnerId() != null) {
+            owner = userRepository.findById(request.getOwnerId())
+                    .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
+        } else {
+            // Use current user as owner if ownerId is not provided
+            owner = getCurrentUser();
+        }
+        
+        // Check if hotel name already exists in the same city
+        if (hotelRepository.existsByNameAndCity(request.getName(), request.getCity())) {
+            throw new AppRuntimeException(ErrorResponse.HOTEL_NAME_ALREADY_EXISTS);
+        }
+        
+        // Convert request to entity
+        Hotel hotel = hotelMapper.toEntity(request);
+        hotel.setOwner(owner);
+        hotel.setCreatedBy(getCurrentUserId());
+        hotel.setUpdatedBy(getCurrentUserId());
+        
+        // Save hotel
+        Hotel savedHotel = hotelRepository.save(hotel);
+        
+        return hotelMapper.toResponse(savedHotel);
+    }
+    
+    @Override
+    @IsAdmin
+    @Transactional
+    public HotelResponse updateHotelByAdmin(UUID id, HotelUpdateRequest request) {
+        log.info("Admin updating hotel: {}", id);
 
         Hotel hotel = hotelRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.HOTEL_NOT_FOUND));
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
 
-        HotelResponse response = hotelMapper.toResponse(hotel);
+        // Check if new name conflicts with existing hotels in the same city
+        if (request.getName() != null && !request.getName().equals(hotel.getName())) {
+            String city = request.getCity() != null ? request.getCity() : hotel.getCity();
+            if (hotelRepository.existsByNameAndCity(request.getName(), city)) {
+                throw new AppRuntimeException(ErrorResponse.HOTEL_NAME_ALREADY_EXISTS);
+            }
+        }
 
+        // Handle owner change (only admin can do this)
+        if (request.getOwnerId() != null && !request.getOwnerId().equals(hotel.getOwner().getId())) {
+            log.info("Admin changing hotel owner from {} to {}", hotel.getOwner().getId(), request.getOwnerId());
+            
+            // Validate new owner exists
+            User newOwner = userRepository.findById(request.getOwnerId())
+                    .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
+            
+            hotel.setOwner(newOwner);
+        }
+
+        // Update hotel
+        hotelMapper.updateEntity(hotel, request);
+        hotel.setUpdatedBy(getCurrentUserId());
+
+        Hotel updatedHotel = hotelRepository.save(hotel);
+
+        return hotelMapper.toResponse(updatedHotel);
+    }
+    
+    @Override
+    @IsAdmin
+    @Transactional
+    public void deleteHotelByAdmin(UUID id) {
+        log.info("Admin deleting hotel: {}", id);
+        
+        Hotel hotel = hotelRepository.findById(id)
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
+        
+        // TODO: Check if hotel has any bookings when booking entity is implemented
+        // For now, we'll allow deletion
+        
+        hotelRepository.delete(hotel);
+    }
+    
+    @Override
+    @IsAdmin
+    @Transactional
+    public HotelResponse toggleHotelStatus(UUID id) {
+        log.info("Toggling hotel status: {}", id);
+        
+        Hotel hotel = hotelRepository.findById(id)
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
+        
+        // Debug: Before toggle
+        log.info("=== TOGGLE STATUS DEBUG ===");
+        log.info("Before toggle - Hotel: {} (ID: {})", hotel.getName(), hotel.getId());
+        log.info("  - Current isActive: {}", hotel.isActive());
+        log.info("  - Current isFeatured: {}", hotel.isFeatured());
+        
+        hotel.setActive(!hotel.isActive());
+        hotel.setUpdatedBy(getCurrentUserId());
+        
+        // Debug: After toggle, before save
+        log.info("After toggle - Hotel: {} (ID: {})", hotel.getName(), hotel.getId());
+        log.info("  - New isActive: {}", hotel.isActive());
+        log.info("  - New isFeatured: {}", hotel.isFeatured());
+        
+        Hotel updatedHotel = hotelRepository.save(hotel);
+        
+        // Debug: After save
+        log.info("After save - Hotel: {} (ID: {})", updatedHotel.getName(), updatedHotel.getId());
+        log.info("  - Saved isActive: {}", updatedHotel.isActive());
+        log.info("  - Saved isFeatured: {}", updatedHotel.isFeatured());
+        
+        HotelResponse response = hotelMapper.toResponse(updatedHotel);
+        
+        // Debug: Final response
+        log.info("Final response - Hotel: {} (ID: {})", response.getName(), response.getId());
+        log.info("  - Response isActive: {}", response.isActive());
+        log.info("  - Response isFeatured: {}", response.isFeatured());
+        
         return response;
     }
 
@@ -98,8 +257,8 @@ public class HotelServiceImpl implements HotelService {
         log.info("Toggling hotel featured status: {}", id);
 
         Hotel hotel = hotelRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.HOTEL_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
+        
         hotel.setFeatured(!hotel.isFeatured());
         hotel.setUpdatedBy(getCurrentUserId());
 
@@ -111,25 +270,107 @@ public class HotelServiceImpl implements HotelService {
     @Override
     public DataResponse<HotelResponse> searchHotels(String keyword, Integer pageNumber, Integer pageSize, String sortBy) {
         log.info("Searching hotels with keyword: {}", keyword);
-
+        
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
-        Page<Hotel> hotelPage = hotelRepository.searchByNameOrCityOrCountry(keyword, pageable);
-
+        Page<Hotel> hotelPage = hotelRepository.searchActiveByNameOrCityOrCountry(keyword, pageable);
+        
         List<HotelResponse> hotelResponses = hotelPage.getContent().stream()
                 .map(hotelMapper::toResponse)
                 .toList();
-
+        
+        // Populate review data
+        populateReviewData(hotelResponses);
+        
         return DataResponseUtils.convertPageInfo(hotelPage, hotelResponses);
     }
-
+    
+    @Override
+    public DataResponse<HotelResponse> getHotelsByCity(String city, Integer pageNumber, Integer pageSize, String sortBy) {
+        log.info("Getting hotels by city: {}", city);
+        
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
+        Page<Hotel> hotelPage = hotelRepository.findByCityIgnoreCaseAndIsActiveTrue(city, pageable);
+        
+        List<HotelResponse> hotelResponses = hotelPage.getContent().stream()
+                .map(hotelMapper::toResponse)
+                .toList();
+        
+        // Populate review data
+        populateReviewData(hotelResponses);
+        
+        return DataResponseUtils.convertPageInfo(hotelPage, hotelResponses);
+    }
+    
+    @Override
+    public DataResponse<HotelResponse> getHotelsByCountry(String country, Integer pageNumber, Integer pageSize, String sortBy) {
+        log.info("Getting hotels by country: {}", country);
+        
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
+        Page<Hotel> hotelPage = hotelRepository.findByCountryIgnoreCaseAndIsActiveTrue(country, pageable);
+        
+        List<HotelResponse> hotelResponses = hotelPage.getContent().stream()
+                .map(hotelMapper::toResponse)
+                .toList();
+        
+        return DataResponseUtils.convertPageInfo(hotelPage, hotelResponses);
+    }
+    
+    @Override
+    public DataResponse<HotelResponse> getHotelsByStarRating(Integer starRating, Integer pageNumber, Integer pageSize, String sortBy) {
+        log.info("Getting hotels by star rating: {}", starRating);
+        
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
+        Page<Hotel> hotelPage = hotelRepository.findByStarRatingAndIsActiveTrue(starRating, pageable);
+        
+        List<HotelResponse> hotelResponses = hotelPage.getContent().stream()
+                .map(hotelMapper::toResponse)
+                .toList();
+        
+        return DataResponseUtils.convertPageInfo(hotelPage, hotelResponses);
+    }
+    
+    @Override
+    public DataResponse<HotelResponse> getActiveHotels(Integer pageNumber, Integer pageSize, String sortBy) {
+        log.info("Getting active hotels");
+        
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
+        Page<Hotel> hotelPage = hotelRepository.findByIsActiveTrue(pageable);
+        
+        List<HotelResponse> hotelResponses = hotelPage.getContent().stream()
+                .map(hotelMapper::toResponse)
+                .toList();
+        
+        // Populate review data
+        populateReviewData(hotelResponses);
+        
+        return DataResponseUtils.convertPageInfo(hotelPage, hotelResponses);
+    }
+    
+    @Override
+    public DataResponse<HotelResponse> getFeaturedHotels(Integer pageNumber, Integer pageSize, String sortBy) {
+        log.info("Getting featured hotels (only active ones for public API)");
+        
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
+        Page<Hotel> hotelPage = hotelRepository.findByIsFeaturedTrueAndIsActiveTrue(pageable);
+        
+        List<HotelResponse> hotelResponses = hotelPage.getContent().stream()
+                .map(hotelMapper::toResponse)
+                .toList();
+        
+        // Populate review data
+        populateReviewData(hotelResponses);
+        
+        return DataResponseUtils.convertPageInfo(hotelPage, hotelResponses);
+    }
+    
     @Override
     public DataResponse<HotelResponse> getHotelsByOwner(UUID ownerId, Integer pageNumber, Integer pageSize, String sortBy) {
         log.info("Getting hotels by owner: {}", ownerId);
 
         // Validate owner exists
         userRepository.findById(ownerId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
+        
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
         Page<Hotel> hotelPage = hotelRepository.findByOwnerId(ownerId, pageable);
 
@@ -152,17 +393,55 @@ public class HotelServiceImpl implements HotelService {
         List<HotelResponse> hotelResponses = hotelPage.getContent().stream()
                 .map(hotelMapper::toResponseWithoutRelations)
                 .toList();
-
+        
         return DataResponseUtils.convertPageInfo(hotelPage, hotelResponses);
     }
-
+    
+    @Override
+    @IsHost
+    public DataResponse<HotelResponse> getMyHotelsWithFilters(
+            String city, String country, Integer starRating, Boolean isActive,
+            Integer pageNumber, Integer pageSize, String sortBy) {
+        log.info("Getting current user's hotels with filters - city: {}, country: {}, stars: {}, active: {}", 
+                city, country, starRating, isActive);
+        
+        UUID currentUserId = getCurrentUserId();
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
+        Page<Hotel> hotelPage = hotelRepository.findMyHotelsWithFilters(
+                currentUserId, city, country, starRating, isActive, pageable);
+        
+        List<HotelResponse> hotelResponses = hotelPage.getContent().stream()
+                .map(hotelMapper::toResponseWithoutRelations)
+                .toList();
+        
+        return DataResponseUtils.convertPageInfo(hotelPage, hotelResponses);
+    }
+    
+    @Override
+    @IsAdmin
+    public Long getTotalHotelsCount() {
+        return hotelRepository.count();
+    }
+    
+    @Override
+    @IsAdmin
+    public Long getActiveHotelsCount() {
+        return hotelRepository.countByIsActiveTrue();
+    }
+    
+    @Override
+    @IsAdmin
+    public Long getFeaturedHotelsCount() {
+        return hotelRepository.countByIsFeaturedTrue();
+    }
+    
     @Override
     @IsAdmin
     public Long getHotelsCountByOwner(UUID ownerId) {
         // Validate owner exists
         userRepository.findById(ownerId)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
+        
         return hotelRepository.countByOwnerId(ownerId);
     }
 
@@ -176,7 +455,7 @@ public class HotelServiceImpl implements HotelService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = authentication.getName();
         return userRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
     }
 
     private UUID getCurrentUserId() {
@@ -184,16 +463,39 @@ public class HotelServiceImpl implements HotelService {
         return UUID.fromString(authentication.getName());
     }
 
+    private void populateReviewData(HotelResponse response) {
+        try {
+            UUID hotelId = UUID.fromString(String.valueOf(response.getId()));
+            
+            // Get average rating
+            Double averageRating = hotelRepository.getAverageRating(hotelId).orElse(0.0);
+            response.setAverageRating(averageRating);
+            
+            // Get total reviews count
+            Long totalReviews = reviewRepository.countByHotelId(hotelId);
+            response.setTotalReviews(totalReviews.intValue());
+            
+        } catch (Exception e) {
+            log.warn("Error populating review data for hotel {}: {}", response.getId(), e.getMessage());
+            response.setAverageRating(0.0);
+            response.setTotalReviews(0);
+        }
+    }
+
+    private void populateReviewData(List<HotelResponse> responses) {
+        responses.forEach(this::populateReviewData);
+    }
+    
     /**
      * Validate that the current user owns the specified hotel
      */
     private void validateHotelOwnership(UUID hotelId) {
         UUID currentUserId = getCurrentUserId();
         Hotel hotel = hotelRepository.findById(hotelId)
-                .orElseThrow(() -> new AppException(ErrorCode.HOTEL_NOT_FOUND));
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
 
         if (!hotel.getOwner().getId().equals(currentUserId)) {
-            throw new AppException(ErrorCode.HOTEL_ACCESS_DENIED);
+            throw new AppRuntimeException(ErrorResponse.HOTEL_ACCESS_DENIED);
         }
     }
 
@@ -202,11 +504,11 @@ public class HotelServiceImpl implements HotelService {
      */
     private Hotel getMyHotelEntity(UUID hotelId) {
         Hotel hotel = hotelRepository.findById(hotelId)
-                .orElseThrow(() -> new AppException(ErrorCode.HOTEL_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
+        
         UUID currentUserId = getCurrentUserId();
         if (!hotel.getOwner().getId().equals(currentUserId)) {
-            throw new AppException(ErrorCode.HOTEL_ACCESS_DENIED);
+            throw new AppRuntimeException(ErrorResponse.HOTEL_ACCESS_DENIED);
         }
 
         return hotel;
@@ -234,7 +536,7 @@ public class HotelServiceImpl implements HotelService {
 
         // Check if hotel name already exists in the same city
         if (hotelRepository.existsByNameAndCity(request.getName(), request.getCity())) {
-            throw new AppException(ErrorCode.HOTEL_NAME_ALREADY_EXISTS);
+            throw new AppRuntimeException(ErrorResponse.HOTEL_NAME_ALREADY_EXISTS);
         }
 
         // Convert request to entity
@@ -264,7 +566,7 @@ public class HotelServiceImpl implements HotelService {
         if (request.getName() != null && !request.getName().equals(hotel.getName())) {
             String city = request.getCity() != null ? request.getCity() : hotel.getCity();
             if (hotelRepository.existsByNameAndCity(request.getName(), city)) {
-                throw new AppException(ErrorCode.HOTEL_NAME_ALREADY_EXISTS);
+                throw new AppRuntimeException(ErrorResponse.HOTEL_NAME_ALREADY_EXISTS);
             }
         }
 
@@ -337,13 +639,16 @@ public class HotelServiceImpl implements HotelService {
                 city, country, starRating, minPrice, maxPrice, amenities);
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
-        Page<Hotel> hotelPage = hotelRepository.findWithFiltersAndAmenities(
-                city, country, starRating, true, null, minPrice, maxPrice, amenities, pageable);
-
+        Page<Hotel> hotelPage = hotelRepository.findActiveWithFiltersAndAmenities(
+                city, country, starRating, null, minPrice, maxPrice, amenities, pageable);
+        
         List<HotelResponse> hotelResponses = hotelPage.getContent().stream()
                 .map(hotelMapper::toResponseWithoutRelations)
                 .toList();
-
+        
+        // Populate review data
+        populateReviewData(hotelResponses);
+        
         return DataResponseUtils.convertPageInfo(hotelPage, hotelResponses);
     }
 
