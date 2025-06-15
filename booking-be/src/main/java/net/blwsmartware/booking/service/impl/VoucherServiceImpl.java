@@ -6,8 +6,10 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import net.blwsmartware.booking.dto.request.VoucherCreateRequest;
 import net.blwsmartware.booking.dto.request.VoucherUpdateRequest;
+import net.blwsmartware.booking.dto.request.VoucherValidationRequest;
 import net.blwsmartware.booking.dto.response.DataResponse;
 import net.blwsmartware.booking.dto.response.VoucherResponse;
+import net.blwsmartware.booking.dto.response.VoucherValidationResponse;
 import net.blwsmartware.booking.entity.*;
 import net.blwsmartware.booking.enums.*;
 import net.blwsmartware.booking.exception.AppRuntimeException;
@@ -43,6 +45,7 @@ public class VoucherServiceImpl implements VoucherService {
     UserRepository userRepository;
     BookingRepository bookingRepository;
     VoucherMapper voucherMapper;
+	VoucherUsageRepository voucherUsageRepository;
 
     @Override
     @IsAdmin
@@ -152,8 +155,18 @@ public class VoucherServiceImpl implements VoucherService {
 
         Voucher voucher = voucherRepository.findById(id)
                 .orElseThrow(() -> new AppRuntimeException(ErrorResponse.VOUCHER_NOT_FOUND));
+        
+        // Check if voucher has been used - throw exception to inform admin
+        long usageCount = voucherUsageRepository.countByVoucherId(id);
+        if (usageCount > 0) {
+            log.warn("Attempted to delete voucher {} with {} usage records", voucher.getCode(), usageCount);
+            throw new AppRuntimeException(ErrorResponse.VOUCHER_HAS_USAGE_RECORDS);
+        } else {
+            voucherRepository.delete(voucher);
+            log.info("Voucher {} deleted successfully", voucher.getCode());
+        }
     }
-
+    
     @Override
     @IsAdmin
     @Transactional
@@ -213,16 +226,69 @@ public class VoucherServiceImpl implements VoucherService {
     }
 
     @Override
+    @IsAdmin
     public BigDecimal getTotalDiscountAmount() {
-        return null;
+        LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0);
+        LocalDateTime endOfMonth = startOfMonth.plusMonths(1).minusSeconds(1);
+        return voucherUsageRepository.calculateTotalDiscountInDateRange(startOfMonth, endOfMonth);
     }
 
     @Override
+    @IsAdmin
     public Long getTotalUsageCount() {
-        return 0L;
+        return voucherUsageRepository.getTotalUsageCount();
     }
-
-
+    
+    @Override
+    public VoucherValidationResponse validateVoucher(VoucherValidationRequest request) {
+        log.info("Validating voucher code: {} for hotel: {}", request.getCode(), request.getHotelId());
+        
+        Voucher voucher = voucherRepository.findByCode(request.getCode()).orElse(null);
+        
+        if (voucher == null) {
+            return VoucherValidationResponse.builder()
+                    .valid(false)
+                    .message("Voucher not found")
+                    .build();
+        }
+        
+        if (!voucher.isActive()) {
+            return VoucherValidationResponse.builder()
+                    .valid(false)
+                    .message("Voucher is not active")
+                    .voucher(voucherMapper.toResponse(voucher))
+                    .build();
+        }
+        
+        if (!voucher.isApplicableToHotel(request.getHotelId())) {
+            return VoucherValidationResponse.builder()
+                    .valid(false)
+                    .message("Voucher is not applicable to this hotel")
+                    .voucher(voucherMapper.toResponse(voucher))
+                    .build();
+        }
+        
+        if (voucher.getMinBookingValue() != null && 
+            request.getBookingAmount().compareTo(voucher.getMinBookingValue()) < 0) {
+            return VoucherValidationResponse.builder()
+                    .valid(false)
+                    .message("Minimum booking value requirement not met")
+                    .voucher(voucherMapper.toResponse(voucher))
+                    .build();
+        }
+        
+        BigDecimal discountAmount = calculateDiscount(voucher.getId(), request.getBookingAmount());
+        BigDecimal finalAmount = request.getBookingAmount().subtract(discountAmount);
+        
+        return VoucherValidationResponse.builder()
+                .valid(true)
+                .message("Voucher is valid")
+                .discountAmount(discountAmount)
+                .finalAmount(finalAmount)
+                .voucher(voucherMapper.toResponse(voucher))
+                .build();
+    }
+    
     @Override
     public List<VoucherResponse> getAvailableVouchersForHotel(UUID hotelId) {
         log.info("Getting available vouchers for hotel: {}", hotelId);
@@ -242,18 +308,93 @@ public class VoucherServiceImpl implements VoucherService {
     }
 
     @Override
+    @Transactional
     public VoucherResponse applyVoucher(String voucherCode, UUID userId, UUID bookingId, BigDecimal originalAmount, UUID hotelId) {
-        return null;
+        log.info("Applying voucher {} for user {} on booking {}", voucherCode, userId, bookingId);
+        
+        Voucher voucher = voucherRepository.findByCode(voucherCode)
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.VOUCHER_NOT_FOUND));
+        
+        if (!voucher.isActive()) {
+            throw new AppRuntimeException(ErrorResponse.VOUCHER_NOT_ACTIVE);
+        }
+        
+        if (!voucher.isApplicableToHotel(hotelId)) {
+            throw new AppRuntimeException(ErrorResponse.VOUCHER_NOT_APPLICABLE_TO_HOTEL);
+        }
+        
+        if (voucherUsageRepository.existsByVoucherIdAndUserId(voucher.getId(), userId)) {
+            throw new AppRuntimeException(ErrorResponse.VOUCHER_ALREADY_USED_BY_USER);
+        }
+        
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
+        
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.BOOKING_NOT_FOUND));
+        
+        BigDecimal discountAmount = calculateDiscount(voucher.getId(), originalAmount);
+        
+        VoucherUsage voucherUsage = VoucherUsage.builder()
+                .voucher(voucher)
+                .user(user)
+                .booking(booking)
+                .discountAmount(discountAmount)
+                .build();
+        
+        voucherUsageRepository.save(voucherUsage);
+        
+        voucher.setUsageCount(voucher.getUsageCount() + 1);
+        
+        if (voucher.getUsageLimit() != null && voucher.getUsageCount() >= voucher.getUsageLimit()) {
+            voucher.setStatus(VoucherStatus.USED_UP);
+        }
+        
+        Voucher updatedVoucher = voucherRepository.save(voucher);
+        return voucherMapper.toResponse(updatedVoucher);
     }
-
+    
     @Override
+    @Transactional
     public void removeVoucherUsage(UUID bookingId) {
-
+        log.info("Removing voucher usage for booking: {}", bookingId);
+        
+        // Find voucher usage by booking ID
+        Optional<VoucherUsage> voucherUsageOpt = voucherUsageRepository.findByBookingId(bookingId);
+        
+        if (voucherUsageOpt.isPresent()) {
+            VoucherUsage voucherUsage = voucherUsageOpt.get();
+            Voucher voucher = voucherUsage.getVoucher();
+            
+            // Decrease usage count
+            voucher.setUsageCount(Math.max(0, voucher.getUsageCount() - 1));
+            
+            // Reactivate voucher if it was marked as used up
+            if (voucher.getStatus() == VoucherStatus.USED_UP && 
+                (voucher.getUsageLimit() == null || voucher.getUsageCount() < voucher.getUsageLimit())) {
+                voucher.setStatus(VoucherStatus.ACTIVE);
+            }
+            
+            // Save voucher and delete usage record
+            voucherRepository.save(voucher);
+            voucherUsageRepository.delete(voucherUsage);
+            
+            log.info("Voucher usage removed for booking: {}, voucher: {}", bookingId, voucher.getCode());
+        } else {
+            log.info("No voucher usage found for booking: {}", bookingId);
+        }
     }
-
+    
     @Override
+    @Transactional
     public void deleteVoucherUsageByBookingId(UUID bookingId) {
-
+        log.info("Deleting voucher usage records for booking: {}", bookingId);
+        
+        // Delete usage records directly without updating voucher counts
+        // This is for hard delete scenarios like admin delete booking
+        voucherUsageRepository.deleteByBookingId(bookingId);
+        
+        log.info("Voucher usage records deleted for booking: {}", bookingId);
     }
 
 

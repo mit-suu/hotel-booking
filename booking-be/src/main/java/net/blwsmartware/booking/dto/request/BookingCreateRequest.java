@@ -45,6 +45,9 @@ public class BookingCreateRequest {
     @Size(max = 1000, message = "Special requests cannot exceed 1000 characters")
     String specialRequests;
 
+    @Size(max = 50, message = "Voucher code cannot exceed 50 characters")
+    String voucherCode;
+
     @AssertTrue(message = "Check-out date must be after check-in date")
     public boolean isCheckOutAfterCheckIn() {
         if (checkInDate == null || checkOutDate == null) {
