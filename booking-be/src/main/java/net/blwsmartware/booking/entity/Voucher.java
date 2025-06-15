@@ -73,13 +73,16 @@ public class Voucher {
     // Relationships
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-            name = "voucher_hotels",
-            joinColumns = @JoinColumn(name = "voucher_id"),
-            inverseJoinColumns = @JoinColumn(name = "hotel_id")
+        name = "voucher_hotels",
+        joinColumns = @JoinColumn(name = "voucher_id"),
+        inverseJoinColumns = @JoinColumn(name = "hotel_id")
     )
     List<Hotel> applicableHotels;
 
+    @OneToMany(mappedBy = "voucher", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    List<VoucherUsage> voucherUsages;
 
+    // Audit fields
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     LocalDateTime createdAt;
@@ -96,17 +99,17 @@ public class Voucher {
 
     // Helper methods
     public boolean isActive() {
-        return status == VoucherStatus.ACTIVE &&
-                LocalDateTime.now().isAfter(startDate) &&
-                LocalDateTime.now().isBefore(endDate) &&
-                (usageLimit == null || usageCount < usageLimit);
+        return status == VoucherStatus.ACTIVE && 
+               LocalDateTime.now().isAfter(startDate) && 
+               LocalDateTime.now().isBefore(endDate) &&
+               (usageLimit == null || usageCount < usageLimit);
     }
 
     public boolean isApplicableToHotel(UUID hotelId) {
         if (applicableScope == ApplicableScope.ALL_HOTELS) {
             return true;
         }
-        return applicableHotels != null &&
-                applicableHotels.stream().anyMatch(hotel -> hotel.getId().equals(hotelId));
+        return applicableHotels != null && 
+               applicableHotels.stream().anyMatch(hotel -> hotel.getId().equals(hotelId));
     }
-}
+} 

@@ -2,8 +2,10 @@ package net.blwsmartware.booking.service;
 
 import net.blwsmartware.booking.dto.request.VoucherCreateRequest;
 import net.blwsmartware.booking.dto.request.VoucherUpdateRequest;
+import net.blwsmartware.booking.dto.request.VoucherValidationRequest;
 import net.blwsmartware.booking.dto.response.DataResponse;
 import net.blwsmartware.booking.dto.response.VoucherResponse;
+import net.blwsmartware.booking.dto.response.VoucherValidationResponse;
 import net.blwsmartware.booking.enums.VoucherStatus;
 
 import java.math.BigDecimal;
@@ -31,7 +33,7 @@ public interface VoucherService {
     Long getTotalUsageCount();
 
     // ===== PUBLIC OPERATIONS =====
-
+    VoucherValidationResponse validateVoucher(VoucherValidationRequest request);
     List<VoucherResponse> getAvailableVouchersForHotel(UUID hotelId);
     VoucherResponse getVoucherByCode(String code);
 
