@@ -33,6 +33,8 @@ public enum ErrorResponse {
     USER_NOT_LOGIN(1001, "Incorrect password!", HttpStatus.BAD_REQUEST),
     USER_BLOCKED(4008, "User has been blocked!", HttpStatus.FORBIDDEN),
     USER_NOT_VERIFICATION(4009, "Email not verified!", HttpStatus.FORBIDDEN),
+    USER_ALREADY_HOST(4010, "User already has host role!", HttpStatus.CONFLICT),
+    HOST_REQUEST_NOT_FOUND(4011, "Host request not found!", HttpStatus.NOT_FOUND),
     CODE_EXPIRED(4012, "Code has expired!", HttpStatus.BAD_REQUEST),
     CODE_INVALID(4017, "Invalid code!", HttpStatus.BAD_REQUEST),
     CODE_NOT_FOUND(4113, "Code not found!", HttpStatus.BAD_REQUEST),
@@ -49,6 +51,60 @@ public enum ErrorResponse {
     JWT_NOT_NULL(7015, "Token cannot be null!", HttpStatus.UNAUTHORIZED),
     ACCESS_DENIED(7030, "Access denied!", HttpStatus.FORBIDDEN),
 
+    // Hotel-related errors
+    HOTEL_NOT_FOUND(2001, "Hotel not found!", HttpStatus.NOT_FOUND),
+    HOTEL_NAME_ALREADY_EXISTS(2002, "Hotel name already exists for this owner!", HttpStatus.BAD_REQUEST),
+    HOTEL_HAS_ROOM_TYPES(2003, "Cannot delete hotel that has room types!", HttpStatus.BAD_REQUEST),
+    HOTEL_HAS_BOOKINGS(2004, "Cannot delete hotel that has bookings!", HttpStatus.BAD_REQUEST),
+    HOTEL_ACCESS_DENIED(2005, "You do not have permission to access this hotel!", HttpStatus.FORBIDDEN),
+    HOTEL_NOT_AVAILABLE(2006, "Hotel is not available for booking!", HttpStatus.BAD_REQUEST),
+
+    // Room type-related errors
+    ROOM_TYPE_NOT_FOUND(3001, "Room type not found!", HttpStatus.NOT_FOUND),
+    ROOM_TYPE_NAME_ALREADY_EXISTS(3002, "Room type name already exists for this hotel!", HttpStatus.BAD_REQUEST),
+    ROOM_TYPE_HAS_BOOKINGS(3003, "Cannot delete room type that has bookings!", HttpStatus.BAD_REQUEST),
+    INSUFFICIENT_ROOMS_AVAILABLE(3004, "Not enough rooms available!", HttpStatus.BAD_REQUEST),
+
+    // Review-related errors
+    REVIEW_NOT_FOUND(4001, "Review not found!", HttpStatus.NOT_FOUND),
+    REVIEW_ALREADY_EXISTS(4002, "User has already reviewed this hotel!", HttpStatus.BAD_REQUEST),
+    REVIEW_NOT_ALLOWED(4003, "User is not allowed to review this hotel!", HttpStatus.FORBIDDEN),
+
+    // Booking-related errors
+    BOOKING_NOT_FOUND(5001, "Booking not found!", HttpStatus.NOT_FOUND),
+    BOOKING_ALREADY_CANCELLED(5002, "Booking is already cancelled!", HttpStatus.BAD_REQUEST),
+    BOOKING_CANNOT_BE_CANCELLED(5003, "Booking cannot be cancelled!", HttpStatus.BAD_REQUEST),
+    INVALID_BOOKING_DATES(5004, "Invalid booking dates!", HttpStatus.BAD_REQUEST),
+    NO_ROOMS_AVAILABLE(5005, "No rooms available for selected dates!", HttpStatus.BAD_REQUEST),
+    BOOKING_ACCESS_DENIED(5006, "You do not have permission to access this booking!", HttpStatus.FORBIDDEN),
+    BOOKING_ALREADY_CONFIRMED(5007, "Booking is already confirmed!", HttpStatus.BAD_REQUEST),
+    BOOKING_CANNOT_BE_CONFIRMED(5008, "Booking cannot be confirmed!", HttpStatus.BAD_REQUEST),
+    INVALID_GUEST_COUNT(5009, "Guest count exceeds room capacity!", HttpStatus.BAD_REQUEST),
+    CHECK_IN_DATE_PAST(5010, "Check-in date cannot be in the past!", HttpStatus.BAD_REQUEST),
+    CHECK_OUT_BEFORE_CHECK_IN(5011, "Check-out date must be after check-in date!", HttpStatus.BAD_REQUEST),
+    CHECK_IN_DATE_TOO_ADVANCE(5012, "Check-in date cannot be more than 2 years in advance!", HttpStatus.BAD_REQUEST),
+    STAY_DURATION_TOO_LONG(5013, "Stay duration cannot exceed 30 days!", HttpStatus.BAD_REQUEST),
+    GUESTS_EXCEED_ROOM_CAPACITY(5014, "Number of guests exceeds room maximum occupancy!", HttpStatus.BAD_REQUEST),
+    LARGE_GROUP_NEEDS_APPROVAL(5015, "Large groups (8+ guests) require special approval!", HttpStatus.BAD_REQUEST),
+    BOOKING_CONFLICT_DETECTED(5016, "Booking conflict detected with existing reservations!", HttpStatus.CONFLICT),
+    ROOM_UNDER_MAINTENANCE(5017, "Room is under maintenance during selected dates!", HttpStatus.BAD_REQUEST),
+
+    // Enhanced errors
+    PAYMENT_FAILED(1508, "Payment failed!", HttpStatus.BAD_REQUEST),
+    INVALID_BOOKING_STATUS(1509, "Invalid booking status!", HttpStatus.BAD_REQUEST),
+    UNAUTHENTICATED(1006, "Unauthenticated!", HttpStatus.UNAUTHORIZED),
+    UNAUTHORIZED(1007, "You do not have permission!", HttpStatus.FORBIDDEN),
+
+    // Voucher-related errors
+    VOUCHER_NOT_FOUND(6001, "Voucher not found!", HttpStatus.NOT_FOUND),
+    VOUCHER_CODE_ALREADY_EXISTS(6002, "Voucher code already exists!", HttpStatus.CONFLICT),
+    VOUCHER_EXPIRED(6003, "Voucher has expired!", HttpStatus.BAD_REQUEST),
+    VOUCHER_NOT_ACTIVE(6004, "Voucher is not active!", HttpStatus.BAD_REQUEST),
+    VOUCHER_USAGE_LIMIT_EXCEEDED(6005, "Voucher usage limit exceeded!", HttpStatus.BAD_REQUEST),
+    VOUCHER_NOT_APPLICABLE_TO_HOTEL(6006, "Voucher is not applicable to this hotel!", HttpStatus.BAD_REQUEST),
+    VOUCHER_MIN_BOOKING_VALUE_NOT_MET(6007, "Minimum booking value requirement not met!", HttpStatus.BAD_REQUEST),
+    VOUCHER_ALREADY_USED_BY_USER(6008, "Voucher has already been used by this user!", HttpStatus.BAD_REQUEST),
+    VOUCHER_HAS_USAGE_RECORDS(6009, "Voucher has been used in bookings. Please disable instead of deleting to preserve data integrity!", HttpStatus.CONFLICT),
 
     ;
 
