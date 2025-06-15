@@ -75,6 +75,12 @@ public class Booking {
     @Column(name = "special_requests", columnDefinition = "TEXT")
     String specialRequests;
 
+    @Column(name = "cancellation_reason", columnDefinition = "TEXT")
+    String cancellationReason;
+
+    @Column(name = "refund_amount", precision = 10, scale = 2)
+    BigDecimal refundAmount;
+
     // Audit fields
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
