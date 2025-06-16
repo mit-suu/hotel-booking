@@ -1,11 +1,51 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Calendar, Users } from 'lucide-react';
 import DatePicker from './DatePicker';
 
 const HeroSection: React.FC = () => {
+  const navigate = useNavigate();
   const [destination, setDestination] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [guests, setGuests] = useState(2);
+  const [dates, setDates] = useState<{checkIn?: Date, checkOut?: Date}>({});
+
+  const handleSearch = () => {
+    const searchParams = new URLSearchParams();
+    
+    if (destination.trim()) {
+      searchParams.append('city', destination.trim());
+    }
+    
+    if (dates.checkIn) {
+      searchParams.append('checkIn', dates.checkIn.toISOString().split('T')[0]);
+    }
+    
+    if (dates.checkOut) {
+      searchParams.append('checkOut', dates.checkOut.toISOString().split('T')[0]);
+    }
+    
+    searchParams.append('guests', guests.toString());
+    
+    navigate(`/hotels${searchParams.toString() ? `?${searchParams.toString()}` : ''}`);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const formatDateRange = () => {
+    if (dates.checkIn && dates.checkOut) {
+      const checkInStr = dates.checkIn.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' });
+      const checkOutStr = dates.checkOut.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' });
+      return `${checkInStr} - ${checkOutStr}`;
+    } else if (dates.checkIn) {
+      return dates.checkIn.toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' });
+    }
+    return 'Select dates';
+  };
 
   return (
     <section className="relative w-full h-[700px]">
@@ -24,12 +64,12 @@ const HeroSection: React.FC = () => {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="text-center">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">
-              Tìm phòng khách sạn hoàn hảo
+              Find the perfect hotel room
               <br />
-              cho kỳ nghỉ của bạn
+              for your vacation
             </h1>
             <p className="text-base md:text-lg text-white/90 mb-6 max-w-xl mx-auto">
-              Khám phá hàng ngàn khách sạn và khu nghỉ dưỡng với giá tốt nhất
+              Explore thousands of hotels and resorts at the best prices
             </p>
 
             {/* Search Box - Smaller and more compact */}
@@ -38,14 +78,15 @@ const HeroSection: React.FC = () => {
                 {/* Destination */}
                 <div className="relative">
                   <label className="block text-xs font-medium text-gray-700 mb-1 text-left">
-                    Điểm đến
+                    Destination
                   </label>
                   <div className="relative">
                     <input
                       type="text"
                       value={destination}
                       onChange={(e) => setDestination(e.target.value)}
-                      placeholder="Bạn muốn đi đâu?"
+                      onKeyPress={handleKeyPress}
+                      placeholder="Where do you want to go?"
                       className="w-full pl-8 pr-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-700 text-sm"
                     />
                     <Search size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -55,7 +96,7 @@ const HeroSection: React.FC = () => {
                 {/* Date Picker */}
                 <div className="relative">
                   <label className="block text-xs font-medium text-gray-700 mb-1 text-left">
-                    Ngày
+                    Dates
                   </label>
                   <div className="relative">
                     <button
@@ -63,13 +104,20 @@ const HeroSection: React.FC = () => {
                       onClick={() => setShowDatePicker(!showDatePicker)}
                       className="w-full flex items-center pl-8 pr-3 py-2.5 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-left hover:border-gray-400 transition-colors text-sm"
                     >
-                      <span className="text-gray-600">Chọn ngày</span>
+                      <span className={`${dates.checkIn ? 'text-gray-700' : 'text-gray-500'}`}>
+                        {formatDateRange()}
+                      </span>
                     </button>
                     <Calendar size={16} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
                   </div>
                   {showDatePicker && (
-                    <div className="absolute z-10 mt-1 w-full">
-                      <DatePicker onClose={() => setShowDatePicker(false)} />
+                    <div className="absolute z-50 mt-1 left-0 right-0 md:left-0 md:right-auto">
+                      <DatePicker 
+                        onClose={() => setShowDatePicker(false)}
+                        checkIn={dates.checkIn}
+                        checkOut={dates.checkOut}
+                        onDatesChange={(newDates) => setDates(newDates)}
+                      />
                     </div>
                   )}
                 </div>
@@ -77,7 +125,7 @@ const HeroSection: React.FC = () => {
                 {/* Guests */}
                 <div className="relative">
                   <label className="block text-xs font-medium text-gray-700 mb-1 text-left">
-                    Khách
+                    Guests
                   </label>
                   <div className="relative">
                     <select
@@ -87,7 +135,7 @@ const HeroSection: React.FC = () => {
                     >
                       {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
                         <option key={num} value={num}>
-                          {num} khách
+                          {num} guest{num > 1 ? 's' : ''}
                         </option>
                       ))}
                     </select>
@@ -102,9 +150,12 @@ const HeroSection: React.FC = () => {
               </div>
 
               {/* Search Button */}
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-md transition-colors font-semibold text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200">
+              <button 
+                onClick={handleSearch}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-md transition-colors font-semibold text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+              >
                 <Search size={16} className="inline mr-2" />
-                Tìm kiếm
+                Search
               </button>
             </div>
           </div>

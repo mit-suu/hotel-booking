@@ -17,7 +17,7 @@ const RoomDetailPage: React.FC = () => {
     price: 2500000,
     rating: 4.8,
     reviewCount: 124,
-    description: 'Phòng sang trọng với view biển tuyệt đẹp, đầy đủ tiện nghi cao cấp. Phòng được thiết kế theo phong cách hiện đại, trang nhã với không gian rộng rãi và ánh sáng tự nhiên. Từ ban công phòng, bạn có thể ngắm nhìn toàn cảnh biển Nha Trang tuyệt đẹp.',
+    description: 'Luxurious room with stunning ocean view, fully equipped with premium amenities. The room is designed in a modern, elegant style with spacious area and natural light. From the balcony, you can admire the beautiful panoramic view of Nha Trang bay.',
     longDescription: 'Phòng Deluxe Ocean View tại Vinpearl Resort & Spa Nha Trang là sự lựa chọn hoàn hảo cho kỳ nghỉ của bạn. Với diện tích 45m², phòng được thiết kế theo phong cách hiện đại, trang nhã với không gian rộng rãi và ánh sáng tự nhiên. Từ ban công phòng, bạn có thể ngắm nhìn toàn cảnh biển Nha Trang tuyệt đẹp.\n\nPhòng được trang bị đầy đủ tiện nghi cao cấp như giường King size hoặc 2 giường đơn với chăn ga gối đệm cao cấp, điều hòa nhiệt độ, TV màn hình phẳng với các kênh quốc tế, minibar, két an toàn, và bàn làm việc.\n\nPhòng tắm sang trọng với bồn tắm riêng, vòi sen, máy sấy tóc và bộ đồ dùng phòng tắm cao cấp. Dịch vụ dọn phòng hàng ngày, WiFi miễn phí tốc độ cao và dịch vụ phòng 24/7 sẽ đảm bảo kỳ nghỉ của bạn thật thoải mái và tiện nghi.',
     amenities: [
       'Wifi miễn phí',
@@ -25,11 +25,11 @@ const RoomDetailPage: React.FC = () => {
       'TV màn hình phẳng',
       'Minibar',
       'Két an toàn',
-      'Bàn làm việc',
+              'Work Desk',
       'Bồn tắm',
       'Máy sấy tóc',
       'Ban công riêng',
-      'Dịch vụ phòng 24/7'
+              '24/7 Room Service'
     ],
     capacity: 2,
     bedType: 'King size hoặc 2 giường đơn',
@@ -41,8 +41,8 @@ const RoomDetailPage: React.FC = () => {
       'https://images.pexels.com/photos/1579253/pexels-photo-1579253.jpeg'
     ],
     policies: [
-      'Nhận phòng: 14:00',
-      'Trả phòng: 12:00',
+              'Check-in: 14:00',
+        'Check-out: 12:00',
       'Hủy miễn phí trước 3 ngày',
       'Không hút thuốc',
       'Không mang vật nuôi'
@@ -139,7 +139,7 @@ const RoomDetailPage: React.FC = () => {
               </div>
 
               <div className="border-t border-gray-200 pt-6">
-                <h2 className="text-xl font-semibold mb-4">Thông tin phòng</h2>
+                <h2 className="text-xl font-semibold mb-4">Room Information</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   <div className="flex items-center">
@@ -198,7 +198,7 @@ const RoomDetailPage: React.FC = () => {
 
             {/* Reviews section */}
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold mb-4">Đánh giá từ khách hàng</h2>
+              <h2 className="text-xl font-semibold mb-4">Customer Reviews</h2>
               <div className="flex items-center mb-6">
                 <div className="flex mr-2">
                   {renderRatingStars(room.rating)}
@@ -270,7 +270,7 @@ const RoomDetailPage: React.FC = () => {
               </div>
 
               <button className="mt-6 w-full py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
-                Xem tất cả {room.reviewCount} đánh giá
+                View all {room.reviewCount} reviews
               </button>
             </div>
           </div>
@@ -285,7 +285,7 @@ const RoomDetailPage: React.FC = () => {
 
               <div className="border border-gray-200 rounded-lg mb-4">
                 <div className="p-4 border-b border-gray-200">
-                  <h3 className="font-semibold mb-2">Đặt phòng của bạn</h3>
+                  <h3 className="font-semibold mb-2">Your Booking</h3>
                   <div className="grid grid-cols-2 gap-2">
                     <div 
                       className="border border-gray-300 rounded-lg p-3 cursor-pointer hover:border-blue-500"
@@ -342,7 +342,7 @@ const RoomDetailPage: React.FC = () => {
               </div>
 
               <button className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors mb-4">
-                Đặt phòng ngay
+                                  Book Now
               </button>
 
               <p className="text-center text-sm text-gray-500">
