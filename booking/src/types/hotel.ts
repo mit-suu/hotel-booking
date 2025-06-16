@@ -12,7 +12,6 @@ export interface RoomType {
   images: string[];
   totalRooms: number;
   availableRooms: number;
-  status: 'active' | 'inactive' | 'maintenance';
 }
 
 export interface SeasonalPricing {
@@ -115,7 +114,6 @@ export interface Review {
   comment: string;
   images?: string[];
   date: string;
-  isVerified: boolean;
   hotelResponse?: {
     message: string;
     date: string;

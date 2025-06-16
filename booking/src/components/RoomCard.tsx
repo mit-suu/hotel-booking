@@ -1,11 +1,12 @@
 import React from 'react';
 import { Star, MapPin, Users, Wifi, Coffee, Tv } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface RoomCardProps {
   id: string;
   name: string;
   hotelName: string;
+  hotelId?: string;
   location: string;
   price: number;
   rating: number;
@@ -19,6 +20,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
   id,
   name,
   hotelName,
+  hotelId,
   location,
   price,
   rating,
@@ -27,6 +29,7 @@ const RoomCard: React.FC<RoomCardProps> = ({
   amenities,
   capacity
 }) => {
+  const navigate = useNavigate();
   const formatPrice = (price: number) => {
     return price.toLocaleString('vi-VN') + 'đ';
   };
@@ -108,8 +111,26 @@ const RoomCard: React.FC<RoomCardProps> = ({
               </span>
               <span className="text-sm text-gray-500">/đêm</span>
             </div>
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-              Đặt phòng
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (hotelId) {
+                  const bookingParams = new URLSearchParams({
+                    hotelId: hotelId,
+                    roomTypeId: id,
+                    checkIn: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
+                    checkOut: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0], // Day after tomorrow
+                    guests: '2'
+                  });
+                  navigate(`/booking?${bookingParams.toString()}`);
+                } else {
+                  alert('Hotel information not available');
+                }
+              }}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Book Now
             </button>
           </div>
         </div>

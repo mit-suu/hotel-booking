@@ -39,7 +39,7 @@ const SearchRoomsPage: React.FC = () => {
       price: 2500000,
       rating: 4.8,
       image: 'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg',
-      description: 'Phòng sang trọng với view biển tuyệt đẹp, đầy đủ tiện nghi cao cấp',
+      description: 'Luxurious room with stunning ocean view, fully equipped with premium amenities',
       amenities: ['Wifi', 'Minibar', 'TV', 'Điều hòa', 'Bồn tắm'],
       capacity: 2
     },
@@ -148,7 +148,7 @@ const SearchRoomsPage: React.FC = () => {
                   name="location"
                   value={searchParams.location}
                   onChange={handleInputChange}
-                  placeholder="Tìm kiếm theo địa điểm..."
+                  placeholder="Search by location..."
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -184,7 +184,7 @@ const SearchRoomsPage: React.FC = () => {
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   {[1, 2, 3, 4, 5, 6].map(num => (
-                    <option key={num} value={num}>{num} khách</option>
+                    <option key={num} value={num}>{num} guest{num > 1 ? 's' : ''}</option>
                   ))}
                 </select>
                 <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -201,11 +201,11 @@ const SearchRoomsPage: React.FC = () => {
               className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
             >
               <Filter size={20} className="mr-2" />
-              Bộ lọc
+              Filters
             </button>
             
             <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-              Tìm kiếm
+                              Search
             </button>
           </div>
           
@@ -213,7 +213,7 @@ const SearchRoomsPage: React.FC = () => {
           {showFilters && (
             <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium">Bộ lọc nâng cao</h3>
+                <h3 className="font-medium">Advanced Filters</h3>
                 <button 
                   onClick={() => setShowFilters(false)}
                   className="text-gray-500 hover:text-gray-700"
@@ -252,7 +252,7 @@ const SearchRoomsPage: React.FC = () => {
                 {/* Rating */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Đánh giá tối thiểu
+                    Minimum Rating
                   </label>
                   <div className="flex items-center">
                     <input
@@ -299,8 +299,8 @@ const SearchRoomsPage: React.FC = () => {
       {/* Results */}
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Kết quả tìm kiếm</h1>
-          <p className="text-gray-600">Tìm thấy {filteredRooms.length} phòng phù hợp</p>
+                        <h1 className="text-2xl font-bold text-gray-900">Search Results</h1>
+              <p className="text-gray-600">Found {filteredRooms.length} matching rooms</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -352,7 +352,7 @@ const SearchRoomsPage: React.FC = () => {
                     <span className="text-sm text-gray-500">/đêm</span>
                   </div>
                   <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                    Đặt phòng
+                    Book Room
                   </button>
                 </div>
               </div>

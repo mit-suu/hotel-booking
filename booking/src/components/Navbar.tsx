@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, User, LogOut, Settings, Hotel, BookOpen, ChevronDown } from 'lucide-react';
+import { Menu, X, User, LogOut, Settings, Hotel, BookOpen, ChevronDown, Star } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 
@@ -30,11 +30,11 @@ const Navbar: React.FC = () => {
     try {
       setIsProfileOpen(false);
       await logout();
-      showToast('success', 'Đăng xuất thành công', 'Hẹn gặp lại bạn!');
+      showToast('success', 'Logout successful', 'See you again!');
       navigate('/');
     } catch (error) {
       console.error('Logout failed:', error);
-      showToast('error', 'Lỗi đăng xuất', 'Có lỗi xảy ra khi đăng xuất');
+      showToast('error', 'Logout error', 'An error occurred during logout');
     }
   };
 
@@ -61,32 +61,32 @@ const Navbar: React.FC = () => {
                 to="/"
                 className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
               >
-                Trang chủ
+                Home
               </Link>
               <Link
                 to="/hotels"
                 className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
               >
-                Khách sạn
+                Hotels
               </Link>
               <Link
                 to="/about"
                 className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
               >
-                Giới thiệu
+                About
               </Link>
               <Link
                 to="/contact"
                 className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
               >
-                Liên hệ
+                Contact
               </Link>
               {isAdmin && (
                 <Link
                   to="/admin"
                   className="border-transparent text-blue-600 hover:border-blue-300 hover:text-blue-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                 >
-                  Quản trị
+                  Admin
                 </Link>
               )}
               {isHost && (
@@ -94,7 +94,7 @@ const Navbar: React.FC = () => {
                   to="/host"
                   className="border-transparent text-green-600 hover:border-green-300 hover:text-green-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
                 >
-                  Quản lý Host
+                  Host Management
                 </Link>
               )}
             </div>
@@ -133,18 +133,29 @@ const Navbar: React.FC = () => {
                       >
                         <div className="flex items-center">
                           <User className="h-4 w-4 mr-3 text-gray-400" />
-                          Thông tin cá nhân
+                          Profile
                         </div>
                       </Link>
                       
                       <Link
-                        to="/bookings"
+                        to="/bookings/my"
                         onClick={handleProfileClick}
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                       >
                         <div className="flex items-center">
                           <BookOpen className="h-4 w-4 mr-3 text-gray-400" />
-                          Lịch sử đặt phòng
+                          My Bookings
+                        </div>
+                      </Link>
+                      
+                      <Link
+                        to="/my-reviews"
+                        onClick={handleProfileClick}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center">
+                          <Star className="h-4 w-4 mr-3 text-gray-400" />
+                          My Reviews
                         </div>
                       </Link>
                       
@@ -156,7 +167,7 @@ const Navbar: React.FC = () => {
                         >
                           <div className="flex items-center">
                             <Hotel className="h-4 w-4 mr-3 text-gray-400" />
-                            Quản lý Host
+                            Host Management
                           </div>
                         </Link>
                       )}
@@ -168,7 +179,7 @@ const Navbar: React.FC = () => {
                       >
                         <div className="flex items-center">
                           <Settings className="h-4 w-4 mr-3 text-gray-400" />
-                          Cài đặt
+                          Settings
                         </div>
                       </Link>
                       
@@ -179,7 +190,7 @@ const Navbar: React.FC = () => {
                         >
                           <div className="flex items-center">
                             <LogOut className="h-4 w-4 mr-3 text-red-500" />
-                            Đăng xuất
+                            Logout
                           </div>
                         </button>
                       </div>
@@ -193,13 +204,13 @@ const Navbar: React.FC = () => {
                   to="/login"
                   className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
-                  Đăng nhập
+                  Login
                 </Link>
                 <Link
                   to="/register"
                   className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
                 >
-                  Đăng ký
+                  Sign Up
                 </Link>
               </div>
             )}
@@ -230,28 +241,28 @@ const Navbar: React.FC = () => {
               onClick={() => setIsOpen(false)}
               className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800"
             >
-              Trang chủ
+              Home
             </Link>
             <Link
               to="/hotels"
               onClick={() => setIsOpen(false)}
               className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800"
             >
-              Khách sạn
+              Hotels
             </Link>
             <Link
               to="/about"
               onClick={() => setIsOpen(false)}
               className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800"
             >
-              Giới thiệu
+              About
             </Link>
             <Link
               to="/contact"
               onClick={() => setIsOpen(false)}
               className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800"
             >
-              Liên hệ
+              Contact
             </Link>
             {isAdmin && (
               <Link
@@ -259,7 +270,7 @@ const Navbar: React.FC = () => {
                 onClick={() => setIsOpen(false)}
                 className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-blue-600 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-800"
               >
-                Quản trị
+                Admin
               </Link>
             )}
             {isHost && (
@@ -268,7 +279,7 @@ const Navbar: React.FC = () => {
                 onClick={() => setIsOpen(false)}
                 className="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-green-600 hover:bg-green-50 hover:border-green-300 hover:text-green-800"
               >
-                Quản lý Host
+                Host Management
               </Link>
             )}
           </div>
@@ -293,7 +304,7 @@ const Navbar: React.FC = () => {
                 >
                   <div className="flex items-center">
                     <User className="h-4 w-4 mr-2" />
-                    Thông tin cá nhân
+                    Profile
                   </div>
                 </Link>
                 <Link
@@ -303,7 +314,17 @@ const Navbar: React.FC = () => {
                 >
                   <div className="flex items-center">
                     <BookOpen className="h-4 w-4 mr-2" />
-                    Lịch sử đặt phòng
+                    Booking History
+                  </div>
+                </Link>
+                <Link
+                  to="/my-reviews"
+                  onClick={() => setIsOpen(false)}
+                  className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+                >
+                  <div className="flex items-center">
+                    <Star className="h-4 w-4 mr-2" />
+                    My Reviews
                   </div>
                 </Link>
                 <Link
@@ -313,7 +334,7 @@ const Navbar: React.FC = () => {
                 >
                   <div className="flex items-center">
                     <Settings className="h-4 w-4 mr-2" />
-                    Cài đặt
+                    Settings
                   </div>
                 </Link>
                 <button
@@ -322,7 +343,7 @@ const Navbar: React.FC = () => {
                 >
                   <div className="flex items-center">
                     <LogOut className="h-4 w-4 mr-2" />
-                    Đăng xuất
+                    Logout
                   </div>
                 </button>
               </div>
@@ -335,14 +356,14 @@ const Navbar: React.FC = () => {
                   onClick={() => setIsOpen(false)}
                   className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
                 >
-                  Đăng nhập
+                  Login
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setIsOpen(false)}
                   className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
                 >
-                  Đăng ký
+                  Sign Up
                 </Link>
               </div>
             </div>

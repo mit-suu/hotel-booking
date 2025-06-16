@@ -49,6 +49,14 @@ import HostBookings from './pages/host/HostBookings';
 import HostAnalytics from './pages/host/HostAnalytics';
 import AddProperty from './pages/host/AddProperty';
 import PropertyDetail from './pages/host/PropertyDetail';
+import HostHotels from './pages/host/HostHotels';
+import HostHotelAdd from './pages/host/HostHotelAdd';
+import HostHotelDetail from './pages/host/HostHotelDetail';
+import HostHotelEdit from './pages/host/HostHotelEdit';
+import HostRoomTypes from './pages/host/HostRoomTypes';
+import HostRoomTypeAdd from './pages/host/HostRoomTypeAdd';
+import HostRoomTypeDetail from './pages/host/HostRoomTypeDetail';
+import HostRoomTypeEdit from './pages/host/HostRoomTypeEdit';
 
 // Layout component for public pages
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
@@ -73,6 +81,18 @@ const HomeLayout = ({ children }: { children: React.ReactNode }) => (
     <Footer />
   </div>
 );
+
+// Host routes
+const hostRoutes = [
+  { path: '/host', element: <HostDashboard /> },
+  { path: '/host/hotels', element: <HostHotels /> },
+  { path: '/host/hotels/add', element: <HostHotelAdd /> },
+  { path: '/host/hotels/:id', element: <HostHotelDetail /> },
+  { path: '/host/hotels/edit/:id', element: <HostHotelEdit /> },
+  { path: '/host/bookings', element: <HostBookings /> },
+  { path: '/host/bookings/:id', element: <HostBookingDetail /> },
+  { path: '/host/analytics', element: <HostAnalytics /> }
+];
 
 function App() {
   return (
@@ -180,6 +200,31 @@ function App() {
                 <DashboardLayout type="admin"><AdminHotelDetail /></DashboardLayout>
               </ProtectedRoute>
             } />
+            <Route path="/admin/hotels/edit/:id" element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <DashboardLayout type="admin"><AdminHotelEdit /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/room-types" element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <DashboardLayout type="admin"><AdminRoomTypes /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/room-types/:id" element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <DashboardLayout type="admin"><AdminRoomTypeDetail /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/room-types/edit/:id" element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <DashboardLayout type="admin"><AdminRoomTypeEdit /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/room-types/add" element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <DashboardLayout type="admin"><AdminRoomTypeAdd /></DashboardLayout>
+              </ProtectedRoute>
+            } />
             <Route path="/admin/users" element={
               <ProtectedRoute requiredRole="ADMIN">
                 <DashboardLayout type="admin"><AdminUsers /></DashboardLayout>
@@ -232,9 +277,54 @@ function App() {
                 <DashboardLayout type="host"><PropertyDetail /></DashboardLayout>
               </ProtectedRoute>
             } />
+            <Route path="/host/hotels" element={
+              <ProtectedRoute requiredRole="HOST">
+                <DashboardLayout type="host"><HostHotels /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/host/hotels/add" element={
+              <ProtectedRoute requiredRole="HOST">
+                <DashboardLayout type="host"><HostHotelAdd /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/host/hotels/:id" element={
+              <ProtectedRoute requiredRole="HOST">
+                <DashboardLayout type="host"><HostHotelDetail /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/host/hotels/edit/:id" element={
+              <ProtectedRoute requiredRole="HOST">
+                <DashboardLayout type="host"><HostHotelEdit /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/host/room-types" element={
+              <ProtectedRoute requiredRole="HOST">
+                <DashboardLayout type="host"><HostRoomTypes /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/host/room-types/add" element={
+              <ProtectedRoute requiredRole="HOST">
+                <DashboardLayout type="host"><HostRoomTypeAdd /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/host/room-types/:id" element={
+              <ProtectedRoute requiredRole="HOST">
+                <DashboardLayout type="host"><HostRoomTypeDetail /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/host/room-types/edit/:id" element={
+              <ProtectedRoute requiredRole="HOST">
+                <DashboardLayout type="host"><HostRoomTypeEdit /></DashboardLayout>
+              </ProtectedRoute>
+            } />
             <Route path="/host/bookings" element={
               <ProtectedRoute requiredRole="HOST">
                 <DashboardLayout type="host"><HostBookings /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/host/bookings/:id" element={
+              <ProtectedRoute requiredRole="HOST">
+                <DashboardLayout type="host"><HostBookingDetail /></DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="/host/analytics" element={
