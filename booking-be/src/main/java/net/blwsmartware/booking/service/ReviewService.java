@@ -18,6 +18,13 @@ public interface ReviewService {
     ReviewResponse getReviewById(UUID id);
     void deleteReview(UUID id);
 
+
+    // Statistics
+    Long getTotalReviewsCount();
+    Long getReviewsCountByHotel(UUID hotelId);
+    Long getReviewsCountByUser(UUID userId);
+    Double getAverageRatingByHotel(UUID hotelId);
+
     // Hotel-specific operations
     DataResponse<ReviewResponse> getReviewsByHotel(UUID hotelId, Integer pageNumber, Integer pageSize, String sortBy);
 
@@ -32,11 +39,7 @@ public interface ReviewService {
     DataResponse<ReviewResponse> getReviewsByRating(Integer rating, Integer pageNumber, Integer pageSize, String sortBy);
     DataResponse<ReviewResponse> searchReviews(String keyword, Integer pageNumber, Integer pageSize, String sortBy);
 
-    // Statistics
-    Long getTotalReviewsCount();
-    Long getReviewsCountByHotel(UUID hotelId);
-    Long getReviewsCountByUser(UUID userId);
-    Double getAverageRatingByHotel(UUID hotelId);
+
 
     // Validation methods
     boolean hasUserReviewedHotel(UUID userId, UUID hotelId);
