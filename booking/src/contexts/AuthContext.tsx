@@ -18,6 +18,7 @@ interface User {
   }>;
   active: boolean;
   emailVerified?: boolean;
+  hostRequested?: boolean;
 }
 
 interface AuthContextType {

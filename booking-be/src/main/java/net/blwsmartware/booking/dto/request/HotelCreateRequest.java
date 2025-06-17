@@ -31,13 +31,13 @@ public class HotelCreateRequest {
     @Size(max = 100, message = "Country name cannot exceed 100 characters")
     String country;
 
-    @Pattern(regexp = "^[+]?[0-9\\s\\-\\(\\)]{10,15}$", message = "Invalid phone number format")
+    @Pattern(regexp = "^$|^[+]?[0-9\\s\\-\\(\\)]{10,15}$", message = "Invalid phone number format")
     String phone;
 
     @Email(message = "Invalid email format")
     String email;
 
-    @Pattern(regexp = "^(https?://)?(www\\.)?[a-zA-Z0-9\\-\\.]+\\.[a-zA-Z]{2,}(/.*)?$",
+    @Pattern(regexp = "^$|^(https?://)?(www\\.)?[a-zA-Z0-9\\-\\.]+\\.[a-zA-Z]{2,}(/.*)?$",
             message = "Invalid website URL format")
     String website;
 
@@ -45,10 +45,10 @@ public class HotelCreateRequest {
     @Max(value = 5, message = "Star rating cannot exceed 5")
     Integer starRating;
 
-    @Pattern(regexp = "^([01]?[0-9]|2[0-3]):[0-5][0-9]$", message = "Check-in time must be in HH:mm format")
+    @Pattern(regexp = "^$|^([01]?[0-9]|2[0-3]):[0-5][0-9]$", message = "Check-in time must be in HH:mm format")
     String checkInTime;
 
-    @Pattern(regexp = "^([01]?[0-9]|2[0-3]):[0-5][0-9]$", message = "Check-out time must be in HH:mm format")
+    @Pattern(regexp = "^$|^([01]?[0-9]|2[0-3]):[0-5][0-9]$", message = "Check-out time must be in HH:mm format")
     String checkOutTime;
 
     String imageUrl;

@@ -50,7 +50,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-3">
               <li className="flex items-start">
                 <MapPin size={18} className="mr-3 mt-1 text-blue-400" />
-                <span className="text-gray-400">123 Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh</span>
+                <span className="text-gray-400">123 Nguyen Hue, District 1, Ho Chi Minh City</span>
               </li>
               <li className="flex items-center">
                 <Phone size={18} className="mr-3 text-blue-400" />
@@ -68,7 +68,7 @@ const Footer: React.FC = () => {
         {/* Copyright */}
         <div className="border-t border-gray-800 pt-6 text-center">
           <p className="text-gray-500">
-            &copy; {new Date().getFullYear()} FBooking. Tất cả các quyền được bảo lưu.
+            &copy; {new Date().getFullYear()} FBooking. All rights reserved.
           </p>
         </div>
       </div>
