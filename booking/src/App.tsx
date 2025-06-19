@@ -19,6 +19,10 @@ import HotelsPage from './pages/HotelsPage';
 import HotelDetailPage from './pages/HotelDetailPage';
 import BookingHistoryPage from './pages/BookingHistoryPage';
 import BookingDetailPage from './pages/BookingDetailPage';
+import BookingConfirmationPage from './pages/BookingConfirmationPage';
+import BookingFormPage from './pages/BookingFormPage';
+import MyReviews from './pages/MyReviews';
+import MyBookingsPage from './pages/MyBookingsPage';
 
 // Admin pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -26,7 +30,7 @@ import AdminCommissions from './pages/admin/AdminCommissions';
 import AdminInvoices from './pages/admin/AdminInvoices';
 import AdminInvoiceDetail from './pages/admin/AdminInvoiceDetail';
 import AdminPromotions from './pages/admin/AdminPromotions';
-import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminAnalytics from './pages/admin/AdminAnalytics'; 
 import AdminCommissionPayments from './pages/admin/AdminCommissionPayments';
 import AdminCommissionPaymentDetail from './pages/admin/AdminCommissionPaymentDetail';
 import AdminCommissionPaymentCreate from './pages/admin/AdminCommissionPaymentCreate';
@@ -35,6 +39,11 @@ import AdminBookingDetail from './pages/admin/AdminBookingDetail';
 import AdminHotels from './pages/admin/AdminHotels';
 import AdminHotelDetail from './pages/admin/AdminHotelDetail';
 import AdminHotelAdd from './pages/admin/AdminHotelAdd';
+import AdminHotelEdit from './pages/admin/AdminHotelEdit';
+import AdminRoomTypes from './pages/admin/AdminRoomTypes';
+import AdminRoomTypeDetail from './pages/admin/AdminRoomTypeDetail';
+import AdminRoomTypeEdit from './pages/admin/AdminRoomTypeEdit';
+import AdminRoomTypeAdd from './pages/admin/AdminRoomTypeAdd';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminUserDetail from './pages/admin/AdminUserDetail';
 import AdminUserEdit from './pages/admin/AdminUserEdit';
@@ -46,6 +55,7 @@ import AdminSettings from './pages/admin/AdminSettings';
 import HostDashboard from './pages/host/HostDashboard';
 import HostProperties from './pages/host/HostProperties';
 import HostBookings from './pages/host/HostBookings';
+import HostBookingDetail from './pages/host/HostBookingDetail';
 import HostAnalytics from './pages/host/HostAnalytics';
 import AddProperty from './pages/host/AddProperty';
 import PropertyDetail from './pages/host/PropertyDetail';
@@ -123,9 +133,29 @@ function App() {
                 <PublicLayout><BookingHistoryPage /></PublicLayout>
               </ProtectedRoute>
             } />
+            <Route path="/bookings/my" element={
+              <ProtectedRoute requireAuth={true}>
+                <PublicLayout><MyBookingsPage /></PublicLayout>
+              </ProtectedRoute>
+            } />
             <Route path="/bookings/:id" element={
               <ProtectedRoute requireAuth={true}>
                 <PublicLayout><BookingDetailPage /></PublicLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/bookings/confirmation/:bookingId" element={
+              <ProtectedRoute requireAuth={true}>
+                <PublicLayout><BookingConfirmationPage /></PublicLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/booking" element={
+              <ProtectedRoute requireAuth={true}>
+                <PublicLayout><BookingFormPage /></PublicLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/my-reviews" element={
+              <ProtectedRoute requireAuth={true}>
+                <PublicLayout><MyReviews /></PublicLayout>
               </ProtectedRoute>
             } />
 
