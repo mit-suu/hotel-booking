@@ -10,8 +10,8 @@ import net.blwsmartware.booking.dto.response.RoomTypeResponse;
 import net.blwsmartware.booking.entity.Hotel;
 import net.blwsmartware.booking.entity.RoomType;
 import net.blwsmartware.booking.entity.User;
-import net.blwsmartware.booking.exception.AppException;
-import net.blwsmartware.booking.exception.ErrorCode;
+import net.blwsmartware.booking.exception.AppRuntimeException;
+import net.blwsmartware.booking.enums.ErrorResponse;
 import net.blwsmartware.booking.mapper.RoomTypeMapper;
 import net.blwsmartware.booking.repository.HotelRepository;
 import net.blwsmartware.booking.repository.RoomTypeRepository;
@@ -83,8 +83,8 @@ public class RoomTypeServiceImpl implements RoomTypeService {
         log.info("Getting room type by ID: {}", id);
 
         RoomType roomType = roomTypeRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.ROOM_TYPE_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.ROOM_TYPE_NOT_FOUND));
+        
         return roomTypeMapper.toResponse(roomType);
     }
 
@@ -96,11 +96,11 @@ public class RoomTypeServiceImpl implements RoomTypeService {
 
         // Validate hotel exists
         Hotel hotel = hotelRepository.findById(request.getHotelId())
-                .orElseThrow(() -> new AppException(ErrorCode.HOTEL_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
+        
         // Check if room type name already exists for this hotel
         if (roomTypeRepository.existsByNameAndHotel(request.getName(), hotel)) {
-            throw new AppException(ErrorCode.ROOM_TYPE_NAME_ALREADY_EXISTS);
+            throw new AppRuntimeException(ErrorResponse.ROOM_TYPE_NAME_ALREADY_EXISTS);
         }
 
         // Convert request to entity
@@ -122,12 +122,12 @@ public class RoomTypeServiceImpl implements RoomTypeService {
         log.info("Updating room type: {}", id);
 
         RoomType roomType = roomTypeRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.ROOM_TYPE_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.ROOM_TYPE_NOT_FOUND));
+        
         // Check if new name conflicts with existing room types for the same hotel
         if (request.getName() != null && !request.getName().equals(roomType.getName())) {
             if (roomTypeRepository.existsByNameAndHotel(request.getName(), roomType.getHotel())) {
-                throw new AppException(ErrorCode.ROOM_TYPE_NAME_ALREADY_EXISTS);
+                throw new AppRuntimeException(ErrorResponse.ROOM_TYPE_NAME_ALREADY_EXISTS);
             }
         }
 
@@ -147,8 +147,8 @@ public class RoomTypeServiceImpl implements RoomTypeService {
         log.info("Deleting room type: {}", id);
 
         RoomType roomType = roomTypeRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.ROOM_TYPE_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.ROOM_TYPE_NOT_FOUND));
+        
         // TODO: Check if room type has any bookings when booking entity is implemented
         // For now, we'll allow deletion
 
@@ -161,8 +161,8 @@ public class RoomTypeServiceImpl implements RoomTypeService {
 
         // Validate hotel exists
         hotelRepository.findById(hotelId)
-                .orElseThrow(() -> new AppException(ErrorCode.HOTEL_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
+        
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
         Page<RoomType> roomTypePage = roomTypeRepository.findByHotelId(hotelId, pageable);
 
@@ -179,8 +179,8 @@ public class RoomTypeServiceImpl implements RoomTypeService {
 
         // Validate hotel exists
         hotelRepository.findById(hotelId)
-                .orElseThrow(() -> new AppException(ErrorCode.HOTEL_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
+        
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
         Page<RoomType> roomTypePage = roomTypeRepository.findByHotelIdAndAvailableRoomsGreaterThan(hotelId, 0, pageable);
 
@@ -259,15 +259,15 @@ public class RoomTypeServiceImpl implements RoomTypeService {
     public Long getRoomTypesCountByHotel(UUID hotelId) {
         // Validate hotel exists
         hotelRepository.findById(hotelId)
-                .orElseThrow(() -> new AppException(ErrorCode.HOTEL_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
+        
         return roomTypeRepository.countByHotelId(hotelId);
     }
 
     @Override
     public boolean isRoomTypeNameExistsForHotel(String name, UUID hotelId) {
         Hotel hotel = hotelRepository.findById(hotelId)
-                .orElseThrow(() -> new AppException(ErrorCode.HOTEL_NOT_FOUND));
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
         return roomTypeRepository.existsByNameAndHotel(name, hotel);
     }
 
@@ -276,7 +276,7 @@ public class RoomTypeServiceImpl implements RoomTypeService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String userId = authentication.getName();
         return userRepository.findById(UUID.fromString(userId))
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
     }
 
     private UUID getCurrentUserId() {
@@ -311,10 +311,10 @@ public class RoomTypeServiceImpl implements RoomTypeService {
 
         // Validate hotel exists and belongs to the host
         Hotel hotel = hotelRepository.findById(hotelId)
-                .orElseThrow(() -> new AppException(ErrorCode.HOTEL_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
+        
         if (!hotel.getOwner().getId().equals(hostId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppRuntimeException(ErrorResponse.UNAUTHORIZED);
         }
 
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
@@ -335,11 +335,11 @@ public class RoomTypeServiceImpl implements RoomTypeService {
         UUID hostId = getCurrentUserId();
 
         RoomType roomType = roomTypeRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.ROOM_TYPE_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.ROOM_TYPE_NOT_FOUND));
+        
         // Validate room type belongs to the host
         if (!roomType.getHotel().getOwner().getId().equals(hostId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppRuntimeException(ErrorResponse.UNAUTHORIZED);
         }
 
         return roomTypeMapper.toResponse(roomType);
@@ -356,15 +356,15 @@ public class RoomTypeServiceImpl implements RoomTypeService {
 
         // Validate hotel exists and belongs to the host
         Hotel hotel = hotelRepository.findById(request.getHotelId())
-                .orElseThrow(() -> new AppException(ErrorCode.HOTEL_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
+        
         if (!hotel.getOwner().getId().equals(hostId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppRuntimeException(ErrorResponse.UNAUTHORIZED);
         }
 
         // Check if room type name already exists for this hotel
         if (roomTypeRepository.existsByNameAndHotel(request.getName(), hotel)) {
-            throw new AppException(ErrorCode.ROOM_TYPE_NAME_ALREADY_EXISTS);
+            throw new AppRuntimeException(ErrorResponse.ROOM_TYPE_NAME_ALREADY_EXISTS);
         }
 
         // Convert request to entity
@@ -388,17 +388,17 @@ public class RoomTypeServiceImpl implements RoomTypeService {
         UUID hostId = getCurrentUserId();
 
         RoomType roomType = roomTypeRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.ROOM_TYPE_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.ROOM_TYPE_NOT_FOUND));
+        
         // Validate room type belongs to the host
         if (!roomType.getHotel().getOwner().getId().equals(hostId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppRuntimeException(ErrorResponse.UNAUTHORIZED);
         }
 
         // Check if new name conflicts with existing room types for the same hotel
         if (request.getName() != null && !request.getName().equals(roomType.getName())) {
             if (roomTypeRepository.existsByNameAndHotel(request.getName(), roomType.getHotel())) {
-                throw new AppException(ErrorCode.ROOM_TYPE_NAME_ALREADY_EXISTS);
+                throw new AppRuntimeException(ErrorResponse.ROOM_TYPE_NAME_ALREADY_EXISTS);
             }
         }
 
@@ -420,11 +420,11 @@ public class RoomTypeServiceImpl implements RoomTypeService {
         UUID hostId = getCurrentUserId();
 
         RoomType roomType = roomTypeRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.ROOM_TYPE_NOT_FOUND));
-
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.ROOM_TYPE_NOT_FOUND));
+        
         // Validate room type belongs to the host
         if (!roomType.getHotel().getOwner().getId().equals(hostId)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+            throw new AppRuntimeException(ErrorResponse.UNAUTHORIZED);
         }
 
         // TODO: Check if room type has any bookings when booking entity is implemented

@@ -9,11 +9,11 @@ const AboutPage: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Về FBooking
+              About FBooking
             </h1>
             <p className="text-xl opacity-90">
-              Chúng tôi là nền tảng đặt phòng khách sạn hàng đầu tại Việt Nam, 
-              mang đến trải nghiệm đặt phòng tuyệt vời với giá cả tốt nhất.
+              We are the leading hotel booking platform in Vietnam, 
+              providing excellent booking experiences at the best prices.
             </p>
           </div>
         </div>
@@ -25,19 +25,19 @@ const AboutPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="text-center">
               <div className="text-4xl font-bold text-blue-600 mb-2">1M+</div>
-              <div className="text-gray-600">Khách hàng</div>
+              <div className="text-gray-600">Customers</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold text-blue-600 mb-2">10K+</div>
-              <div className="text-gray-600">Khách sạn đối tác</div>
+              <div className="text-gray-600">Partner Hotels</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold text-blue-600 mb-2">63</div>
-              <div className="text-gray-600">Tỉnh thành</div>
+              <div className="text-gray-600">Provinces</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold text-blue-600 mb-2">4.8/5</div>
-              <div className="text-gray-600">Đánh giá trung bình</div>
+              <div className="text-gray-600">Average Rating</div>
             </div>
           </div>
         </div>
@@ -47,32 +47,32 @@ const AboutPage: React.FC = () => {
       <div className="py-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Tại sao chọn chúng tôi?</h2>
+            <h2 className="text-3xl font-bold mb-4">Why Choose Us?</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              FBooking cam kết mang đến trải nghiệm đặt phòng tốt nhất cho khách hàng
+              FBooking is committed to providing the best booking experience for customers
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <FeatureCard
               icon={<Users className="h-8 w-8" />}
-              title="Dịch vụ khách hàng 24/7"
-              description="Đội ngũ hỗ trợ chuyên nghiệp, sẵn sàng phục vụ mọi lúc"
+              title="24/7 Customer Service"
+              description="Professional support team, ready to serve at all times"
             />
             <FeatureCard
               icon={<Award className="h-8 w-8" />}
-              title="Giá tốt nhất"
-              description="Đảm bảo giá cả cạnh tranh nhất trên thị trường"
+              title="Best Prices"
+              description="Guaranteed most competitive prices in the market"
             />
             <FeatureCard
               icon={<Clock className="h-8 w-8" />}
-              title="Đặt phòng nhanh chóng"
-              description="Quy trình đặt phòng đơn giản, tiết kiệm thời gian"
+              title="Quick Booking"
+              description="Simple booking process, saving time"
             />
             <FeatureCard
               icon={<Shield className="h-8 w-8" />}
-              title="An toàn & Bảo mật"
-              description="Bảo vệ thông tin và giao dịch của khách hàng"
+              title="Safe & Secure"
+              description="Protecting customer information and transactions"
             />
           </div>
         </div>
@@ -82,26 +82,26 @@ const AboutPage: React.FC = () => {
       <div className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Đội ngũ của chúng tôi</h2>
+            <h2 className="text-3xl font-bold mb-4">Our Team</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Những người luôn nỗ lực để mang đến trải nghiệm tốt nhất cho khách hàng
+              People who always strive to bring the best experience to customers
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <TeamMember
-              name="Nguyễn Văn A"
-              position="Giám đốc điều hành"
+              name="John Smith"
+              position="Chief Executive Officer"
               image="https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg"
             />
             <TeamMember
-              name="Trần Thị B"
-              position="Giám đốc marketing"
+              name="Sarah Johnson"
+              position="Marketing Director"
               image="https://images.pexels.com/photos/3796217/pexels-photo-3796217.jpeg"
             />
             <TeamMember
-              name="Lê Văn C"
-              position="Trưởng phòng kỹ thuật"
+              name="Michael Brown"
+              position="Head of Technology"
               image="https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg"
             />
           </div>

@@ -1,7 +1,17 @@
 import axios from 'axios';
+import {
+  VoucherRequest,
+  VoucherUpdateRequest,
+  VoucherResponse,
+  VoucherValidationRequest,
+  VoucherValidationResponse,
+  VoucherFilterParams,
+  VoucherStatsResponse,
+  VoucherApiResponse,
+  VoucherListResponse
+} from '../types/voucher';
 
 const API_URL = 'http://localhost:8080';  // Direct API endpoint
-//const API_URL = 'https://bk.blwsmartware.net';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -86,14 +96,12 @@ export interface HotelCreateRequest {
   checkOutTime?: string;
   imageUrl?: string;
   pricePerNight?: number;
-  latitude?: number;
-  longitude?: number;
   amenities?: string;
   cancellationPolicy?: string;
   petPolicy?: string;
   ownerId?: string;
-  active?: boolean;
-  featured?: boolean;
+  isActive?: boolean;
+  isFeatured?: boolean;
 }
 
 export interface HotelUpdateRequest {
@@ -110,13 +118,38 @@ export interface HotelUpdateRequest {
   checkOutTime?: string;
   imageUrl?: string;
   pricePerNight?: number;
-  latitude?: number;
-  longitude?: number;
   amenities?: string;
   cancellationPolicy?: string;
   petPolicy?: string;
+  ownerId?: string;
   active?: boolean;
-  featured?: boolean;
+  featured?: boolean; // Note: Only admin can modify this field
+}
+
+
+
+export interface HotelFilterParams {
+  city?: string;
+  country?: string;
+  starRating?: number;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  minPrice?: number;
+  maxPrice?: number;
+  amenities?: string; // Comma-separated amenities string for backend
+  pageNumber?: number;
+  pageSize?: number;
+  sortBy?: string;
+}
+
+export interface HostHotelFilterParams {
+  city?: string;
+  country?: string;
+  starRating?: number;
+  isActive?: boolean;
+  pageNumber?: number;
+  pageSize?: number;
+  sortBy?: string;
 }
 
 export interface HotelResponse {
@@ -136,8 +169,6 @@ export interface HotelResponse {
   active: boolean;
   featured: boolean;
   pricePerNight?: number;
-  latitude?: number;
-  longitude?: number;
   amenities?: string;
   cancellationPolicy?: string;
   petPolicy?: string;
@@ -207,6 +238,7 @@ export interface UserResponse {
     }>;
     active: boolean;
     emailVerified?: boolean;
+    hostRequested?: boolean;
   }
 }
 
@@ -285,9 +317,15 @@ export const userAPI = {
     api.put<UserResponse>(`/users/admin/${id}/password`, data),
   updateUserRoles: (id: string, data: RoleUpdateRequest) =>
     api.put<UserResponse>(`/users/role/${id}`, data),
+  requestHost: () =>
+    api.post<UserResponse>('/users/request-host'),
+  approveHostRequest: (id: string) =>
+    api.put<UserResponse>(`/users/approve-host/${id}`),
   deleteUser: (id: string) => api.delete(`/users/${id}`),
   getAllUsers: (pageNumber = 0, pageSize = 5, sortBy = 'id') =>
-    api.get('/users', { params: { pageNumber, pageSize, sortBy } })
+    api.get('/users', { params: { pageNumber, pageSize, sortBy } }),
+  getHosts: (pageNumber = 0, pageSize = 100, sortBy = 'name') =>
+    api.get('/users/hosts', { params: { pageNumber, pageSize, sortBy } })
 };
 
 // Role APIs
@@ -300,78 +338,123 @@ export const roleAPI = {
 
 // Hotel APIs
 export const hotelAPI = {
-  // Admin operations
-  getAllHotels: (pageNumber = 0, pageSize = 10, sortBy = 'createdAt') =>
+  // ===== PUBLIC APIs =====
+  getHotelDetails: (id: string) =>
+    api.get(`/hotels/${id}`),
+
+  searchHotels: (keyword: string, pageNumber = 0, pageSize = 10, sortBy = 'name') =>
+    api.get('/hotels/search', { params: { keyword, pageNumber, pageSize, sortBy } }),
+
+  getHotelsByCity: (city: string, pageNumber = 0, pageSize = 10, sortBy = 'name') =>
+    api.get(`/hotels/city/${city}`, { params: { pageNumber, pageSize, sortBy } }),
+
+  getHotelsByCountry: (country: string, pageNumber = 0, pageSize = 10, sortBy = 'name') =>
+    api.get(`/hotels/country/${country}`, { params: { pageNumber, pageSize, sortBy } }),
+
+  getHotelsByStarRating: (starRating: number, pageNumber = 0, pageSize = 10, sortBy = 'name') =>
+    api.get(`/hotels/rating/${starRating}`, { params: { pageNumber, pageSize, sortBy } }),
+
+  getActiveHotels: (pageNumber = 0, pageSize = 10, sortBy = 'name') =>
+    api.get('/hotels/active', { params: { pageNumber, pageSize, sortBy } }),
+
+  getFeaturedHotels: (pageNumber = 0, pageSize = 10, sortBy = 'name') =>
+    api.get('/hotels/featured', { params: { pageNumber, pageSize, sortBy } }),
+
+  // New public search with filters API
+  searchHotelsWithFilters: (params: HotelFilterParams) =>
+    api.get('/hotels/search/filters', { params }),
+
+  // Get all available amenities from hotels
+  getAvailableAmenities: () =>
+    api.get('/hotels/amenities'),
+
+
+
+  // ===== ADMIN APIs =====
+  getAdminHotels: (pageNumber = 0, pageSize = 10, sortBy = 'id') =>
     api.get('/hotels/admin', { params: { pageNumber, pageSize, sortBy } }),
-  
-  getAllHotelsWithFilters: (params: {
-    city?: string;
-    country?: string;
-    starRating?: number;
-    active?: boolean;
-    featured?: boolean;
-    minPrice?: number;
-    maxPrice?: number;
-    pageNumber?: number;
-    pageSize?: number;
-    sortBy?: string;
-  }) => api.get('/hotels/admin/filter', { params }),
-  
-  getHotelById: (id: string) => api.get(`/hotels/${id}`),
-  
-  createHotel: (data: HotelCreateRequest) =>
+
+  getAdminHotelsWithFilters: (params: HotelFilterParams) => 
+    api.get('/hotels/admin/filter', { params }),
+
+  createHotelByAdmin: (data: HotelCreateRequest) =>
     api.post('/hotels/admin', data),
-  
-  updateHotel: (id: string, data: HotelUpdateRequest) =>
+
+  updateHotelByAdmin: (id: string, data: HotelUpdateRequest) =>
     api.put(`/hotels/admin/${id}`, data),
-  
-  deleteHotel: (id: string) => api.delete(`/hotels/admin/${id}`),
-  
+
+  deleteHotelByAdmin: (id: string) =>
+    api.delete(`/hotels/admin/${id}`),
+
   toggleHotelStatus: (id: string) =>
     api.put(`/hotels/admin/${id}/toggle-status`),
-  
-  toggleFeaturedStatus: (id: string) =>
+
+  toggleHotelFeatured: (id: string) =>
     api.put(`/hotels/admin/${id}/toggle-featured`),
-  
-  // Search and filter operations
-  searchHotels: (keyword: string, pageNumber = 0, pageSize = 10, sortBy = 'createdAt') =>
-    api.get('/hotels/search', { params: { keyword, pageNumber, pageSize, sortBy } }),
-  
-  getHotelsByCity: (city: string, pageNumber = 0, pageSize = 10, sortBy = 'createdAt') =>
-    api.get('/hotels/city', { params: { city, pageNumber, pageSize, sortBy } }),
-  
-  getHotelsByCountry: (country: string, pageNumber = 0, pageSize = 10, sortBy = 'createdAt') =>
-    api.get('/hotels/country', { params: { country, pageNumber, pageSize, sortBy } }),
-  
-  getHotelsByStarRating: (starRating: number, pageNumber = 0, pageSize = 10, sortBy = 'createdAt') =>
-    api.get('/hotels/star-rating', { params: { starRating, pageNumber, pageSize, sortBy } }),
-  
-  getActiveHotels: (pageNumber = 0, pageSize = 10, sortBy = 'createdAt') =>
-    api.get('/hotels/active', { params: { pageNumber, pageSize, sortBy } }),
-  
-  getFeaturedHotels: (pageNumber = 0, pageSize = 10, sortBy = 'createdAt') =>
-    api.get('/hotels/featured', { params: { pageNumber, pageSize, sortBy } }),
-  
-  getHotelsByOwner: (ownerId: string, pageNumber = 0, pageSize = 10, sortBy = 'createdAt') =>
+
+  getHotelsByOwner: (ownerId: string, pageNumber = 0, pageSize = 10, sortBy = 'id') =>
     api.get(`/hotels/admin/owner/${ownerId}`, { params: { pageNumber, pageSize, sortBy } }),
-  
-  getMyHotels: (pageNumber = 0, pageSize = 10, sortBy = 'createdAt') =>
-    api.get('/hotels/my', { params: { pageNumber, pageSize, sortBy } }),
-  
-  getHotelsNearLocation: (params: {
-    latitude: number;
-    longitude: number;
-    radiusKm: number;
-    pageNumber?: number;
-    pageSize?: number;
-    sortBy?: string;
-  }) => api.get('/hotels/near', { params }),
-  
-  // Statistics
-  getTotalHotelsCount: () => api.get('/hotels/admin/stats/total'),
-  getActiveHotelsCount: () => api.get('/hotels/admin/stats/active'),
-  getFeaturedHotelsCount: () => api.get('/hotels/admin/stats/featured'),
-  getHotelsCountByOwner: (ownerId: string) => api.get(`/hotels/admin/stats/owner/${ownerId}`)
+
+  // Admin Statistics
+  getTotalHotelsCount: () =>
+    api.get('/hotels/admin/stats/total'),
+
+  getActiveHotelsCount: () =>
+    api.get('/hotels/admin/stats/active'),
+
+  getFeaturedHotelsCount: () =>
+    api.get('/hotels/admin/stats/featured'),
+
+  getHotelsCountByOwner: (ownerId: string) =>
+    api.get(`/hotels/admin/stats/owner/${ownerId}`),
+
+  // ===== HOST APIs =====
+  getMyHotels: (pageNumber = 0, pageSize = 10, sortBy = 'id') =>
+    api.get('/hotels/host', { params: { pageNumber, pageSize, sortBy } }),
+
+  getMyHotelsWithFilters: (params: HostHotelFilterParams) => 
+    api.get('/hotels/host/filter', { params }),
+
+  getMyHotelById: (id: string) =>
+    api.get(`/hotels/host/${id}`),
+
+  createMyHotel: (data: HotelCreateRequest) =>
+    api.post('/hotels/host', data),
+
+  updateMyHotel: (id: string, data: Omit<HotelUpdateRequest, 'featured'>) =>
+    api.put(`/hotels/host/${id}`, data),
+
+  deleteMyHotel: (id: string) =>
+    api.delete(`/hotels/host/${id}`),
+
+  toggleMyHotelStatus: (id: string) =>
+    api.put(`/hotels/host/${id}/toggle-status`),
+
+  // Host Statistics
+  getMyHotelsCount: () =>
+    api.get('/hotels/host/stats/total'),
+
+  getMyActiveHotelsCount: () =>
+    api.get('/hotels/host/stats/active'),
+
+  // ===== DEPRECATED - Keep for backward compatibility =====
+  getAllHotels: (pageNumber = 0, pageSize = 10) =>
+    api.get('/hotels/active', { params: { pageNumber, pageSize } }),
+
+  getAdminHotelById: (id: string) =>
+    api.get(`/hotels/${id}`),
+
+  createHostHotel: (data: HotelCreateRequest) =>
+    api.post('/hotels/host', data),
+
+  getHostHotelById: (id: string) =>
+    api.get(`/hotels/host/${id}`),
+
+  updateHostHotel: (id: string, data: HotelUpdateRequest) =>
+    api.put(`/hotels/host/${id}`, data),
+
+  deleteHostHotel: (id: string) =>
+    api.delete(`/hotels/host/${id}`)
 };
 
 // Room Type Types
@@ -386,7 +469,6 @@ export interface RoomTypeCreateRequest {
   imageUrl?: string;
   amenities?: string;
   hotelId: string;
-  isActive?: boolean;
 }
 
 export interface RoomTypeUpdateRequest {
@@ -399,7 +481,7 @@ export interface RoomTypeUpdateRequest {
   totalRooms?: number;
   imageUrl?: string;
   amenities?: string;
-  isActive?: boolean;
+  hotelId: string;
 }
 
 export interface RoomTypeResponse {
@@ -413,7 +495,6 @@ export interface RoomTypeResponse {
   totalRooms: number;
   availableRooms: number;
   imageUrl?: string;
-  isActive: boolean;
   amenities?: string;
   hotelId: string;
   hotelName?: string;
@@ -431,7 +512,6 @@ export const roomTypeAPI = {
   
   getAllRoomTypesWithFilters: (params: {
     hotelId?: string;
-    isActive?: boolean;
     minOccupancy?: number;
     maxOccupancy?: number;
     minPrice?: number;
@@ -451,15 +531,9 @@ export const roomTypeAPI = {
   
   deleteRoomType: (id: string) => api.delete(`/room-types/admin/${id}`),
   
-  toggleRoomTypeStatus: (id: string) =>
-    api.put(`/room-types/admin/${id}/toggle-status`),
-  
   // Hotel-specific operations
   getRoomTypesByHotel: (hotelId: string, pageNumber = 0, pageSize = 10, sortBy = 'name') =>
     api.get(`/room-types/hotel/${hotelId}`, { params: { pageNumber, pageSize, sortBy } }),
-  
-  getActiveRoomTypesByHotel: (hotelId: string, pageNumber = 0, pageSize = 10, sortBy = 'name') =>
-    api.get(`/room-types/hotel/${hotelId}/active`, { params: { pageNumber, pageSize, sortBy } }),
   
   getAvailableRoomTypesByHotel: (hotelId: string, pageNumber = 0, pageSize = 10, sortBy = 'pricePerNight') =>
     api.get(`/room-types/hotel/${hotelId}/available`, { params: { pageNumber, pageSize, sortBy } }),
@@ -485,8 +559,37 @@ export const roomTypeAPI = {
   // Statistics
   getTotalRoomTypesCount: () => api.get('/room-types/admin/stats/total'),
   getActiveRoomTypesCount: () => api.get('/room-types/admin/stats/active'),
-  getRoomTypesCountByHotel: (hotelId: string) => api.get(`/room-types/admin/stats/hotel/${hotelId}`)
+  getRoomTypesCountByHotel: (hotelId: string) => api.get(`/room-types/admin/stats/hotel/${hotelId}`),
+  toggleRoomTypeStatus: (roomTypeId: string) =>
+    api.patch(`/room-types/admin/${roomTypeId}/toggle-status`)
 };
+
+// Host Room Type APIs
+export const hostRoomTypeAPI = {
+  // Get all room types for current host
+  getMyRoomTypes: (pageNumber = 0, pageSize = 10, sortBy = 'name') =>
+    api.get('/room-types/host/my-room-types', { params: { pageNumber, pageSize, sortBy } }),
+  
+  // Get room types for specific hotel (host must own the hotel)
+  getMyHotelRoomTypes: (hotelId: string, pageNumber = 0, pageSize = 10, sortBy = 'name') =>
+    api.get(`/room-types/host/hotel/${hotelId}/room-types`, { params: { pageNumber, pageSize, sortBy } }),
+  
+  // Get specific room type by ID (host must own the hotel)
+  getMyRoomTypeById: (id: string) => api.get(`/room-types/host/${id}`),
+  
+  // Create new room type for host's hotel
+  createMyRoomType: (data: RoomTypeCreateRequest) =>
+    api.post('/room-types/host', data),
+  
+  // Update room type (host must own the hotel)
+  updateMyRoomType: (id: string, data: RoomTypeUpdateRequest) =>
+    api.put(`/room-types/host/${id}`, data),
+  
+  // Delete room type (host must own the hotel)
+  deleteMyRoomType: (id: string) => api.delete(`/room-types/host/${id}`)
+};
+
+
 
 // Review Types
 export interface ReviewCreateRequest {
@@ -505,8 +608,6 @@ export interface ReviewResponse {
   id: string;
   rating: number;
   comment?: string;
-  isVerified: boolean;
-  isApproved: boolean;
   helpfulCount: number;
   hotelId: string;
   hotelName?: string;
@@ -524,13 +625,122 @@ export interface AdminDashboardResponse {
   inactiveHotels: number;
   featuredHotels: number;
   totalRoomTypes: number;
-  activeRoomTypes: number;
-  inactiveRoomTypes: number;
   totalReviews: number;
   approvedReviews: number;
   pendingReviews: number;
   verifiedReviews: number;
   totalUsers: number;
+}
+
+// Host Dashboard Statistics
+export interface HostDashboardResponse {
+  totalHotels: number;
+  activeHotels: number;
+  totalRoomTypes: number;
+  totalBookings: number;
+  monthlyRevenue: number;
+  averageRating: number;
+  occupancyRate: number;
+  totalReviews: number;
+  pendingBookings: number;
+  confirmedBookings: number;
+  recentBookings?: Array<{
+    id: string;
+    guestName: string;
+    hotelName: string;
+    checkInDate: string;
+    checkOutDate: string;
+    totalAmount: number;
+    status: string;
+  }>;
+  monthlyRevenueData?: Array<{
+    month: string;
+    revenue: number;
+  }>;
+}
+
+// Booking Types
+export interface BookingCreateRequest {
+  hotelId: string;
+  roomTypeId: string;
+  checkInDate: string;
+  checkOutDate: string;
+  guests: number;
+  totalAmount: number;
+  paymentMethod?: string;
+  specialRequests?: string;
+  voucherCode?: string;
+}
+
+export interface BookingUpdateRequest {
+  guestName?: string;
+  guestEmail?: string;
+  guestPhone?: string;
+  checkInDate?: string;
+  checkOutDate?: string;
+  guests?: number;
+  totalAmount?: number;
+  status?: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW' | 'CANCELLED_BY_GUEST' | 'CANCELLED_BY_HOST';
+  paymentStatus?: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED' | 'PARTIALLY_REFUNDED' | 'REFUND_PENDING' | 'NO_PAYMENT' | 'CANCELLED';
+  paymentMethod?: string;
+  specialRequests?: string;
+}
+
+export interface BookingResponse {
+  id: string;
+  guestName: string;
+  guestEmail: string;
+  guestPhone: string;
+  hotelId: string;
+  hotelName: string;
+  hotelAddress: string;
+  hotelPhone: string;
+  hotelEmail: string;
+  roomTypeId: string;
+  roomTypeName: string;
+  roomDescription: string;
+  maxOccupancy: number;
+  bedType: string;
+  userId?: string;
+  userName?: string;
+  checkInDate: string;
+  checkOutDate: string;
+  guests: number;
+  totalAmount: number;
+  status: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW' | 'CANCELLED_BY_GUEST' | 'CANCELLED_BY_HOST';
+  paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED' | 'PARTIALLY_REFUNDED' | 'REFUND_PENDING' | 'NO_PAYMENT' | 'CANCELLED';
+  paymentMethod?: string;
+  bookingReference: string;
+  specialRequests?: string;
+  numberOfNights: number;
+  pricePerNight: number;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+export interface BookingFilterParams {
+  status?: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW' | 'CANCELLED_BY_GUEST' | 'CANCELLED_BY_HOST';
+  paymentStatus?: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED' | 'PARTIALLY_REFUNDED' | 'REFUND_PENDING' | 'NO_PAYMENT' | 'CANCELLED';
+  hotelId?: string;
+  guestName?: string;
+  checkInDate?: string;
+  checkOutDate?: string;
+  pageNumber?: number;
+  pageSize?: number;
+  sortBy?: string;
+}
+
+export interface BookingStatsResponse {
+  totalBookings: number;
+  pendingBookings: number;
+  confirmedBookings: number;
+  cancelledBookings: number;
+  completedBookings: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+  occupancyRate: number;
 }
 
 // Review APIs
@@ -543,20 +753,12 @@ export const reviewAPI = {
     hotelId?: string;
     userId?: string;
     rating?: number;
-    isApproved?: boolean;
-    isVerified?: boolean;
     pageNumber?: number;
     pageSize?: number;
     sortBy?: string;
   }) => api.get('/reviews/admin/filter', { params }),
   
   deleteReview: (id: string) => api.delete(`/reviews/admin/${id}`),
-  
-  approveReview: (id: string) => api.put(`/reviews/admin/${id}/approve`),
-  
-  disapproveReview: (id: string) => api.put(`/reviews/admin/${id}/disapprove`),
-  
-  verifyReview: (id: string) => api.put(`/reviews/admin/${id}/verify`),
   
   getReviewsByUser: (userId: string, pageNumber = 0, pageSize = 10, sortBy = 'createdAt') =>
     api.get(`/reviews/admin/user/${userId}`, { params: { pageNumber, pageSize, sortBy } }),
@@ -567,11 +769,7 @@ export const reviewAPI = {
   getReviewsByHotel: (hotelId: string, pageNumber = 0, pageSize = 10, sortBy = 'createdAt') =>
     api.get(`/reviews/hotel/${hotelId}`, { params: { pageNumber, pageSize, sortBy } }),
   
-  getApprovedReviewsByHotel: (hotelId: string, pageNumber = 0, pageSize = 10, sortBy = 'createdAt') =>
-    api.get(`/reviews/hotel/${hotelId}/approved`, { params: { pageNumber, pageSize, sortBy } }),
-  
-  getVerifiedReviewsByHotel: (hotelId: string, pageNumber = 0, pageSize = 10, sortBy = 'createdAt') =>
-    api.get(`/reviews/hotel/${hotelId}/verified`, { params: { pageNumber, pageSize, sortBy } }),
+
   
   getHotelAverageRating: (hotelId: string) =>
     api.get(`/reviews/hotel/${hotelId}/average-rating`),
@@ -588,6 +786,9 @@ export const reviewAPI = {
   
   updateMyReview: (id: string, data: ReviewUpdateRequest) =>
     api.put(`/reviews/${id}`, data),
+  
+  deleteMyReview: (id: string) =>
+    api.delete(`/reviews/${id}`),
   
   getMyReviews: (pageNumber = 0, pageSize = 10, sortBy = 'createdAt') =>
     api.get('/reviews/my', { params: { pageNumber, pageSize, sortBy } }),

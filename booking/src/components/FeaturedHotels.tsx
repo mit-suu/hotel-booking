@@ -216,7 +216,7 @@ const FeaturedHotels: React.FC = () => {
             to="/hotels"
             className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
           >
-            View all hotels
+            View All Hotels
           </Link>
         </div>
       </div>
