@@ -4,7 +4,7 @@ import { Save, Bell, Shield, Database, Mail, Globe } from 'lucide-react';
 const AdminSettings: React.FC = () => {
   const [settings, setSettings] = useState({
     siteName: 'FBooking',
-    siteDescription: 'Nền tảng đặt phòng khách sạn hàng đầu Việt Nam',
+    siteDescription: 'Leading hotel booking platform in Vietnam',
     contactEmail: 'admin@fbooking.com',
     supportPhone: '1900-1234',
     maintenanceMode: false,
@@ -126,7 +126,7 @@ const AdminSettings: React.FC = () => {
             </div>
             
             <div className="flex items-center justify-between py-2">
-              <span className="text-sm font-medium text-gray-700">Tự động duyệt đặt phòng</span>
+              <span className="text-sm font-medium text-gray-700">Auto-approve bookings</span>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -153,7 +153,7 @@ const AdminSettings: React.FC = () => {
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Số ngày đặt phòng tối đa
+                Maximum booking days
               </label>
               <input
                 type="number"
@@ -165,7 +165,7 @@ const AdminSettings: React.FC = () => {
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Thời hạn hủy đặt phòng (giờ)
+                Booking cancellation deadline (hours)
               </label>
               <input
                 type="number"

@@ -37,6 +37,20 @@ public class SecurityConfig {
             "/users",
             "/auth/**"
     };
+
+    private static final String[] PUBLIC_GET_ENDPOINTS = {
+            "/hotels/{id}",
+            "/hotels/search",
+            "/hotels/city/**",
+            "/hotels/country/**", 
+            "/hotels/rating/**",
+            "/hotels/active",
+            "/hotels/featured",
+            "/hotels/search/filters",
+            "/hotels/amenities",
+            "/room-types/hotel/**",
+            "/bookings/check-availability" // Only keep availability check as public
+    };
     private final JwtCustomDecoder customJwtDecoder;
 
     public SecurityConfig(JwtCustomDecoder customJwtDecoder) {
@@ -49,26 +63,28 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(authorize -> {
                     authorize.requestMatchers(
-                                HttpMethod.POST,PUBLIC_ENDPOINTS).permitAll()
+                                    HttpMethod.POST,PUBLIC_ENDPOINTS).permitAll()
+                            .requestMatchers(
+                                    HttpMethod.GET,PUBLIC_GET_ENDPOINTS).permitAll()
                             .requestMatchers("/swagger-ui/**").permitAll()
                             .requestMatchers("/v3/**").permitAll()
                             .requestMatchers("/actuator/**").permitAll()
-                                .anyRequest().authenticated();
-                    } )
+                            .anyRequest().authenticated();
+                } )
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception->exception.authenticationEntryPoint(new JwtAuthEntryPoint()))
 
                 .oauth2ResourceServer(oauth2 -> {
-                    oauth2.jwt(jwtConfigurer ->
-                                    jwtConfigurer.decoder(customJwtDecoder)
-                                        .jwtAuthenticationConverter(jwtAuthenticationConverter())
-                                )
+                            oauth2.jwt(jwtConfigurer ->
+                                            jwtConfigurer.decoder(customJwtDecoder)
+                                                    .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                                    )
 
-                            .authenticationEntryPoint(new JwtAuthEntryPoint())
-                    ;
+                                    .authenticationEntryPoint(new JwtAuthEntryPoint())
+                            ;
 
-                }
+                        }
                 )  ;
 
         return http.build();
@@ -77,12 +93,39 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(URL_CORS));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Content-Type", "Authorization", "X-Requested-With"));
+        
+        // Allow specific origins (can be multiple)
+        configuration.setAllowedOriginPatterns(Arrays.asList("*")); // For development
+        // configuration.setAllowedOrigins(Arrays.asList(URL_CORS)); // For production
+        
+        // Allow all HTTP methods including PATCH
+        configuration.setAllowedMethods(Arrays.asList(
+            "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"
+        ));
+        
+        // Allow all necessary headers
+        configuration.setAllowedHeaders(Arrays.asList(
+            "Content-Type", 
+            "Authorization", 
+            "X-Requested-With",
+            "Accept",
+            "Origin",
+            "Access-Control-Request-Method",
+            "Access-Control-Request-Headers"
+        ));
+        
+        // Allow credentials
         configuration.setAllowCredentials(true);
+        
+        // Cache preflight response for 1 hour
         configuration.setMaxAge(3600L);
         
+        // Expose headers that client can access
+        configuration.setExposedHeaders(Arrays.asList(
+            "Access-Control-Allow-Origin",
+            "Access-Control-Allow-Credentials"
+        ));
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
@@ -99,7 +142,6 @@ public class SecurityConfig {
         granted.setAuthorityPrefix("");
         JwtAuthenticationConverter converter =  new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(granted);
-         return converter;
+        return converter;
     }
 }
-

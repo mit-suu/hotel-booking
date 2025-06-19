@@ -58,6 +58,22 @@ public class UserController {
                 );
     }
 
+    @GetMapping("/hosts")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<DataResponse<UserResponse>>> getHosts(
+            @RequestParam(value = "pageNumber",defaultValue = PagePrepare.PAGE_NUMBER,required = false) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(value = "sortBy",defaultValue = "fullName", required = false) String sortBy) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<UserResponse>>builder()
+                    .message("Hosts retrieved successfully")
+                    .result(userService.getHostUsers(pageNumber,pageSize,sortBy))
+                    .build()
+                );
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<MessageResponse<UserResponse>> getUser(@PathVariable UUID id){
 
@@ -170,6 +186,30 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .body(MessageResponse.<UserResponse>builder()
                         .result(userService.toggleEmailVerification(id))
+                        .build()
+                );
+    }
+
+    @PostMapping("/request-host")
+    public ResponseEntity<MessageResponse<UserResponse>> requestHost() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        UUID userId = UUID.fromString(authentication.getName());
+        
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(MessageResponse.<UserResponse>builder()
+                        .result(userService.requestHost(userId))
+                        .build()
+                );
+    }
+
+    @PutMapping("/approve-host/{id}")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<UserResponse>> approveHostRequest(@PathVariable UUID id) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(MessageResponse.<UserResponse>builder()
+                        .result(userService.approveHostRequest(id))
                         .build()
                 );
     }

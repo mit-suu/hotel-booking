@@ -56,28 +56,28 @@ public interface RoomTypeRepository extends JpaRepository<RoomType, UUID> {
     
     // Search room types by name or description
     @Query("SELECT rt FROM RoomType rt WHERE " +
-            "LOWER(rt.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-            "LOWER(rt.description) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+           "LOWER(rt.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(rt.description) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<RoomType> searchByNameOrDescription(@Param("keyword") String keyword, Pageable pageable);
-
+    
     // Find room types with filters
     @Query("SELECT rt FROM RoomType rt WHERE " +
-            "(:hotelId IS NULL OR rt.hotel.id = :hotelId) AND " +
-            "(:minOccupancy IS NULL OR rt.maxOccupancy >= :minOccupancy) AND " +
-            "(:maxOccupancy IS NULL OR rt.maxOccupancy <= :maxOccupancy) AND " +
-            "(:minPrice IS NULL OR rt.pricePerNight >= :minPrice) AND " +
-            "(:maxPrice IS NULL OR rt.pricePerNight <= :maxPrice)")
+           "(:hotelId IS NULL OR rt.hotel.id = :hotelId) AND " +
+           "(:minOccupancy IS NULL OR rt.maxOccupancy >= :minOccupancy) AND " +
+           "(:maxOccupancy IS NULL OR rt.maxOccupancy <= :maxOccupancy) AND " +
+           "(:minPrice IS NULL OR rt.pricePerNight >= :minPrice) AND " +
+           "(:maxPrice IS NULL OR rt.pricePerNight <= :maxPrice)")
     Page<RoomType> findWithFilters(@Param("hotelId") UUID hotelId,
-                                   @Param("minOccupancy") Integer minOccupancy,
-                                   @Param("maxOccupancy") Integer maxOccupancy,
-                                   @Param("minPrice") BigDecimal minPrice,
-                                   @Param("maxPrice") BigDecimal maxPrice,
-                                   Pageable pageable);
-
+                                  @Param("minOccupancy") Integer minOccupancy,
+                                  @Param("maxOccupancy") Integer maxOccupancy,
+                                  @Param("minPrice") BigDecimal minPrice,
+                                  @Param("maxPrice") BigDecimal maxPrice,
+                                  Pageable pageable);
+    
     // Count room types by hotel
     long countByHotel(Hotel hotel);
     long countByHotelId(UUID hotelId);
-
+    
     // Check if room type name exists for hotel (for validation)
     boolean existsByNameAndHotel(String name, Hotel hotel);
     boolean existsByNameAndHotelId(String name, UUID hotelId);

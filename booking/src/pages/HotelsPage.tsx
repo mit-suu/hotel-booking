@@ -385,10 +385,10 @@ const HotelsPage: React.FC = () => {
       {/* Page Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Khách sạn & Resort</h1>
-          <p className="text-xl text-blue-100">
-            Khám phá hàng ngàn khách sạn tuyệt vời trên khắp Việt Nam
-          </p>
+                          <h1 className="text-4xl font-bold mb-4">Hotels & Resorts</h1>
+                <p className="text-xl text-blue-100">
+                  Explore thousands of amazing hotels across Vietnam
+                </p>
         </div>
       </div>
 

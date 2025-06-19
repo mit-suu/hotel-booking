@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Edit, Trash, Eye, Mail, Phone, Calendar, Filter, RefreshCw, Settings, MailCheck, MailX } from 'lucide-react';
+import { Search, Plus, Edit, Trash, Eye, Mail, Phone, Calendar, Filter, RefreshCw, Settings, MailCheck, MailX, Check } from 'lucide-react';
 import { userAPI } from '../../services/api';
 import { useToast } from '../../contexts/ToastContext';
 import UserRoleModal from '../../components/admin/UserRoleModal';
@@ -22,6 +22,7 @@ interface User {
   }>;
   active: boolean;
   emailVerified: boolean;
+  hostRequested?: boolean;
 }
 
 interface ApiResponse {
@@ -70,11 +71,11 @@ const AdminUsers: React.FC = () => {
         setTotalElements(data.result.totalElements);
         setCurrentPage(data.result.number);
       } else {
-        showToast('error', 'Lỗi', data.message || 'Không thể tải danh sách người dùng');
+        showToast('error', 'Error', data.message || 'Unable to load user list');
       }
     } catch (error: any) {
       console.error('Error fetching users:', error);
-      showToast('error', 'Lỗi', 'Không thể kết nối đến server');
+              showToast('error', 'Error', 'Unable to connect to server');
     } finally {
       setLoading(false);
     }
@@ -159,15 +160,15 @@ const AdminUsers: React.FC = () => {
     const user = users.find(u => u.id === userId);
     if (!user) return;
 
-    if (window.confirm(`Bạn có chắc chắn muốn xóa người dùng "${user.name}" không?`)) {
+          if (window.confirm(`Are you sure you want to delete user "${user.name}"?`)) {
       try {
         setActionLoading(userId);
         await userAPI.deleteUser(userId);
-        showToast('success', 'Thành công', 'Đã xóa người dùng thành công');
+                  showToast('success', 'Success', 'User deleted successfully');
         fetchUsers(currentPage); // Refresh current page
       } catch (error: any) {
         console.error('Error deleting user:', error);
-        const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi xóa người dùng';
+                  const errorMessage = error.response?.data?.message || 'An error occurred while deleting user';
         showToast('error', 'Lỗi', errorMessage);
       } finally {
         setActionLoading(null);
@@ -178,7 +179,7 @@ const AdminUsers: React.FC = () => {
   const handleDeleteSelected = async () => {
     if (selectedUsers.length === 0) return;
     
-    if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedUsers.length} người dùng đã chọn không?`)) {
+          if (window.confirm(`Are you sure you want to delete ${selectedUsers.length} selected users?`)) {
       try {
         setActionLoading('bulk-delete');
         
@@ -186,13 +187,13 @@ const AdminUsers: React.FC = () => {
         const deletePromises = selectedUsers.map(userId => userAPI.deleteUser(userId));
         await Promise.all(deletePromises);
         
-        showToast('success', 'Thành công', `Đã xóa ${selectedUsers.length} người dùng thành công`);
+                    showToast('success', 'Success', `${selectedUsers.length} users deleted successfully`);
         setSelectedUsers([]);
         setIsSelectAll(false);
         fetchUsers(currentPage);
       } catch (error: any) {
         console.error('Error deleting users:', error);
-        showToast('error', 'Lỗi', 'Có lỗi xảy ra khi xóa người dùng');
+                  showToast('error', 'Error', 'An error occurred while deleting users');
       } finally {
         setActionLoading(null);
       }
@@ -201,8 +202,8 @@ const AdminUsers: React.FC = () => {
 
   const getStatusBadge = (active: boolean) => {
     return active 
-      ? <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Hoạt động</span>
-      : <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Vô hiệu</span>;
+              ? <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Active</span>
+        : <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Inactive</span>;
   };
 
   const getRoleBadges = (roles: Array<{name: string}>) => {
@@ -217,7 +218,7 @@ const AdminUsers: React.FC = () => {
               : 'bg-gray-100 text-gray-800'
         }`}
       >
-        {role.name === 'ADMIN' ? 'Quản trị viên' : role.name === 'HOST' ? 'Chủ khách sạn' : 'Người dùng'}
+        {role.name === 'ADMIN' ? 'Administrator' : role.name === 'HOST' ? 'Hotel Owner' : 'User'}
       </span>
     ));
   };
@@ -233,6 +234,21 @@ const AdminUsers: React.FC = () => {
     setSelectedUserForRole(null);
   };
 
+  const handleApproveHostRequest = async (userId: string) => {
+    try {
+      setActionLoading(userId);
+      await userAPI.approveHostRequest(userId);
+              showToast('success', 'Success', 'Host request has been approved');
+      fetchUsers(currentPage); // Refresh current page
+    } catch (error: any) {
+      console.error('Error approving host request:', error);
+              const errorMessage = error.response?.data?.message || 'An error occurred while approving the request';
+      showToast('error', 'Lỗi', errorMessage);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="w-full flex justify-center items-center py-12">
@@ -245,8 +261,8 @@ const AdminUsers: React.FC = () => {
     <div className="w-full">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Quản lý người dùng</h1>
-          <p className="text-gray-600 mt-1">Tổng cộng {totalElements} người dùng</p>
+          <h1 className="text-xl sm:text-2xl font-bold">User Management</h1>
+          <p className="text-gray-600 mt-1">Total {totalElements} users</p>
         </div>
         <div className="flex space-x-3">
           <button
@@ -255,14 +271,14 @@ const AdminUsers: React.FC = () => {
             className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center disabled:opacity-50"
           >
             <RefreshCw size={20} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Làm mới
+                          Refresh
           </button>
           <button
             onClick={handleAddUser}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
           >
             <Plus size={20} className="mr-2" />
-            Thêm người dùng
+                          Add User
           </button>
         </div>
       </div>
@@ -273,7 +289,7 @@ const AdminUsers: React.FC = () => {
           <div className="flex-1 relative">
             <input
               type="text"
-              placeholder="Tìm kiếm theo tên, username, email..."
+                              placeholder="Search by name, username, email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -288,9 +304,9 @@ const AdminUsers: React.FC = () => {
                 onChange={(e) => setRoleFilter(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="all">Tất cả vai trò</option>
-                <option value="USER">Người dùng</option>
-                <option value="HOST">Chủ khách sạn</option>
+                                  <option value="all">All roles</option>
+                <option value="USER">User</option>
+                <option value="HOST">Hotel Owner</option>
                 <option value="ADMIN">Quản trị viên</option>
               </select>
             </div>
@@ -300,9 +316,9 @@ const AdminUsers: React.FC = () => {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="all">Tất cả trạng thái</option>
-                <option value="active">Hoạt động</option>
-                <option value="inactive">Vô hiệu</option>
+                <option value="all">All statuses</option>
+                                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
               </select>
             </div>
             <div className="flex items-center">
@@ -311,9 +327,9 @@ const AdminUsers: React.FC = () => {
                 onChange={(e) => setEmailVerificationFilter(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="all">Tất cả email</option>
-                <option value="verified">Đã xác thực</option>
-                <option value="unverified">Chưa xác thực</option>
+                                  <option value="all">All emails</option>
+                <option value="verified">Verified</option>
+                                  <option value="unverified">Unverified</option>
               </select>
             </div>
           </div>
@@ -323,7 +339,7 @@ const AdminUsers: React.FC = () => {
       {/* Bulk Actions */}
       {selectedUsers.length > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex justify-between items-center">
-          <span className="text-blue-700">Đã chọn {selectedUsers.length} người dùng</span>
+                        <span className="text-blue-700">Selected {selectedUsers.length} users</span>
           <div className="flex gap-2">
             <button
               onClick={handleDeleteSelected}
@@ -335,7 +351,7 @@ const AdminUsers: React.FC = () => {
               ) : (
                 <Trash size={16} className="mr-1" />
               )}
-              Xóa đã chọn
+                              Delete Selected
             </button>
           </div>
         </div>
@@ -358,19 +374,20 @@ const AdminUsers: React.FC = () => {
                   </div>
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Người dùng
+                  User
+                </th>
+                
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Role
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Liên hệ
+                  Host Request
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Vai trò
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Trạng thái
+                  Status
                 </th>  
                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Thao tác
+                  Actions
                 </th>
               </tr>
             </thead>
@@ -397,36 +414,30 @@ const AdminUsers: React.FC = () => {
                         <div className="text-sm text-gray-500">@{user.username}</div>
                       </div>
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900 flex items-center">
-                      <Mail className="h-4 w-4 mr-1 text-gray-500" />
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <span>{user.email}</span>
-                          {user.emailVerified ? (
-                            <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                              <MailCheck className="h-3 w-3 mr-0.5" /> 
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
-                              <MailX className="h-3 w-3 mr-0.5" /> 
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    {user.tel && (
-                      <div className="text-sm text-gray-500 flex items-center mt-1">
-                        <Phone className="h-4 w-4 mr-1 text-gray-500" />
-                        {user.tel}
-                      </div>
-                    )}
-                  </td>
+                  </td> 
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-wrap gap-1">
                       {getRoleBadges(user.roles)}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {user.hostRequested ? (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-amber-600 font-medium">Pending</span>
+                        <input
+                          type="checkbox"
+                          onChange={() => handleApproveHostRequest(user.id)}
+                          disabled={actionLoading === user.id}
+                          className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded disabled:opacity-50"
+                          title="Check to approve Host request"
+                        />
+                        {actionLoading === user.id && (
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-500">-</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(user.active)}
@@ -436,21 +447,21 @@ const AdminUsers: React.FC = () => {
                       <button
                         onClick={() => handleViewUser(user.id)}
                         className="text-blue-600 hover:text-blue-900"
-                        title="Xem chi tiết"
+                        title="View Details"
                       >
                         <Eye size={18} />
                       </button>
                       <button
                         onClick={() => handleManageRoles(user)}
                         className="text-purple-600 hover:text-purple-900"
-                        title="Quản lý vai trò"
+                        title="Manage Roles"
                       >
                         <Settings size={18} />
                       </button>
                       <button
                         onClick={() => handleEditUser(user.id)}
                         className="text-yellow-600 hover:text-yellow-900"
-                        title="Chỉnh sửa"
+                        title="Edit"
                       >
                         <Edit size={18} />
                       </button>
@@ -458,7 +469,7 @@ const AdminUsers: React.FC = () => {
                         onClick={() => handleDeleteUser(user.id)}
                         disabled={actionLoading === user.id}
                         className="text-red-600 hover:text-red-900 disabled:opacity-50"
-                        title="Xóa"
+                        title="Delete"
                       >
                         {actionLoading === user.id ? (
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
@@ -487,7 +498,7 @@ const AdminUsers: React.FC = () => {
                     : 'bg-white text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                Trước
+                Previous
               </button>
               <button
                 onClick={() => handlePageChange(Math.min(totalPages - 1, currentPage + 1))}
@@ -498,17 +509,17 @@ const AdminUsers: React.FC = () => {
                     : 'bg-white text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                Sau
+                Next
               </button>
             </div>
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
-                  Hiển thị <span className="font-medium">{currentPage * itemsPerPage + 1}</span> đến{' '}
+                  Showing <span className="font-medium">{currentPage * itemsPerPage + 1}</span> to{' '}
                   <span className="font-medium">
                     {Math.min((currentPage + 1) * itemsPerPage, totalElements)}
                   </span>{' '}
-                  trong tổng số <span className="font-medium">{totalElements}</span> người dùng
+                  of <span className="font-medium">{totalElements}</span> users
                 </p>
               </div>
               <div>
@@ -522,7 +533,7 @@ const AdminUsers: React.FC = () => {
                         : 'text-gray-500 hover:bg-gray-50'
                     }`}
                   >
-                    <span className="sr-only">Trang trước</span>
+                    <span className="sr-only">Previous page</span>
                     <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                       <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
@@ -572,8 +583,8 @@ const AdminUsers: React.FC = () => {
           <div className="text-gray-400 mb-4">
             <Search size={48} className="mx-auto" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Không tìm thấy người dùng</h3>
-          <p className="text-gray-500">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm.</p>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+                      <p className="text-gray-500">Try changing filters or search keywords.</p>
         </div>
       )}
 

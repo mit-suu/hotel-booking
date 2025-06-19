@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { 
   Users, Hotel, BookOpen, Settings, Star, BarChart2, Tag, Home, 
   FileText, Percent, CreditCard, LogOut, ChevronDown, ChevronRight,
-  Menu, X, FolderOpen, DollarSign, Calendar, MessageSquare
+  Menu, X, FolderOpen, DollarSign, Calendar, MessageSquare, BedDouble, TrendingUp
 } from 'lucide-react';
 import '../styles/dashboard.css';
 
@@ -17,7 +17,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, type }) => 
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [expandedMenus, setExpandedMenus] = useState<string[]>(['Quản lý', 'Tài chính']);
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(['Management', 'Finance']);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isAdmin = type === 'admin';
@@ -28,40 +28,42 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, type }) => 
   };
 
   const adminMenuItems = [
-    { path: '/admin', label: 'Tổng quan', icon: <Home size={20} /> },
+    { path: '/admin', label: 'Overview', icon: <Home size={20} /> },
     {
-      label: 'Quản lý',
+      label: 'Management',
       icon: <FolderOpen size={20} />,
       subItems: [
-        { path: '/admin/hotels', label: 'Khách sạn', icon: <Hotel size={20} /> },
-        { path: '/admin/bookings', label: 'Đặt phòng', icon: <BookOpen size={20} /> },
-        { path: '/admin/users', label: 'Người dùng', icon: <Users size={20} /> },
-        { path: '/admin/reviews', label: 'Đánh giá', icon: <Star size={20} /> },
+        { path: '/admin/hotels', label: 'Hotels', icon: <Hotel size={20} /> },
+        { path: '/admin/room-types', label: 'Room Types', icon: <BedDouble size={20} /> },
+        { path: '/admin/bookings', label: 'Bookings', icon: <BookOpen size={20} /> },
+        { path: '/admin/users', label: 'Users', icon: <Users size={20} /> },
+        { path: '/admin/reviews', label: 'Reviews', icon: <Star size={20} /> },
       ],
     },
     {
-      label: 'Tài chính',
+      label: 'Finance',
       icon: <DollarSign size={20} />,
       subItems: [
-        { path: '/admin/commissions', label: 'Hoa hồng', icon: <Percent size={20} /> },
-        { path: '/admin/invoices', label: 'Hóa đơn', icon: <FileText size={20} /> },
-        { path: '/admin/commission-payments', label: 'Thanh toán', icon: <CreditCard size={20} /> },
+        { path: '/admin/commissions', label: 'Commissions', icon: <Percent size={20} /> },
+        { path: '/admin/invoices', label: 'Invoices', icon: <FileText size={20} /> },
+        { path: '/admin/commission-payments', label: 'Payments', icon: <CreditCard size={20} /> },
       ],
     },
-    { path: '/admin/promotions', label: 'Khuyến mãi', icon: <Tag size={20} /> },
-    { path: '/admin/analytics', label: 'Thống kê', icon: <BarChart2 size={20} /> },
-    { path: '/admin/settings', label: 'Cài đặt', icon: <Settings size={20} /> },
+    { path: '/admin/promotions', label: 'Promotions', icon: <Tag size={20} /> },
+    { path: '/admin/analytics', label: 'Analytics', icon: <BarChart2 size={20} /> }, 
+    { path: '/admin/settings', label: 'Settings', icon: <Settings size={20} /> },
   ];
 
   const hostMenuItems = [
-    { path: '/host', label: 'Tổng quan', icon: <Home size={20} /> },
-    { path: '/host/properties', label: 'Bất động sản', icon: <Hotel size={20} /> },
-    { path: '/host/bookings', label: 'Đặt phòng', icon: <BookOpen size={20} /> },
-    { path: '/host/calendar', label: 'Lịch đặt phòng', icon: <Calendar size={20} /> },
-    { path: '/host/reviews', label: 'Đánh giá', icon: <Star size={20} /> },
-    { path: '/host/messages', label: 'Tin nhắn', icon: <MessageSquare size={20} /> },
-    { path: '/host/analytics', label: 'Thống kê', icon: <BarChart2 size={20} /> },
-    { path: '/host/settings', label: 'Cài đặt', icon: <Settings size={20} /> },
+    { path: '/host', label: 'Overview', icon: <Home size={20} /> },
+    { path: '/host/hotels', label: 'Hotels', icon: <Hotel size={20} /> },
+    { path: '/host/room-types', label: 'Room Types', icon: <BedDouble size={20} /> },
+    { path: '/host/bookings', label: 'Bookings', icon: <BookOpen size={20} /> },
+    { path: '/host/calendar', label: 'Booking Calendar', icon: <Calendar size={20} /> },
+    { path: '/host/reviews', label: 'Reviews', icon: <Star size={20} /> },
+    { path: '/host/messages', label: 'Messages', icon: <MessageSquare size={20} /> },
+    { path: '/host/analytics', label: 'Analytics', icon: <BarChart2 size={20} /> },
+    { path: '/host/settings', label: 'Settings', icon: <Settings size={20} /> },
   ];
 
   const menuItems = isAdmin ? adminMenuItems : hostMenuItems;
@@ -189,7 +191,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, type }) => 
           className="w-full flex items-center px-4 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-700 hover:text-white transition-colors"
         >
           <LogOut size={20} className="mr-3" />
-          Đăng xuất
+          Logout
         </button>
       </div>
     </div>

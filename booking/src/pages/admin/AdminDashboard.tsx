@@ -13,8 +13,6 @@ const AdminDashboard: React.FC = () => {
     inactiveHotels: 0,
     featuredHotels: 0,
     totalRoomTypes: 0,
-    activeRoomTypes: 0,
-    inactiveRoomTypes: 0,
     totalReviews: 0,
     approvedReviews: 0,
     pendingReviews: 0,
@@ -36,7 +34,7 @@ const AdminDashboard: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error fetching dashboard stats:', error);
-      showToast('error', 'Lỗi', 'Không thể tải thống kê dashboard');
+      showToast('error', 'Error', 'Unable to load dashboard statistics');
     } finally {
       setLoading(false);
     }
@@ -52,60 +50,46 @@ const AdminDashboard: React.FC = () => {
 
   const dashboardStats = [
     { 
-      label: 'Tổng người dùng', 
+      label: 'Total Users', 
       value: stats.totalUsers.toLocaleString(), 
       icon: Users,
       color: 'blue',
-      description: 'Tổng số người dùng đã đăng ký'
+      description: 'Total registered users'
     },
     { 
-      label: 'Tổng khách sạn', 
+      label: 'Total Hotels', 
       value: stats.totalHotels.toLocaleString(), 
       icon: Hotel,
       color: 'green',
-      description: 'Tổng số khách sạn trong hệ thống'
+      description: 'Total hotels in the system'
     },
     { 
-      label: 'Khách sạn hoạt động', 
+      label: 'Active Hotels', 
       value: stats.activeHotels.toLocaleString(), 
       icon: CheckCircle,
       color: 'emerald',
-      description: 'Số khách sạn đang hoạt động'
+      description: 'Number of active hotels'
     },
     { 
-      label: 'Khách sạn nổi bật', 
+      label: 'Featured Hotels', 
       value: stats.featuredHotels.toLocaleString(), 
       icon: Award,
       color: 'yellow',
-      description: 'Số khách sạn được đánh dấu nổi bật'
+      description: 'Number of featured hotels'
     },
     { 
-      label: 'Tổng loại phòng', 
+      label: 'Total Room Types', 
       value: stats.totalRoomTypes.toLocaleString(), 
       icon: BedDouble,
       color: 'indigo',
-      description: 'Tổng số loại phòng trong hệ thống'
+      description: 'Total room types in the system'
     },
     { 
-      label: 'Loại phòng hoạt động', 
-      value: stats.activeRoomTypes.toLocaleString(), 
-      icon: CheckCircle,
-      color: 'teal',
-      description: 'Số loại phòng đang hoạt động'
-    },
-    { 
-      label: 'Tổng đánh giá', 
+      label: 'Total Reviews', 
       value: stats.totalReviews.toLocaleString(), 
       icon: Star,
       color: 'orange',
-      description: 'Tổng số đánh giá từ khách hàng'
-    },
-    { 
-      label: 'Đánh giá đã duyệt', 
-      value: stats.approvedReviews.toLocaleString(), 
-      icon: CheckCircle,
-      color: 'purple',
-      description: 'Số đánh giá đã được phê duyệt'
+      description: 'Total reviews from customers'
     }
   ];
 
@@ -128,8 +112,8 @@ const AdminDashboard: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Bảng điều khiển quản trị</h1>
-          <p className="text-gray-600 mt-1">Tổng quan hệ thống quản lý khách sạn</p>
+                      <h1 className="text-2xl sm:text-3xl font-bold">Admin Dashboard</h1>
+          <p className="text-gray-600 mt-1">Hotel management system overview</p>
         </div>
         <button
           onClick={handleRefresh}
@@ -137,7 +121,7 @@ const AdminDashboard: React.FC = () => {
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50"
         >
           <RefreshCw size={20} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Làm mới
+                      Refresh
         </button>
       </div>
 
@@ -173,106 +157,88 @@ const AdminDashboard: React.FC = () => {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
         <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
           <TrendingUp size={20} className="mr-2 text-blue-500" />
-          Tóm tắt nhanh
+          Quick Summary
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl font-bold text-green-600">
               {stats.totalHotels > 0 ? Math.round((stats.activeHotels / stats.totalHotels) * 100) : 0}%
             </div>
-            <div className="text-sm text-gray-600">Tỷ lệ khách sạn hoạt động</div>
+            <div className="text-sm text-gray-600">Active hotels rate</div>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl font-bold text-yellow-600">
               {stats.totalHotels > 0 ? Math.round((stats.featuredHotels / stats.totalHotels) * 100) : 0}%
             </div>
-            <div className="text-sm text-gray-600">Tỷ lệ khách sạn nổi bật</div>
-          </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <div className="text-2xl font-bold text-indigo-600">
-              {stats.totalRoomTypes > 0 ? Math.round((stats.activeRoomTypes / stats.totalRoomTypes) * 100) : 0}%
-            </div>
-            <div className="text-sm text-gray-600">Tỷ lệ loại phòng hoạt động</div>
+            <div className="text-sm text-gray-600">Featured hotels rate</div>
           </div>
           <div className="text-center p-4 bg-gray-50 rounded-lg">
             <div className="text-2xl font-bold text-blue-600">
               {stats.totalReviews && stats.totalHotels > 0 ? Math.round(stats.totalReviews / stats.totalHotels) : 0}
             </div>
-            <div className="text-sm text-gray-600">Đánh giá trung bình/khách sạn</div>
+            <div className="text-sm text-gray-600">Average reviews/hotel</div>
           </div>
-          <div className="text-center p-4 bg-gray-50 rounded-lg">
-            <div className="text-2xl font-bold text-purple-600">
-              {stats.totalReviews && stats.totalHotels > 0 ? Math.round(stats.approvedReviews / stats.totalHotels) : 0}
-            </div>
-            <div className="text-sm text-gray-600">Đánh giá đã duyệt/khách sạn</div>
-          </div>
+         
         </div>
       </div>
 
       {/* Management Sections */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <ManagementCard
-          title="Quản lý người dùng"
-          description="Quản lý tài khoản và phân quyền người dùng"
+          title="User Management"
+          description="Manage user accounts and permissions"
           icon={<Users className="h-5 w-5 sm:h-6 sm:w-6" />}
           onClick={() => navigate('/admin/users')}
-          stats={`${stats.totalUsers.toLocaleString()} người dùng`}
+          stats={`${stats.totalUsers.toLocaleString()} users`}
         />
         <ManagementCard
-          title="Quản lý khách sạn"
-          description="Quản lý danh sách và thông tin khách sạn"
+          title="Hotel Management"
+          description="Manage hotel list and information"
           icon={<Hotel className="h-5 w-5 sm:h-6 sm:w-6" />}
           onClick={() => navigate('/admin/hotels')}
-          stats={`${stats.totalHotels.toLocaleString()} khách sạn`}
+          stats={`${stats.totalHotels.toLocaleString()} hotels`}
         />
         <ManagementCard
-          title="Quản lý loại phòng"
-          description="Quản lý các loại phòng và cấu hình"
+          title="Room Type Management"
+          description="Manage room types and configurations"
           icon={<BedDouble className="h-5 w-5 sm:h-6 sm:w-6" />}
           onClick={() => navigate('/admin/room-types')}
-          stats={`${stats.totalRoomTypes.toLocaleString()} loại phòng`}
+          stats={`${stats.totalRoomTypes.toLocaleString()} room types`}
         />
         <ManagementCard
-          title="Quản lý đặt phòng"
-          description="Xem và quản lý các đơn đặt phòng"
+          title="Booking Management"
+          description="View and manage booking orders"
           icon={<BookOpen className="h-5 w-5 sm:h-6 sm:w-6" />}
           onClick={() => navigate('/admin/bookings')}
-          stats={`${stats.totalReviews.toLocaleString()} đánh giá`}
+          stats={`${stats.totalReviews.toLocaleString()} bookings`}
         />
         <ManagementCard
-          title="Quản lý đánh giá"
-          description="Duyệt và quản lý đánh giá của người dùng"
+          title="Review Management"
+          description="Approve and manage user reviews"
           icon={<Star className="h-5 w-5 sm:h-6 sm:w-6" />}
           onClick={() => navigate('/admin/reviews')}
-          stats={`${stats.totalReviews.toLocaleString()} đánh giá`}
+          stats={`${stats.totalReviews.toLocaleString()} reviews`}
         />
         <ManagementCard
-          title="Thống kê & Phân tích"
-          description="Xem báo cáo và thống kê hệ thống"
+          title="Statistics & Analytics"
+          description="View reports and system statistics"
           icon={<BarChart2 className="h-5 w-5 sm:h-6 sm:w-6" />}
           onClick={() => navigate('/admin/analytics')}
-          stats="Báo cáo chi tiết"
-        />
+          stats="Detailed reports"
+        /> 
         <ManagementCard
-          title="Phân tích nâng cao"
-          description="Biểu đồ và thống kê chi tiết hệ thống"
-          icon={<TrendingUp className="h-5 w-5 sm:h-6 sm:w-6" />}
-          onClick={() => navigate('/admin/advanced-analytics')}
-          stats="Phân tích sâu"
-        />
-        <ManagementCard
-          title="Quản lý khuyến mãi"
-          description="Tạo và quản lý các mã khuyến mãi"
+          title="Promotion Management"
+          description="Create and manage promotion codes"
           icon={<Tag className="h-5 w-5 sm:h-6 sm:w-6" />}
           onClick={() => navigate('/admin/promotions')}
-          stats="Mã khuyến mãi"
+          stats="Promotion codes"
         />
         <ManagementCard
-          title="Cài đặt hệ thống"
-          description="Cấu hình các thiết lập hệ thống"
+          title="System Settings"
+          description="Configure system settings"
           icon={<Settings className="h-5 w-5 sm:h-6 sm:w-6" />}
           onClick={() => navigate('/admin/settings')}
-          stats="Cấu hình"
+          stats="Configuration"
         />
       </div>
     </div>

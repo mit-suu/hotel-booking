@@ -13,7 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class HotelCreateRequest {
-
+    
     @NotBlank(message = "Hotel name is required")
     @Size(min = 2, max = 100, message = "Hotel name must be between 2 and 100 characters")
     String name;
@@ -37,8 +37,8 @@ public class HotelCreateRequest {
     @Email(message = "Invalid email format")
     String email;
 
-    @Pattern(regexp = "^$|^(https?://)?(www\\.)?[a-zA-Z0-9\\-\\.]+\\.[a-zA-Z]{2,}(/.*)?$",
-            message = "Invalid website URL format")
+    @Pattern(regexp = "^$|^(https?://)?(www\\.)?[a-zA-Z0-9\\-\\.]+\\.[a-zA-Z]{2,}(/.*)?$", 
+             message = "Invalid website URL format")
     String website;
 
     @Min(value = 1, message = "Star rating must be at least 1")
@@ -69,4 +69,4 @@ public class HotelCreateRequest {
 
     Boolean isActive = true;
     Boolean isFeatured = false;
-}
+} 

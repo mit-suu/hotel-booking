@@ -50,39 +50,39 @@ const AdminUserAdd: React.FC = () => {
 
     // Required fields
     if (!formData.name.trim()) {
-      newErrors.name = 'Họ và tên là bắt buộc';
+      newErrors.name = 'Full name is required';
     }
 
     if (!formData.username.trim()) {
-      newErrors.username = 'Tên đăng nhập là bắt buộc';
+      newErrors.username = 'Username is required';
     } else if (formData.username.length < 3) {
-      newErrors.username = 'Tên đăng nhập phải có ít nhất 3 ký tự';
+              newErrors.username = 'Username must be at least 3 characters';
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Email là bắt buộc';
+      newErrors.email = 'Email is required';
     } else {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
-        newErrors.email = 'Email không hợp lệ';
+        newErrors.email = 'Invalid email format';
       }
     }
 
     if (!formData.password) {
-      newErrors.password = 'Mật khẩu là bắt buộc';
+      newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự';
+              newErrors.password = 'Password must be at least 8 characters';
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
+              newErrors.confirmPassword = 'Password confirmation does not match';
     }
 
     // Phone validation (optional)
     if (formData.tel && formData.tel.trim()) {
       const phoneRegex = /^[0-9]{10,11}$/;
       if (!phoneRegex.test(formData.tel.replace(/\s/g, ''))) {
-        newErrors.tel = 'Số điện thoại không hợp lệ (10-11 số)';
+        newErrors.tel = 'Invalid phone number (10-11 digits)';
       }
     }
 
@@ -110,16 +110,16 @@ const AdminUserAdd: React.FC = () => {
       const response = await authAPI.register(registerData);
       
       if (response.data.success) {
-        showToast('success', 'Thành công', 'Người dùng mới đã được tạo thành công!');
+        showToast('success', 'Success', 'New user has been created successfully!');
         navigate('/admin/users');
       } else {
-        showToast('error', 'Lỗi', response.data.message || 'Có lỗi xảy ra khi tạo người dùng');
+                  showToast('error', 'Error', response.data.message || 'An error occurred while creating user');
       }
       
     } catch (error: any) {
       console.error('Create user error:', error);
-      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi tạo người dùng mới';
-      showToast('error', 'Lỗi', errorMessage);
+              const errorMessage = error.response?.data?.message || 'An error occurred while creating new user';
+      showToast('error', 'Error', errorMessage);
     } finally {
       setSaving(false);
     }
@@ -154,11 +154,11 @@ const AdminUserAdd: React.FC = () => {
             className="flex items-center text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft size={20} className="mr-2" />
-            Quay lại
+            Back
           </button>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Thêm người dùng mới</h1>
-            <p className="text-gray-600 mt-1">Tạo tài khoản người dùng mới trong hệ thống</p>
+                      <h1 className="text-xl sm:text-2xl font-bold">Add New User</h1>
+          <p className="text-gray-600 mt-1">Create a new user account in the system</p>
           </div>
         </div>
       </div>
@@ -172,8 +172,8 @@ const AdminUserAdd: React.FC = () => {
               <UserPlus size={32} />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Thông tin người dùng mới</h3>
-              <p className="text-gray-600">Nhập đầy đủ thông tin để tạo tài khoản mới</p>
+              <h3 className="text-lg font-semibold text-gray-900">New User Information</h3>
+              <p className="text-gray-600">Enter complete information to create new account</p>
             </div>
           </div>
 
@@ -181,7 +181,7 @@ const AdminUserAdd: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Họ và tên *
+                Full Name *
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -193,7 +193,7 @@ const AdminUserAdd: React.FC = () => {
                   className={`block w-full pl-10 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.name ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  placeholder="Nhập họ và tên"
+                  placeholder="Enter full name"
                 />
               </div>
               {errors.name && (
@@ -206,7 +206,7 @@ const AdminUserAdd: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tên đăng nhập *
+                Username *
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -218,7 +218,7 @@ const AdminUserAdd: React.FC = () => {
                   className={`block w-full pl-10 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.username ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  placeholder="Nhập tên đăng nhập"
+                  placeholder="Enter username"
                 />
               </div>
               {errors.username && (
@@ -243,7 +243,7 @@ const AdminUserAdd: React.FC = () => {
                   className={`block w-full pl-10 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.email ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  placeholder="Nhập địa chỉ email"
+                  placeholder="Enter email address"
                 />
               </div>
               {errors.email && (
@@ -256,7 +256,7 @@ const AdminUserAdd: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Số điện thoại
+                Phone Number
               </label>
               <div className="relative">
                 <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -268,7 +268,7 @@ const AdminUserAdd: React.FC = () => {
                   className={`block w-full pl-10 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.tel ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  placeholder="Nhập số điện thoại"
+                  placeholder="Enter phone number"
                 />
               </div>
               {errors.tel && (
@@ -281,7 +281,7 @@ const AdminUserAdd: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ngày sinh
+                Date of Birth
               </label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -297,7 +297,7 @@ const AdminUserAdd: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Vai trò
+                Role
               </label>
               <div className="relative">
                 <Shield className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -307,9 +307,9 @@ const AdminUserAdd: React.FC = () => {
                   onChange={handleChange}
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
-                  <option value="USER">Người dùng</option>
-                  <option value="HOST">Chủ khách sạn</option>
-                  <option value="ADMIN">Quản trị viên</option>
+                  <option value="USER">User</option>
+                  <option value="HOST">Hotel Owner</option>
+                  <option value="ADMIN">Administrator</option>
                 </select>
               </div>
             </div>
@@ -318,7 +318,7 @@ const AdminUserAdd: React.FC = () => {
           {/* Address */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Địa chỉ
+              Address
             </label>
             <div className="relative">
               <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -328,7 +328,7 @@ const AdminUserAdd: React.FC = () => {
                 onChange={handleChange}
                 rows={3}
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Nhập địa chỉ"
+                placeholder="Enter address"
               />
             </div>
           </div>
@@ -336,20 +336,20 @@ const AdminUserAdd: React.FC = () => {
           {/* Password Section */}
           <div className="border-t border-gray-200 pt-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Mật khẩu</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Password</h3>
               <button
                 type="button"
                 onClick={generatePassword}
                 className="text-sm text-blue-600 hover:text-blue-800 underline"
               >
-                Tạo mật khẩu tự động
+                Generate password automatically
               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mật khẩu *
+                  Password *
                 </label>
                 <div className="relative">
                   <Shield className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -361,7 +361,7 @@ const AdminUserAdd: React.FC = () => {
                     className={`block w-full pl-10 pr-10 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                       errors.password ? 'border-red-300' : 'border-gray-300'
                     }`}
-                    placeholder="Nhập mật khẩu"
+                    placeholder="Enter password"
                   />
                   <button
                     type="button"
@@ -381,7 +381,7 @@ const AdminUserAdd: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Xác nhận mật khẩu *
+                  Confirm Password *
                 </label>
                 <div className="relative">
                   <Shield className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -393,7 +393,7 @@ const AdminUserAdd: React.FC = () => {
                     className={`block w-full pl-10 pr-10 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                       errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
                     }`}
-                    placeholder="Xác nhận mật khẩu"
+                    placeholder="Confirm password"
                   />
                   <button
                     type="button"
@@ -413,11 +413,11 @@ const AdminUserAdd: React.FC = () => {
             </div>
 
             <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-              <h4 className="text-sm font-medium text-blue-900 mb-2">Yêu cầu mật khẩu:</h4>
+              <h4 className="text-sm font-medium text-blue-900 mb-2">Password requirements:</h4>
               <ul className="text-sm text-blue-800 space-y-1">
-                <li>• Ít nhất 8 ký tự</li>
-                <li>• Nên bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt</li>
-                <li>• Không sử dụng thông tin cá nhân dễ đoán</li>
+                <li>• At least 8 characters</li>
+                <li>• Should include uppercase, lowercase, numbers and special characters</li>
+                <li>• Don't use easily guessable personal information</li>
               </ul>
             </div>
           </div>
@@ -430,7 +430,7 @@ const AdminUserAdd: React.FC = () => {
               disabled={saving}
               className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
-              Hủy
+              Cancel
             </button>
             <button
               type="submit"
@@ -440,12 +440,12 @@ const AdminUserAdd: React.FC = () => {
               {saving ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Đang tạo...
+                  Creating...
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Tạo người dùng
+                  Create User
                 </>
               )}
             </button>

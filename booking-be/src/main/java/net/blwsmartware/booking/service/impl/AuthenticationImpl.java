@@ -12,7 +12,7 @@ import net.blwsmartware.booking.dto.response.AuthenResponse;
 import net.blwsmartware.booking.dto.response.VerifyResponse;
 import net.blwsmartware.booking.entity.InvalidToken;
 import net.blwsmartware.booking.enums.ErrorResponse;
-import net.blwsmartware.booking.exception.IdentityRuntimeException;
+import net.blwsmartware.booking.exception.AppRuntimeException;
 import net.blwsmartware.booking.repository.InvalidTokenRepository;
 import net.blwsmartware.booking.security.JwtTokenProvider;
 import net.blwsmartware.booking.service.AuthenticationService;
@@ -41,12 +41,12 @@ public class AuthenticationImpl implements AuthenticationService {
 
         boolean rs = jwtTokenProvider.verify(token);
         if (!rs) {
-            throw new IdentityRuntimeException(ErrorResponse.JWT_INVALID);
+            throw new AppRuntimeException(ErrorResponse.JWT_INVALID);
         }
 
         String type = jwtTokenProvider.getTokenType(token);
         if(!type.equals(TokenType.access)) {
-            throw new IdentityRuntimeException(ErrorResponse.JWT_ACCESS_INVALID);
+            throw new AppRuntimeException(ErrorResponse.JWT_ACCESS_INVALID);
         }
         String username = jwtTokenProvider.getUsername(token);
 
@@ -65,7 +65,7 @@ public class AuthenticationImpl implements AuthenticationService {
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
         var matched = passwordEncoder.matches(request.getPassword(), userDetails.getPassword());
 
-        if (!matched) throw new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND);
+        if (!matched) throw new AppRuntimeException(ErrorResponse.USER_NOT_FOUND);
 
         String token = jwtTokenProvider.createAccessToken(userDetails);
         String refreshToken = jwtTokenProvider.createRefreshToken(userDetails);
@@ -86,12 +86,12 @@ public class AuthenticationImpl implements AuthenticationService {
         boolean isRefreshToken = jwtTokenProvider.getTokenType(token)
                 .equals(TokenType.refresh);
         if(!isRefreshToken ) {
-            throw new IdentityRuntimeException(ErrorResponse.JWT_REFRESH_INVALID);
+            throw new AppRuntimeException(ErrorResponse.JWT_REFRESH_INVALID);
         }
 
         Instant expiryTime = jwtTokenProvider.getExpireDate(token);
         if(expiryTime.isBefore(Instant.now())){
-            throw new IdentityRuntimeException(ErrorResponse.JWT_EXPIRED);
+            throw new AppRuntimeException(ErrorResponse.JWT_EXPIRED);
         }
 
         String username = jwtTokenProvider.getUsername(token);
@@ -110,12 +110,12 @@ public class AuthenticationImpl implements AuthenticationService {
         String token = request.getRefreshToken();
         UUID jwtID = jwtTokenProvider.getJwtID(token);
         if(!jwtTokenProvider.verify(token) || invalidTokenRepository.existsById(jwtID) ) {
-            throw new IdentityRuntimeException(ErrorResponse.JWT_INVALID);
+            throw new AppRuntimeException(ErrorResponse.JWT_INVALID);
         }
         boolean isRefreshToken = jwtTokenProvider.getTokenType(token)
                 .equals(TokenType.refresh);
         if(!isRefreshToken) {
-            throw new IdentityRuntimeException(ErrorResponse.JWT_REFRESH_INVALID);
+            throw new AppRuntimeException(ErrorResponse.JWT_REFRESH_INVALID);
         }
         String username = jwtTokenProvider.getUsername(token);
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);

@@ -32,20 +32,20 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class VoucherController {
-
+    
     VoucherService voucherService;
-
+    
     // ===== ADMIN ENDPOINTS =====
-
+    
     @GetMapping("/admin")
     @IsAdmin
     public ResponseEntity<MessageResponse<DataResponse<VoucherResponse>>> getAllVouchers(
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "createdAt") String sortBy) {
-
+        
         DataResponse<VoucherResponse> response = voucherService.getAllVouchers(pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<VoucherResponse>>builder()
@@ -53,17 +53,17 @@ public class VoucherController {
                         .result(response)
                         .build());
     }
-
+    
     @GetMapping("/admin/status/{status}")
-    @IsAdmin
+    @IsAdmin    
     public ResponseEntity<MessageResponse<DataResponse<VoucherResponse>>> getVouchersByStatus(
             @PathVariable VoucherStatus status,
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "createdAt") String sortBy) {
-
+        
         DataResponse<VoucherResponse> response = voucherService.getVouchersByStatus(status, pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<VoucherResponse>>builder()
@@ -71,12 +71,12 @@ public class VoucherController {
                         .result(response)
                         .build());
     }
-
+    
     @GetMapping("/admin/{id}")
     @IsAdmin
     public ResponseEntity<MessageResponse<VoucherResponse>> getVoucherById(@PathVariable UUID id) {
         VoucherResponse response = voucherService.getVoucherById(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<VoucherResponse>builder()
@@ -84,12 +84,12 @@ public class VoucherController {
                         .result(response)
                         .build());
     }
-
+    
     @PostMapping("/admin")
     @IsAdmin
     public ResponseEntity<MessageResponse<VoucherResponse>> createVoucher(@Valid @RequestBody VoucherCreateRequest request) {
         VoucherResponse response = voucherService.createVoucher(request);
-
+        
         return ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<VoucherResponse>builder()
@@ -97,14 +97,14 @@ public class VoucherController {
                         .result(response)
                         .build());
     }
-
+    
     @PutMapping("/admin/{id}")
     @IsAdmin
     public ResponseEntity<MessageResponse<VoucherResponse>> updateVoucher(
             @PathVariable UUID id,
             @Valid @RequestBody VoucherUpdateRequest request) {
         VoucherResponse response = voucherService.updateVoucher(id, request);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<VoucherResponse>builder()
@@ -112,24 +112,24 @@ public class VoucherController {
                         .result(response)
                         .build());
     }
-
+    
     @DeleteMapping("/admin/{id}")
     @IsAdmin
     public ResponseEntity<MessageResponse<Void>> deleteVoucher(@PathVariable UUID id) {
         voucherService.deleteVoucher(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<Void>builder()
                         .message("Voucher deleted successfully")
                         .build());
     }
-
+    
     @PatchMapping("/admin/{id}/toggle-status")
     @IsAdmin
     public ResponseEntity<MessageResponse<VoucherResponse>> toggleVoucherStatus(@PathVariable UUID id) {
         VoucherResponse response = voucherService.toggleVoucherStatus(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<VoucherResponse>builder()
@@ -137,7 +137,7 @@ public class VoucherController {
                         .result(response)
                         .build());
     }
-
+    
     @GetMapping("/admin/search")
     @IsAdmin
     public ResponseEntity<MessageResponse<DataResponse<VoucherResponse>>> searchVouchers(
@@ -145,9 +145,9 @@ public class VoucherController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "createdAt") String sortBy) {
-
+        
         DataResponse<VoucherResponse> response = voucherService.searchVouchers(keyword, pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<VoucherResponse>>builder()
@@ -155,14 +155,14 @@ public class VoucherController {
                         .result(response)
                         .build());
     }
-
+    
     // ===== ADMIN STATISTICS ENDPOINTS =====
-
+    
     @GetMapping("/admin/stats/total")
     @IsAdmin
     public ResponseEntity<MessageResponse<Long>> getTotalVouchersCount() {
         Long count = voucherService.getTotalVouchersCount();
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<Long>builder()
@@ -170,12 +170,12 @@ public class VoucherController {
                         .result(count)
                         .build());
     }
-
+    
     @GetMapping("/admin/stats/active")
     @IsAdmin
     public ResponseEntity<MessageResponse<Long>> getActiveVouchersCount() {
         Long count = voucherService.getActiveVouchersCount();
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<Long>builder()
@@ -183,12 +183,12 @@ public class VoucherController {
                         .result(count)
                         .build());
     }
-
+    
     @GetMapping("/admin/stats/expired")
     @IsAdmin
     public ResponseEntity<MessageResponse<Long>> getExpiredVouchersCount() {
         Long count = voucherService.getExpiredVouchersCount();
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<Long>builder()
@@ -196,12 +196,12 @@ public class VoucherController {
                         .result(count)
                         .build());
     }
-
+    
     @GetMapping("/admin/stats/used-up")
     @IsAdmin
     public ResponseEntity<MessageResponse<Long>> getUsedUpVouchersCount() {
         Long count = voucherService.getUsedUpVouchersCount();
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<Long>builder()
@@ -209,12 +209,12 @@ public class VoucherController {
                         .result(count)
                         .build());
     }
-
+    
     @GetMapping("/admin/stats/discount-amount")
     @IsAdmin
     public ResponseEntity<MessageResponse<BigDecimal>> getTotalDiscountAmount() {
         BigDecimal amount = voucherService.getTotalDiscountAmount();
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<BigDecimal>builder()
@@ -222,12 +222,12 @@ public class VoucherController {
                         .result(amount)
                         .build());
     }
-
+    
     @GetMapping("/admin/stats/usage-count")
     @IsAdmin
     public ResponseEntity<MessageResponse<Long>> getTotalUsageCount() {
         Long count = voucherService.getTotalUsageCount();
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<Long>builder()
@@ -235,7 +235,7 @@ public class VoucherController {
                         .result(count)
                         .build());
     }
-
+    
     // ===== PUBLIC ENDPOINTS =====
     
     @PostMapping("/validate")
@@ -254,7 +254,7 @@ public class VoucherController {
     @GetMapping("/hotel/{hotelId}/available")
     public ResponseEntity<MessageResponse<List<VoucherResponse>>> getAvailableVouchersForHotel(@PathVariable UUID hotelId) {
         List<VoucherResponse> response = voucherService.getAvailableVouchersForHotel(hotelId);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<List<VoucherResponse>>builder()
@@ -262,11 +262,11 @@ public class VoucherController {
                         .result(response)
                         .build());
     }
-
+    
     @GetMapping("/code/{code}")
     public ResponseEntity<MessageResponse<VoucherResponse>> getVoucherByCode(@PathVariable String code) {
         VoucherResponse response = voucherService.getVoucherByCode(code);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<VoucherResponse>builder()
@@ -274,24 +274,24 @@ public class VoucherController {
                         .result(response)
                         .build());
     }
-
+    
     // ===== VOUCHER APPLICATION ENDPOINT =====
-
+    
     @PostMapping("/apply")
     public ResponseEntity<MessageResponse<VoucherResponse>> applyVoucherToBooking(
             @Valid @RequestBody ApplyVoucherRequest request) {
-
+        
         // Get current user from security context
         String currentUserId = org.springframework.security.core.context.SecurityContextHolder
                 .getContext().getAuthentication().getName();
-
+        
         VoucherResponse response = voucherService.applyVoucher(
-                request.getVoucherCode(),
-                UUID.fromString(currentUserId),
-                request.getBookingId(),
+                request.getVoucherCode(), 
+                UUID.fromString(currentUserId), 
+                request.getBookingId(), 
                 request.getOriginalAmount(),
                 request.getHotelId());
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<VoucherResponse>builder()
@@ -299,4 +299,4 @@ public class VoucherController {
                         .result(response)
                         .build());
     }
-}
+} 

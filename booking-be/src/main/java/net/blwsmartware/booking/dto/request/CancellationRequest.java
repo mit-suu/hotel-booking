@@ -13,11 +13,11 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CancellationRequest {
-
+    
     @NotBlank(message = "Reason is required")
     private String reason;
-
+    
     private BigDecimal refundAmount;
-
+    
     private Integer refundPercentage;
-}
+} 

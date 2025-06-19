@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle, AlertCircle, Info, X, AlertTriangle } from 'lucide-react';
+import { CheckCircle, AlertCircle, X, Info, AlertTriangle } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -12,7 +12,14 @@ export interface ToastProps {
   onClose: (id: string) => void;
 }
 
-const Toast: React.FC<ToastProps> = ({ id, type, title, message, duration = 5000, onClose }) => {
+const Toast: React.FC<ToastProps> = ({
+  id,
+  type,
+  title,
+  message,
+  duration = 5000,
+  onClose
+}) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [progress, setProgress] = useState(100);
@@ -158,7 +165,7 @@ const Toast: React.FC<ToastProps> = ({ id, type, title, message, duration = 5000
               onClick={handleClose}
               className="inline-flex text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition-colors duration-200"
             >
-              <span className="sr-only">Đóng</span>
+              <span className="sr-only">Close</span>
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -177,6 +184,39 @@ const Toast: React.FC<ToastProps> = ({ id, type, title, message, duration = 5000
           />
         </div>
       )}
+    </div>
+  );
+};
+
+// Toast Container Component
+interface ToastContainerProps {
+  toasts: Array<{
+    id: string;
+    type: ToastType;
+    title: string;
+    message?: string;
+    duration?: number;
+  }>;
+  onRemoveToast: (id: string) => void;
+}
+
+export const ToastContainer: React.FC<ToastContainerProps> = ({
+  toasts,
+  onRemoveToast
+}) => {
+  return (
+    <div className="fixed top-4 right-4 z-50 space-y-2">
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          id={toast.id}
+          type={toast.type}
+          title={toast.title}
+          message={toast.message}
+          duration={toast.duration}
+          onClose={onRemoveToast}
+        />
+      ))}
     </div>
   );
 };

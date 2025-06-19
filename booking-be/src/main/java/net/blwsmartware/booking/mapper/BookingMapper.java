@@ -13,7 +13,7 @@ import java.time.temporal.ChronoUnit;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface BookingMapper {
-
+    
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "hotel", ignore = true)
     @Mapping(target = "roomType", ignore = true)
@@ -26,7 +26,7 @@ public interface BookingMapper {
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
     Booking toEntity(BookingCreateRequest request);
-
+    
     @Mapping(target = "hotelId", source = "hotel.id")
     @Mapping(target = "hotelName", source = "hotel.name")
     @Mapping(target = "hotelAddress", source = "hotel.address")
@@ -42,7 +42,7 @@ public interface BookingMapper {
     @Mapping(target = "numberOfNights", expression = "java(calculateNumberOfNights(booking))")
     @Mapping(target = "pricePerNight", source = "roomType.pricePerNight")
     BookingResponse toResponse(Booking booking);
-
+    
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "hotel", ignore = true)
     @Mapping(target = "roomType", ignore = true)
@@ -52,11 +52,11 @@ public interface BookingMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     void updateEntity(@MappingTarget Booking booking, BookingUpdateRequest request);
-
+    
     default Integer calculateNumberOfNights(Booking booking) {
         if (booking.getCheckInDate() != null && booking.getCheckOutDate() != null) {
             return (int) ChronoUnit.DAYS.between(booking.getCheckInDate(), booking.getCheckOutDate());
         }
         return null;
     }
-}
+} 

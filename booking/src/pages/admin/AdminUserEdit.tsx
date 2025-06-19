@@ -87,12 +87,12 @@ const AdminUserEdit: React.FC = () => {
           emailVerified: data.result.emailVerified
         });
       } else {
-        showToast('error', 'Lỗi', data.message || 'Không thể tải thông tin người dùng');
+        showToast('error', 'Error', data.message || 'Unable to load user information');
         navigate('/admin/users');
       }
     } catch (error: any) {
       console.error('Error fetching user:', error);
-      showToast('error', 'Lỗi', 'Không thể kết nối đến server');
+              showToast('error', 'Error', 'Unable to connect to server');
       navigate('/admin/users');
     } finally {
       setLoading(false);
@@ -129,21 +129,21 @@ const AdminUserEdit: React.FC = () => {
 
     // Required fields
     if (!formData.name.trim()) {
-      newErrors.name = 'Họ và tên là bắt buộc';
+      newErrors.name = 'Full name is required';
     }
 
     if (!formData.username.trim()) {
-      newErrors.username = 'Tên đăng nhập là bắt buộc';
+      newErrors.username = 'Username is required';
     } else if (formData.username.length < 3) {
-      newErrors.username = 'Tên đăng nhập phải có ít nhất 3 ký tự';
+              newErrors.username = 'Username must be at least 3 characters';
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = 'Email là bắt buộc';
+      newErrors.email = 'Email is required';
     } else {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
-        newErrors.email = 'Email không hợp lệ';
+        newErrors.email = 'Invalid email format';
       }
     }
 
@@ -151,20 +151,20 @@ const AdminUserEdit: React.FC = () => {
     if (formData.tel && formData.tel.trim()) {
       const phoneRegex = /^[0-9]{10,11}$/;
       if (!phoneRegex.test(formData.tel.replace(/\s/g, ''))) {
-        newErrors.tel = 'Số điện thoại không hợp lệ (10-11 số)';
+        newErrors.tel = 'Invalid phone number (10-11 digits)';
       }
     }
 
     // Password validation (if changing password)
     if (formData.changePassword) {
       if (!formData.password) {
-        newErrors.password = 'Mật khẩu mới là bắt buộc';
+        newErrors.password = 'New password is required';
       } else if (formData.password.length < 8) {
-        newErrors.password = 'Mật khẩu phải có ít nhất 8 ký tự';
+                  newErrors.password = 'Password must be at least 8 characters';
       }
 
       if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = 'Mật khẩu xác nhận không khớp';
+                  newErrors.confirmPassword = 'Password confirmation does not match';
       }
     }
 
@@ -209,30 +209,30 @@ const AdminUserEdit: React.FC = () => {
         } catch (passwordError: any) {
           // If password update fails, still show success for profile update
           console.error('Password update error:', passwordError);
-          showToast('warning', 'Cảnh báo', 'Thông tin đã được cập nhật nhưng có lỗi khi thay đổi mật khẩu');
+          showToast('warning', 'Warning', 'Information updated but there was an error changing the password');
         }
       }
       
-      let successMessage = 'Thông tin người dùng đã được cập nhật thành công!';
+              let successMessage = 'User information has been updated successfully!';
       if (updateData.active !== user.active) {
-        const statusText = updateData.active ? 'kích hoạt' : 'vô hiệu hóa';
-        successMessage += ` Trạng thái tài khoản đã được ${statusText}.`;
+                  const statusText = updateData.active ? 'activated' : 'deactivated';
+          successMessage += ` Account status has been ${statusText}.`;
       }
       if (updateData.emailVerified !== user.emailVerified) {
-        const verificationText = updateData.emailVerified ? 'đã được xác thực' : 'đã bị hủy xác thực';
+                  const verificationText = updateData.emailVerified ? 'has been verified' : 'has been unverified';
         successMessage += ` Email ${verificationText}.`;
       }
       if (formData.changePassword && formData.password) {
-        successMessage += ' Mật khẩu đã được thay đổi.';
+                  successMessage += ' Password has been changed.';
       }
       
-      showToast('success', 'Thành công', successMessage);
+      showToast('success', 'Success', successMessage);
       navigate(`/admin/users/${user.id}`);
       
     } catch (error: any) {
       console.error('Update user error:', error);
-      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật thông tin người dùng';
-      showToast('error', 'Lỗi', errorMessage);
+              const errorMessage = error.response?.data?.message || 'An error occurred while updating user information';
+      showToast('error', 'Error', errorMessage);
     } finally {
       setSaving(false);
     }
@@ -253,12 +253,12 @@ const AdminUserEdit: React.FC = () => {
   if (!user) {
     return (
       <div className="w-full text-center py-12">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Không tìm thấy người dùng</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">User Not Found</h2>
         <button
           onClick={() => navigate('/admin/users')}
           className="text-blue-600 hover:text-blue-800"
         >
-          Quay lại danh sách người dùng
+                          Back to user list
         </button>
       </div>
     );
@@ -274,11 +274,11 @@ const AdminUserEdit: React.FC = () => {
             className="flex items-center text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft size={20} className="mr-2" />
-            Quay lại
+            Back
           </button>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Chỉnh sửa người dùng</h1>
-            <p className="text-gray-600 mt-1">Cập nhật thông tin của {user.name}</p>
+            <h1 className="text-xl sm:text-2xl font-bold">Edit User</h1>
+            <p className="text-gray-600 mt-1">Update information for {user.name}</p>
           </div>
         </div>
       </div>
@@ -292,8 +292,8 @@ const AdminUserEdit: React.FC = () => {
               {formData.name.charAt(0).toUpperCase() || 'U'}
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Thông tin cơ bản</h3>
-              <p className="text-gray-600">Cập nhật thông tin cá nhân của người dùng</p>
+                          <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
+            <p className="text-gray-600">Update user's personal information</p>
             </div>
           </div>
 
@@ -301,7 +301,7 @@ const AdminUserEdit: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Họ và tên *
+                Full Name *
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -313,7 +313,7 @@ const AdminUserEdit: React.FC = () => {
                   className={`block w-full pl-10 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.name ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  placeholder="Nhập họ và tên"
+                  placeholder="Enter full name"
                 />
               </div>
               {errors.name && (
@@ -326,7 +326,7 @@ const AdminUserEdit: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tên đăng nhập *
+                Username *
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -338,7 +338,7 @@ const AdminUserEdit: React.FC = () => {
                   className={`block w-full pl-10 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.username ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  placeholder="Nhập tên đăng nhập"
+                  placeholder="Enter username"
                 />
               </div>
               {errors.username && (
@@ -363,7 +363,7 @@ const AdminUserEdit: React.FC = () => {
                   className={`block w-full pl-10 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.email ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  placeholder="Nhập địa chỉ email"
+                  placeholder="Enter email address"
                 />
               </div>
               {errors.email && (
@@ -376,7 +376,7 @@ const AdminUserEdit: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Số điện thoại
+                Phone Number
               </label>
               <div className="relative">
                 <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -388,7 +388,7 @@ const AdminUserEdit: React.FC = () => {
                   className={`block w-full pl-10 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                     errors.tel ? 'border-red-300' : 'border-gray-300'
                   }`}
-                  placeholder="Nhập số điện thoại"
+                  placeholder="Enter phone number"
                 />
               </div>
               {errors.tel && (
@@ -401,7 +401,7 @@ const AdminUserEdit: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ngày sinh
+                Date of Birth
               </label>
               <div className="relative">
                 <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -419,7 +419,7 @@ const AdminUserEdit: React.FC = () => {
           {/* Address */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Địa chỉ
+              Address
             </label>
             <div className="relative">
               <MapPin className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -429,7 +429,7 @@ const AdminUserEdit: React.FC = () => {
                 onChange={handleChange}
                 rows={3}
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Nhập địa chỉ"
+                placeholder="Enter address"
               />
             </div>
           </div>
@@ -446,7 +446,7 @@ const AdminUserEdit: React.FC = () => {
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
               <label htmlFor="changePassword" className="ml-2 block text-sm font-medium text-gray-700">
-                Đổi mật khẩu
+                Change Password
               </label>
             </div>
 
@@ -454,7 +454,7 @@ const AdminUserEdit: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mật khẩu mới *
+                    New Password *
                   </label>
                   <div className="relative">
                     <Shield className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -466,7 +466,7 @@ const AdminUserEdit: React.FC = () => {
                       className={`block w-full pl-10 pr-10 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         errors.password ? 'border-red-300' : 'border-gray-300'
                       }`}
-                      placeholder="Nhập mật khẩu mới"
+                      placeholder="Enter new password"
                     />
                     <button
                       type="button"
@@ -486,7 +486,7 @@ const AdminUserEdit: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Xác nhận mật khẩu *
+                    Confirm Password *
                   </label>
                   <div className="relative">
                     <Shield className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
@@ -498,7 +498,7 @@ const AdminUserEdit: React.FC = () => {
                       className={`block w-full pl-10 pr-10 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
                       }`}
-                      placeholder="Xác nhận mật khẩu mới"
+                      placeholder="Confirm new password"
                     />
                     <button
                       type="button"
@@ -523,7 +523,7 @@ const AdminUserEdit: React.FC = () => {
           <div className="border-t border-gray-200 pt-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <Shield className="h-5 w-5 mr-2" />
-              Vai trò hiện tại
+              Current Roles
             </h3>
             <div className="flex flex-wrap gap-2">
               {user.roles.map((role, index) => (
@@ -538,12 +538,12 @@ const AdminUserEdit: React.FC = () => {
                   }`}
                 >
                   <Shield className="h-4 w-4 mr-1" />
-                  {role.name === 'ADMIN' ? 'Quản trị viên' : role.name === 'HOST' ? 'Chủ khách sạn' : 'Người dùng'}
+                  {role.name === 'ADMIN' ? 'Administrator' : role.name === 'HOST' ? 'Hotel Owner' : 'User'}
                 </span>
               ))}
             </div>
             <p className="text-sm text-gray-500 mt-2">
-              Để thay đổi vai trò, vui lòng liên hệ quản trị viên cấp cao hơn.
+              To change roles, please contact a higher-level administrator.
             </p>
           </div>
 
@@ -551,16 +551,16 @@ const AdminUserEdit: React.FC = () => {
           <div className="border-t border-gray-200 pt-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <Shield className="h-5 w-5 mr-2" />
-              Trạng thái tài khoản
+              Account Status
             </h3>
             
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div className="flex-1">
-                <h4 className="text-sm font-medium text-gray-900">Kích hoạt tài khoản</h4>
+                <h4 className="text-sm font-medium text-gray-900">Activate Account</h4>
                 <p className="text-sm text-gray-500">
                   {formData.active 
-                    ? 'Tài khoản đang hoạt động và có thể đăng nhập bình thường' 
-                    : 'Tài khoản bị vô hiệu hóa và không thể đăng nhập'
+                                  ? 'Account is active and can login normally'
+              : 'Account is disabled and cannot login'
                   }
                 </p>
               </div>
@@ -580,7 +580,7 @@ const AdminUserEdit: React.FC = () => {
                   />
                 </button>
                 <span className={`ml-3 text-sm font-medium ${formData.active ? 'text-green-600' : 'text-gray-400'}`}>
-                  {formData.active ? 'Hoạt động' : 'Vô hiệu'}
+                  {formData.active ? 'Active' : 'Inactive'}
                 </span>
               </div>
             </div>
@@ -594,9 +594,9 @@ const AdminUserEdit: React.FC = () => {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-yellow-800">Cảnh báo</h3>
+                    <h3 className="text-sm font-medium text-yellow-800">Warning</h3>
                     <div className="mt-2 text-sm text-yellow-700">
-                      <p>Vô hiệu hóa tài khoản sẽ ngăn người dùng đăng nhập vào hệ thống. Họ sẽ không thể truy cập vào bất kỳ tính năng nào cho đến khi tài khoản được kích hoạt lại.</p>
+                      <p>Disabling the account will prevent users from logging into the system. They will not be able to access any features until the account is reactivated.</p>
                     </div>
                   </div>
                 </div>
@@ -608,16 +608,16 @@ const AdminUserEdit: React.FC = () => {
           <div className="border-t border-gray-200 pt-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <MailCheck className="h-5 w-5 mr-2" />
-              Trạng thái xác thực email
+              Email Verification Status
             </h3>
             
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div className="flex-1">
-                <h4 className="text-sm font-medium text-gray-900">Email đã được xác thực</h4>
+                <h4 className="text-sm font-medium text-gray-900">Email Verified</h4>
                 <p className="text-sm text-gray-500">
                   {formData.emailVerified 
-                    ? 'Email của người dùng đã được xác thực và có thể nhận thông báo' 
-                    : 'Email chưa được xác thực, người dùng có thể không nhận được thông báo'
+                                        ? 'User email has been verified and can receive notifications'
+                    : 'Email not verified, user may not receive notifications'
                   }
                 </p>
               </div>
@@ -637,7 +637,7 @@ const AdminUserEdit: React.FC = () => {
                   />
                 </button>
                 <span className={`ml-3 text-sm font-medium ${formData.emailVerified ? 'text-green-600' : 'text-gray-400'}`}>
-                  {formData.emailVerified ? 'Đã xác thực' : 'Chưa xác thực'}
+                  {formData.emailVerified ? 'Verified' : 'Unverified'}
                 </span>
               </div>
             </div>
@@ -651,11 +651,11 @@ const AdminUserEdit: React.FC = () => {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-blue-800">Thay đổi trạng thái xác thực</h3>
+                    <h3 className="text-sm font-medium text-blue-800">Change Verification Status</h3>
                     <div className="mt-2 text-sm text-blue-700">
                       <p>
-                        Bạn đang {formData.emailVerified ? 'đánh dấu email đã được xác thực' : 'hủy xác thực email'}. 
-                        Thay đổi này sẽ có hiệu lực sau khi lưu.
+                                        You are {formData.emailVerified ? 'marking email as verified' : 'unverifying email'}.
+                This change will take effect after saving.
                       </p>
                     </div>
                   </div>
@@ -672,7 +672,7 @@ const AdminUserEdit: React.FC = () => {
               disabled={saving}
               className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50"
             >
-              Hủy
+              Cancel
             </button>
             <button
               type="submit"
@@ -682,12 +682,12 @@ const AdminUserEdit: React.FC = () => {
               {saving ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Đang lưu...
+                  Saving...
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Lưu thay đổi
+                  Save Changes
                 </>
               )}
             </button>

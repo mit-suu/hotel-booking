@@ -11,7 +11,8 @@ import {
   VoucherListResponse
 } from '../types/voucher';
 
-const API_URL = 'http://localhost:8080';  // Direct API endpoint
+//const API_URL = 'https://bk.blwsmartware.net';
+const API_URL = 'http://localhost:8080'; // Direct API endpoint
 
 const api = axios.create({
   baseURL: API_URL,
@@ -31,6 +32,52 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor để handle authentication errors
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+    
+    // If the error status is 401 and we haven't already tried to refresh the token
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      if (refreshToken) {
+        try {
+          // Try to refresh the token
+          const response = await axios.post(`${API_URL}/auth/refresh`, {
+            refreshToken: refreshToken
+          });
+          
+          const newToken = response.data.result.token;
+          localStorage.setItem('token', newToken);
+          
+          // Retry the original request with the new token
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return api(originalRequest);
+        } catch (refreshError) {
+          // Refresh failed, redirect to login
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          window.location.href = '/login';
+          return Promise.reject(refreshError);
+        }
+      } else {
+        // No refresh token, redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/login';
+      }
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -812,6 +859,176 @@ export const adminAPI = {
   getReviewStats: () => api.get('/admin/stats/reviews'),
   
   getUserStats: () => api.get('/admin/stats/users')
+};
+
+// Host Dashboard APIs
+export const hostAPI = {
+  getDashboard: () => api.get<{ success: boolean; result: HostDashboardResponse }>('/host/dashboard'),
+  
+  getHotelStats: () => api.get('/hotels/host/stats'),
+  
+  getBookingStats: () => api.get('/bookings/host/stats'),
+  
+  getRevenueStats: (year?: number, month?: number) => 
+    api.get('/bookings/host/revenue-stats', { params: { year, month } }),
+  
+  getRecentBookings: (limit = 10) => 
+    api.get('/bookings/host/recent', { params: { limit } }),
+  
+  getOccupancyStats: (hotelId?: string) => 
+    api.get('/bookings/host/occupancy-stats', { params: { hotelId } }),
+  
+  getReviewStats: () => api.get('/reviews/host/stats')
+};
+
+// Booking APIs
+export const bookingAPI = {
+  // Host operations - get host's bookings
+  getHostBookings: (params?: BookingFilterParams) =>
+    api.get('/bookings/host', { params }),
+  
+  getHostBookingById: (id: string) => 
+    api.get(`/bookings/host/${id}`),
+  
+  updateHostBooking: (id: string, data: BookingUpdateRequest) =>
+    api.put(`/bookings/host/${id}`, data),
+  
+  confirmBooking: (id: string) =>
+    api.patch(`/bookings/host/${id}/confirm`),
+  
+  cancelBooking: (id: string, reason?: string) =>
+    api.patch(`/bookings/host/${id}/cancel`, { reason }),
+  
+  completeBooking: (id: string) =>
+    api.patch(`/bookings/host/${id}/complete`),
+  
+  confirmPayment: (id: string) =>
+    api.patch(`/bookings/host/${id}/confirm-payment`),
+  
+  processCancellation: (id: string, data: { refundAmount: number; reason: string; refundPercentage?: number }) =>
+    api.patch(`/bookings/host/${id}/process-cancellation`, data),
+  
+  // Guest operations - create and manage own bookings
+  createBooking: (data: BookingCreateRequest) =>
+    api.post('/bookings', data),
+  
+  getMyBookings: (params?: BookingFilterParams) =>
+    api.get('/bookings/my', { 
+      params: { ...params, _t: Date.now() } // Cache busting
+    }),
+  
+  getMyBookingById: (id: string) =>
+    api.get(`/bookings/my/${id}`, { 
+      params: { _t: Date.now() } // Cache busting
+    }),
+  
+  updateMyBooking: (id: string, data: BookingUpdateRequest) =>
+    api.put(`/bookings/my/${id}`, data),
+  
+  cancelMyBooking: (id: string, reason?: string) =>
+    api.patch(`/bookings/my/${id}/cancel`, { reason }),
+  
+  // Admin operations
+  getAllBookings: (params?: BookingFilterParams) =>
+    api.get('/bookings/admin', { params }),
+  
+  getBookingById: (id: string) =>
+    api.get(`/bookings/admin/${id}`),
+  
+  updateBooking: (id: string, data: BookingUpdateRequest) =>
+    api.put(`/bookings/admin/${id}`, data),
+  
+  deleteBooking: (id: string) =>
+    api.delete(`/bookings/admin/${id}`),
+  
+  adminConfirmPayment: (id: string) =>
+    api.patch(`/bookings/admin/${id}/confirm-payment`),
+  
+  // Statistics
+  getBookingStats: () => api.get('/bookings/stats'),
+  getHostBookingStats: () => api.get('/bookings/host/stats'),
+  
+  // Search and filter
+  searchBookings: (keyword: string, params?: BookingFilterParams) =>
+    api.get('/bookings/search', { params: { ...params, keyword } }),
+  
+  getBookingsByDateRange: (startDate: string, endDate: string, params?: BookingFilterParams) =>
+    api.get('/bookings/date-range', { params: { ...params, startDate, endDate } }),
+  
+  getBookingsByHotel: (hotelId: string, params?: BookingFilterParams) =>
+    api.get(`/bookings/hotel/${hotelId}`, { params }),
+  
+  // Utility endpoints
+  checkRoomAvailability: (roomTypeId: string, checkInDate: string, checkOutDate: string) =>
+    api.get('/bookings/check-availability', { 
+      params: { roomTypeId, checkInDate, checkOutDate } 
+    }),
+  
+  // Statistics endpoints
+  getTotalBookingsCount: () => api.get('/bookings/admin/stats/total'),
+  getHostBookingsCount: () => api.get('/bookings/host/stats/total')
+};
+
+export const voucherAPI = {
+  // Admin operations
+  getAllVouchers: (params?: VoucherFilterParams) =>
+    api.get<VoucherApiResponse<VoucherListResponse>>('/vouchers/admin', { params }),
+  
+  createVoucher: (data: VoucherRequest) =>
+    api.post<VoucherApiResponse<VoucherResponse>>('/vouchers/admin', data),
+  
+  updateVoucher: (id: string, data: VoucherUpdateRequest) =>
+    api.put<VoucherApiResponse<VoucherResponse>>(`/vouchers/admin/${id}`, data),
+  
+  deleteVoucher: (id: string) =>
+    api.delete<VoucherApiResponse<void>>(`/vouchers/admin/${id}`),
+  
+  getVoucherById: (id: string) =>
+    api.get<VoucherApiResponse<VoucherResponse>>(`/vouchers/admin/${id}`),
+  
+  toggleVoucherStatus: (id: string) =>
+    api.patch<VoucherApiResponse<VoucherResponse>>(`/vouchers/admin/${id}/toggle-status`),
+  
+  searchVouchers: (keyword: string, params?: VoucherFilterParams) =>
+    api.get<VoucherApiResponse<VoucherListResponse>>('/vouchers/admin/search', { 
+      params: { ...params, keyword } 
+    }),
+  
+  // Statistics
+  getVoucherStats: () =>
+    api.get<VoucherApiResponse<VoucherStatsResponse>>('/vouchers/admin/stats'),
+  
+  getTotalVouchersCount: () =>
+    api.get<VoucherApiResponse<number>>('/vouchers/admin/stats/total'),
+  
+  getActiveVouchersCount: () =>
+    api.get<VoucherApiResponse<number>>('/vouchers/admin/stats/active'),
+  
+  getExpiredVouchersCount: () =>
+    api.get<VoucherApiResponse<number>>('/vouchers/admin/stats/expired'),
+  
+  getUsedUpVouchersCount: () =>
+    api.get<VoucherApiResponse<number>>('/vouchers/admin/stats/used-up'),
+  
+  getTotalDiscountAmount: () =>
+    api.get<VoucherApiResponse<number>>('/vouchers/admin/stats/discount-amount'),
+  
+  getTotalUsageCount: () =>
+    api.get<VoucherApiResponse<number>>('/vouchers/admin/stats/usage-count'),
+  
+  // Public operations
+  validateVoucher: (data: VoucherValidationRequest) =>
+    api.post<VoucherApiResponse<VoucherValidationResponse>>('/vouchers/validate', data),
+  
+  getVoucherByCode: (code: string) =>
+    api.get<VoucherApiResponse<VoucherResponse>>(`/vouchers/code/${code}`),
+  
+  getAvailableVouchersForHotel: (hotelId: string) =>
+    api.get<VoucherApiResponse<VoucherResponse[]>>(`/vouchers/hotel/${hotelId}/available`),
+  
+  // Apply voucher to booking
+  applyVoucherToBooking: (data: { voucherCode: string; bookingId: string }) =>
+    api.post<VoucherApiResponse<{ discountAmount: number; finalAmount: number }>>('/vouchers/apply', data)
 };
 
 export default api;

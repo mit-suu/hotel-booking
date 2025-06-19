@@ -50,7 +50,7 @@ Authorization: Bearer <token>
 - `GET /hotels/active` - Lấy khách sạn đang hoạt động
 - `GET /hotels/featured` - Lấy khách sạn nổi bật
 - `GET /hotels/my` - Lấy khách sạn của tôi (chủ sở hữu)
-- `GET /hotels/near?latitude={lat}&longitude={lng}&radiusKm={radius}` - Tìm khách sạn gần vị trí
+
 
 ### Hotel Request/Response Models
 
@@ -62,16 +62,15 @@ Authorization: Bearer <token>
   "address": "string (required, max 500 chars)",
   "city": "string (max 100 chars)",
   "country": "string (max 100 chars)",
-  "phone": "string (pattern: phone format)",
-  "email": "string (email format)",
-  "website": "string (URL format)",
-  "starRating": "integer (1-5)",
-  "checkInTime": "string (HH:mm format)",
-  "checkOutTime": "string (HH:mm format)",
+  "phone": "string (optional, phone format)",
+  "email": "string (optional, email format)",
+  "website": "string (optional, URL format)",
+  "starRating": "integer (optional, 1-5)",
+  "checkInTime": "string (optional, HH:mm format)",
+  "checkOutTime": "string (optional, HH:mm format)",
   "imageUrl": "string",
   "pricePerNight": "decimal (> 0)",
-  "latitude": "double (-90 to 90)",
-  "longitude": "double (-180 to 180)",
+
   "amenities": "string",
   "cancellationPolicy": "string (max 1000 chars)",
   "petPolicy": "string (max 1000 chars)",
@@ -100,8 +99,7 @@ Authorization: Bearer <token>
   "isActive": "boolean",
   "isFeatured": "boolean",
   "pricePerNight": "decimal",
-  "latitude": "double",
-  "longitude": "double",
+
   "amenities": "string",
   "cancellationPolicy": "string",
   "petPolicy": "string",
@@ -282,6 +280,122 @@ Authorization: Bearer <token>
 - `rating`: Số sao đánh giá (1-5)
 - `isApproved`: Trạng thái phê duyệt (boolean)
 - `isVerified`: Trạng thái xác minh (boolean)
+
+### Booking Filters
+- `status`: Trạng thái đặt phòng (PENDING, CONFIRMED, CANCELLED, COMPLETED, NO_SHOW)
+- `paymentStatus`: Trạng thái thanh toán (PENDING, PAID, FAILED, REFUNDED, PARTIALLY_REFUNDED)
+- `hotelId`: ID khách sạn
+- `guestName`: Tên khách
+- `checkInDate`: Ngày nhận phòng
+- `checkOutDate`: Ngày trả phòng
+
+## Booking Management
+
+### Guest Booking Operations
+- `POST /bookings` - Tạo đặt phòng mới
+- `GET /bookings/my` - Lấy danh sách đặt phòng của tôi
+- `GET /bookings/my/{id}` - Lấy chi tiết đặt phòng của tôi
+- `PUT /bookings/my/{id}` - Cập nhật đặt phòng của tôi
+- `PATCH /bookings/my/{id}/cancel` - Hủy đặt phòng của tôi
+
+### Host Booking Operations
+- `GET /bookings/host` - Lấy tất cả đặt phòng của host
+- `GET /bookings/host/{id}` - Lấy chi tiết đặt phòng (host)
+- `PUT /bookings/host/{id}` - Cập nhật đặt phòng (host)
+- `PATCH /bookings/host/{id}/confirm` - Xác nhận đặt phòng
+- `PATCH /bookings/host/{id}/cancel` - Hủy đặt phòng
+- `PATCH /bookings/host/{id}/complete` - Hoàn thành đặt phòng
+- `GET /bookings/hotel/{hotelId}` - Lấy đặt phòng theo khách sạn
+
+### Admin Booking Operations
+- `GET /bookings/admin` - Lấy tất cả đặt phòng (admin)
+- `GET /bookings/admin/{id}` - Lấy chi tiết đặt phòng (admin)
+- `PUT /bookings/admin/{id}` - Cập nhật đặt phòng (admin)
+- `DELETE /bookings/admin/{id}` - Xóa đặt phòng
+
+### Booking Search & Filter
+- `GET /bookings/search?keyword={keyword}` - Tìm kiếm đặt phòng
+- `GET /bookings/date-range?startDate={start}&endDate={end}` - Lấy đặt phòng theo khoảng thời gian
+
+### Booking Statistics
+- `GET /bookings/admin/stats/total` - Tổng số đặt phòng (admin)
+- `GET /bookings/host/stats/total` - Tổng số đặt phòng của host
+
+### Booking Utility
+- `GET /bookings/check-availability?roomTypeId={id}&checkInDate={date}&checkOutDate={date}` - Kiểm tra tình trạng phòng
+
+### Booking Request/Response Models
+
+#### BookingCreateRequest
+```json
+{
+  "hotelId": "UUID (required)",
+  "roomTypeId": "UUID (required)",
+  "guestName": "string (required, 2-100 chars)",
+  "guestEmail": "string (required, email format)",
+  "guestPhone": "string (phone format)",
+  "checkInDate": "date (required, future or present)",
+  "checkOutDate": "date (required, future)",
+  "guests": "integer (required, 1-10)",
+  "totalAmount": "decimal (required, > 0)",
+  "paymentMethod": "string (max 50 chars)",
+  "specialRequests": "string (max 1000 chars)"
+}
+```
+
+#### BookingUpdateRequest
+```json
+{
+  "guestName": "string (2-100 chars)",
+  "guestEmail": "string (email format)",
+  "guestPhone": "string (phone format)",
+  "checkInDate": "date (future or present)",
+  "checkOutDate": "date (future)",
+  "guests": "integer (1-10)",
+  "totalAmount": "decimal (> 0)",
+  "status": "PENDING|CONFIRMED|CANCELLED|COMPLETED|NO_SHOW",
+  "paymentStatus": "PENDING|PAID|FAILED|REFUNDED|PARTIALLY_REFUNDED",
+  "paymentMethod": "string (max 50 chars)",
+  "specialRequests": "string (max 1000 chars)"
+}
+```
+
+#### BookingResponse
+```json
+{
+  "id": "UUID",
+  "guestName": "string",
+  "guestEmail": "string",
+  "guestPhone": "string",
+  "hotelId": "UUID",
+  "hotelName": "string",
+  "hotelAddress": "string",
+  "hotelPhone": "string",
+  "hotelEmail": "string",
+  "roomTypeId": "UUID",
+  "roomTypeName": "string",
+  "roomDescription": "string",
+  "maxOccupancy": "integer",
+  "bedType": "string",
+  "userId": "UUID",
+  "userName": "string",
+  "checkInDate": "date",
+  "checkOutDate": "date",
+  "guests": "integer",
+  "totalAmount": "decimal",
+  "status": "enum",
+  "paymentStatus": "enum",
+  "paymentMethod": "string",
+  "bookingReference": "string",
+  "specialRequests": "string",
+  "numberOfNights": "integer",
+  "pricePerNight": "decimal",
+  "createdAt": "datetime",
+  "updatedAt": "datetime",
+  "createdBy": "UUID",
+  "updatedBy": "UUID"
+}
+```
 
 ## Response Format
 

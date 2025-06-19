@@ -30,7 +30,7 @@ const ContactPage: React.FC = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-6">
-              Liên hệ với chúng tôi
+              Contact Us
             </h1>
             <p className="text-xl opacity-90">
               Chúng tôi luôn sẵn sàng lắng nghe và hỗ trợ bạn 24/7
@@ -44,7 +44,7 @@ const ContactPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Contact Information */}
           <div>
-            <h2 className="text-2xl font-bold mb-6">Thông tin liên hệ</h2>
+            <h2 className="text-2xl font-bold mb-6">Contact Information</h2>
             
             <div className="space-y-6">
               <div className="flex items-start">

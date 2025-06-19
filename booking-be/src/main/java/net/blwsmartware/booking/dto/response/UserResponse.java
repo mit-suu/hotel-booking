@@ -18,6 +18,7 @@ public class UserResponse {
     String email;
     boolean isActive;
     boolean emailVerified;
+    boolean hostRequested;
     String tel,address;
     LocalDate dob;
     Instant createAt;

@@ -12,6 +12,7 @@ public interface UserService {
     UserResponse resendCodeMail(ResendEmailRequest request);
     UserResponse newPass(NewPassRequest request);
     DataResponse<UserResponse> getAll(Integer pageNumber, Integer pageSize, String sortBy);
+    DataResponse<UserResponse> getHostUsers(Integer pageNumber, Integer pageSize, String sortBy);
     UserResponse getUserByID(UUID id);
     UserResponse getUserByEmail(String email);
     UserResponse getUserByUsername(String username);
@@ -21,6 +22,8 @@ public interface UserService {
     UserResponse adminUpdatePassword(UUID id, AdminPasswordUpdateRequest request);
     UserResponse updateRoleOfUser(UUID id, RoleOfUpdate request);
     UserResponse toggleEmailVerification(UUID id);
+    UserResponse requestHost(UUID id);
+    UserResponse approveHostRequest(UUID id);
     void deleteUser(UUID id);
     
     // Statistics

@@ -30,7 +30,7 @@ const RoomSearchForm: React.FC<RoomSearchFormProps> = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const hotelTypes = [
-    { value: 'Hotel', label: 'Khách sạn' },
+    { value: 'Hotel', label: 'Hotel' },
     { value: 'Resort', label: 'Resort' },
     { value: 'Homestay', label: 'Homestay' },
     { value: 'Villa', label: 'Villa' },
@@ -54,7 +54,7 @@ const RoomSearchForm: React.FC<RoomSearchFormProps> = ({
 
   const sortOptions = [
     { value: 'price', label: 'Giá' },
-    { value: 'rating', label: 'Đánh giá' },
+    { value: 'rating', label: 'Rating' },
     { value: 'distance', label: 'Khoảng cách' },
     { value: 'popularity', label: 'Phổ biến' }
   ];
@@ -145,7 +145,7 @@ const RoomSearchForm: React.FC<RoomSearchFormProps> = ({
               <MapPin size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Thành phố, quận, khách sạn..."
+                placeholder="City, district, hotel..."
                 value={filters.location}
                 onChange={(e) => handleInputChange('location', e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -242,7 +242,7 @@ const RoomSearchForm: React.FC<RoomSearchFormProps> = ({
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
             >
               <Search size={16} className="mr-2" />
-              Tìm kiếm
+              Search
             </button>
           </div>
         </div>
@@ -313,7 +313,7 @@ const RoomSearchForm: React.FC<RoomSearchFormProps> = ({
             {/* Rating */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                Đánh giá tối thiểu
+                Minimum Rating
               </label>
               <div className="flex space-x-2">
                 {[0, 3, 4, 4.5].map(rating => (

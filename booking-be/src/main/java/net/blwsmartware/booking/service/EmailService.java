@@ -9,7 +9,7 @@ import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import net.blwsmartware.booking.dto.request.EmailRequest;
 import net.blwsmartware.booking.enums.ErrorResponse;
-import net.blwsmartware.booking.exception.IdentityRuntimeException;
+import net.blwsmartware.booking.exception.AppRuntimeException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -59,7 +59,7 @@ public class EmailService {
 
         } catch (MessagingException e) {
             log.error( "MessagingException :{}", e.getMessage());
-            throw new IdentityRuntimeException(ErrorResponse.EMAIL_INVALID);
+            throw new AppRuntimeException(ErrorResponse.EMAIL_INVALID);
         }
 
     }

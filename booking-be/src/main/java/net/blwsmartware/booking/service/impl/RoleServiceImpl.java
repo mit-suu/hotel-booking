@@ -9,7 +9,7 @@ import net.blwsmartware.booking.dto.response.DataResponse;
 import net.blwsmartware.booking.dto.response.RoleResponse;
 import net.blwsmartware.booking.entity.Role;
 import net.blwsmartware.booking.enums.ErrorResponse;
-import net.blwsmartware.booking.exception.IdentityRuntimeException;
+import net.blwsmartware.booking.exception.AppRuntimeException;
 import net.blwsmartware.booking.mapper.RoleMapper;
 import net.blwsmartware.booking.repository.RoleRepository;
 import net.blwsmartware.booking.service.RoleService;
@@ -20,8 +20,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 
 @Service
@@ -51,19 +49,19 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public RoleResponse getRoleByID(int id) {
         return roleMapper.toRoleResponse(roleRepository.findById(id)
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.ROLE_NOT_EXISTED))
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.ROLE_NOT_EXISTED))
         ) ;
     }
     @Override
     public RoleResponse getRoleByName(String name) {
         return roleMapper.toRoleResponse(roleRepository.findByName(name)
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.ROLE_NOT_EXISTED))
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.ROLE_NOT_EXISTED))
         ) ;
     }
     @Override
     public RoleResponse updateRole(int id, RoleUpdate request) {
         Role old = roleRepository.findById(id)
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.ROLE_NOT_EXISTED));
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.ROLE_NOT_EXISTED));
         roleMapper.updateRole(request, old);
         return roleMapper.toRoleResponse(roleRepository.save(old)) ;
     }

@@ -9,19 +9,19 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface RoomTypeMapper {
-
+    
     // Convert RoomType entity to RoomTypeResponse with full details
     @Named("toResponse")
     @Mapping(target = "hotelId", source = "hotel.id")
     @Mapping(target = "hotelName", source = "hotel.name")
     RoomTypeResponse toResponse(RoomType roomType);
-
+    
     // Convert RoomType entity to RoomTypeResponse without hotel info (for nested use)
     @Named("toResponseWithoutHotel")
     @Mapping(target = "hotelId", ignore = true)
     @Mapping(target = "hotelName", ignore = true)
     RoomTypeResponse toResponseWithoutHotel(RoomType roomType);
-
+    
     // Convert RoomTypeCreateRequest to RoomType entity
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "hotel", ignore = true) // Will be set manually
@@ -31,7 +31,7 @@ public interface RoomTypeMapper {
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
     RoomType toEntity(RoomTypeCreateRequest request);
-
+    
     // Update RoomType entity from RoomTypeCreateRequest (for updates)
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "hotel", ignore = true)

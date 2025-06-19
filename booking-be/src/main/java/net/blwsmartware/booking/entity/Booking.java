@@ -95,4 +95,4 @@ public class Booking {
 
     @Column(name = "updated_by")
     UUID updatedBy;
-}
+} 

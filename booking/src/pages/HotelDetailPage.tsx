@@ -721,30 +721,30 @@ const HotelDetailPage: React.FC = () => {
 
               {/* Booking Button */}
               <button 
-                onClick={() => {
-                  // Find best available room type
-                  const availableRoomTypes = roomTypes.filter(rt => 
-                    rt.availableRooms > 0 && rt.maxOccupancy >= guestCount
-                  );
+                // onClick={() => {
+                //   // Find best available room type
+                //   const availableRoomTypes = roomTypes.filter(rt => 
+                //     rt.availableRooms > 0 && rt.maxOccupancy >= guestCount
+                //   );
                   
-                  if (availableRoomTypes.length > 0) {
-                    // Use the cheapest available room type
-                    const cheapestRoom = availableRoomTypes.reduce((prev, current) => 
-                      prev.pricePerNight < current.pricePerNight ? prev : current
-                    );
+                //   if (availableRoomTypes.length > 0) {
+                //     // Use the cheapest available room type
+                //     const cheapestRoom = availableRoomTypes.reduce((prev, current) => 
+                //       prev.pricePerNight < current.pricePerNight ? prev : current
+                //     );
                     
-                    const bookingParams = new URLSearchParams({
-                      hotelId: hotel.id,
-                      roomTypeId: cheapestRoom.id,
-                      checkIn: checkInDate,
-                      checkOut: checkOutDate,
-                      guests: guestCount.toString()
-                    });
-                    navigate(`/booking?${bookingParams.toString()}`);
-                  } else {
-                    alert(`No rooms available for ${guestCount} guests on the selected dates. Please try different dates or guest count.`);
-                  }
-                }}
+                //     const bookingParams = new URLSearchParams({
+                //       hotelId: hotel.id,
+                //       roomTypeId: cheapestRoom.id,
+                //       checkIn: checkInDate,
+                //       checkOut: checkOutDate,
+                //       guests: guestCount.toString()
+                //     });
+                //     navigate(`/booking?${bookingParams.toString()}`);
+                //   } else {
+                //     alert(`No rooms available for ${guestCount} guests on the selected dates. Please try different dates or guest count.`);
+                //   }
+                // }}
                 className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold mb-4"
               >
                 Book Now

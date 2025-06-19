@@ -59,12 +59,12 @@ const AdminUserDetail: React.FC = () => {
       if (data.success) {
         setUser(data.result);
       } else {
-        showToast('error', 'Lỗi', data.message || 'Không thể tải thông tin người dùng');
+        showToast('error', 'Error', data.message || 'Unable to load user information');
         navigate('/admin/users');
       }
     } catch (error: any) {
       console.error('Error fetching user:', error);
-      showToast('error', 'Lỗi', 'Không thể kết nối đến server');
+              showToast('error', 'Error', 'Unable to connect to server');
       navigate('/admin/users');
     } finally {
       setLoading(false);
@@ -78,16 +78,16 @@ const AdminUserDetail: React.FC = () => {
   const handleDelete = async () => {
     if (!user) return;
 
-    if (window.confirm(`Bạn có chắc chắn muốn xóa người dùng "${user.name}" không?`)) {
+          if (window.confirm(`Are you sure you want to delete user "${user.name}"?`)) {
       try {
         setActionLoading(true);
         await userAPI.deleteUser(user.id);
-        showToast('success', 'Thành công', 'Đã xóa người dùng thành công');
+                  showToast('success', 'Success', 'User deleted successfully');
         navigate('/admin/users');
       } catch (error: any) {
         console.error('Error deleting user:', error);
-        const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi xóa người dùng';
-        showToast('error', 'Lỗi', errorMessage);
+                  const errorMessage = error.response?.data?.message || 'An error occurred while deleting user';
+        showToast('error', 'Error', errorMessage);
       } finally {
         setActionLoading(false);
       }
@@ -106,7 +106,7 @@ const AdminUserDetail: React.FC = () => {
   };
 
   const formatDateOfBirth = (dateString?: string) => {
-    if (!dateString) return 'Chưa cập nhật';
+          if (!dateString) return 'Not updated';
     return new Date(dateString).toLocaleDateString('vi-VN');
   };
 
@@ -123,7 +123,7 @@ const AdminUserDetail: React.FC = () => {
         }`}
       >
         <Shield className="h-4 w-4 mr-1" />
-        {role.name === 'ADMIN' ? 'Quản trị viên' : role.name === 'HOST' ? 'Chủ khách sạn' : 'Người dùng'}
+        {role.name === 'ADMIN' ? 'Administrator' : role.name === 'HOST' ? 'Hotel Owner' : 'User'}
       </span>
     ));
   };
@@ -146,12 +146,12 @@ const AdminUserDetail: React.FC = () => {
   if (!user) {
     return (
       <div className="w-full text-center py-12">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Không tìm thấy người dùng</h2>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2">User Not Found</h2>
         <button
           onClick={() => navigate('/admin/users')}
           className="text-blue-600 hover:text-blue-800"
         >
-          Quay lại danh sách người dùng
+                      Back to User List
         </button>
       </div>
     );
@@ -167,11 +167,11 @@ const AdminUserDetail: React.FC = () => {
             className="flex items-center text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft size={20} className="mr-2" />
-            Quay lại
+              Back
           </button>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold">Chi tiết người dùng</h1>
-            <p className="text-gray-600 mt-1">Thông tin chi tiết của {user.name}</p>
+            <h1 className="text-xl sm:text-2xl font-bold">User Details</h1>
+            <p className="text-gray-600 mt-1">Detailed information for {user.name}</p>
           </div>
         </div>
         
@@ -182,7 +182,7 @@ const AdminUserDetail: React.FC = () => {
             className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center disabled:opacity-50"
           >
             <RefreshCw size={20} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Làm mới
+                          Refresh
           </button>
           
           <button
@@ -190,7 +190,7 @@ const AdminUserDetail: React.FC = () => {
             className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors flex items-center"
           >
             <Settings size={20} className="mr-2" />
-            Quản lý vai trò
+                          Role Management
           </button>
           
           <button
@@ -198,7 +198,7 @@ const AdminUserDetail: React.FC = () => {
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
           >
             <Edit size={20} className="mr-2" />
-            Chỉnh sửa
+            Edit
           </button>
           
           <button
@@ -211,7 +211,7 @@ const AdminUserDetail: React.FC = () => {
             ) : (
               <Trash size={20} className="mr-2" />
             )}
-            Xóa
+            Delete
           </button>
         </div>
       </div>
@@ -232,16 +232,16 @@ const AdminUserDetail: React.FC = () => {
                   {user.active ? (
                     <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
                       <CheckCircle className="h-3 w-3 mr-1" />
-                      Hoạt động
+                      Active
                     </span>
                   ) : (
                     <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
                       <XCircle className="h-3 w-3 mr-1" />
-                      Vô hiệu
+                      Inactive
                     </span>
                   )}
                   <span className="ml-2 text-xs text-gray-500">
-                    (Có thể thay đổi trong phần chỉnh sửa)
+                    (Can be changed in the edit section)
                   </span>
                 </div>
               </div>
@@ -272,7 +272,7 @@ const AdminUserDetail: React.FC = () => {
                   <div className="flex items-center space-x-3">
                     <Phone className="h-5 w-5 text-gray-400" />
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Số điện thoại</p>
+                      <p className="text-sm font-medium text-gray-500">Phone</p>
                       <p className="text-gray-900">{user.tel}</p>
                     </div>
                   </div>
@@ -281,7 +281,7 @@ const AdminUserDetail: React.FC = () => {
                 <div className="flex items-center space-x-3">
                   <Calendar className="h-5 w-5 text-gray-400" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Ngày sinh</p>
+                    <p className="text-sm font-medium text-gray-500">Date of Birth</p>
                     <p className="text-gray-900">{formatDateOfBirth(user.dob)}</p>
                   </div>
                 </div>
@@ -292,7 +292,7 @@ const AdminUserDetail: React.FC = () => {
                   <div className="flex items-start space-x-3">
                     <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-gray-500">Địa chỉ</p>
+                      <p className="text-sm font-medium text-gray-500">Address</p>
                       <p className="text-gray-900">{user.address}</p>
                     </div>
                   </div>
@@ -301,7 +301,7 @@ const AdminUserDetail: React.FC = () => {
                 <div className="flex items-center space-x-3">
                   <Clock className="h-5 w-5 text-gray-400" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Ngày tạo</p>
+                    <p className="text-sm font-medium text-gray-500">Created Date</p>
                     <p className="text-gray-900">{formatDate(user.createAt)}</p>
                   </div>
                 </div>
@@ -309,7 +309,7 @@ const AdminUserDetail: React.FC = () => {
                 <div className="flex items-center space-x-3">
                   <Clock className="h-5 w-5 text-gray-400" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Cập nhật gần đây</p>
+                    <p className="text-sm font-medium text-gray-500">Updated</p>
                     <p className="text-gray-900">{formatDate(user.updateAt)}</p>
                   </div>
                 </div>
@@ -324,14 +324,14 @@ const AdminUserDetail: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                 <Shield className="h-5 w-5 mr-2" />
-                Vai trò & Quyền hạn
+                Roles & Permissions
               </h3>
               <button
                 onClick={() => setIsRoleModalOpen(true)}
                 className="text-purple-600 hover:text-purple-800 text-sm font-medium flex items-center"
               >
                 <Settings className="h-4 w-4 mr-1" />
-                Chỉnh sửa
+                Edit
               </button>
             </div>
             
@@ -347,7 +347,7 @@ const AdminUserDetail: React.FC = () => {
             </div>
 
             {user.roles.length === 0 && (
-              <p className="text-gray-500 text-center py-4">Chưa có vai trò nào được gán</p>
+                              <p className="text-gray-500 text-center py-4">No roles assigned yet</p>
             )}
           </div>
         </div>
@@ -356,29 +356,29 @@ const AdminUserDetail: React.FC = () => {
       {/* Activity & Statistics */}
       <div className="mt-6 bg-white rounded-lg shadow-md overflow-hidden">
         <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Thống kê hoạt động</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Statistics</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-blue-50 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-blue-600">0</div>
-              <div className="text-sm text-blue-600">Đặt phòng</div>
+              <div className="text-sm text-blue-600">Booking</div>
             </div>
             
             <div className="bg-green-50 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-green-600">0</div>
-              <div className="text-sm text-green-600">Đánh giá</div>
+              <div className="text-sm text-green-600">Review</div>
             </div>
             
             <div className="bg-yellow-50 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-yellow-600">0</div>
-              <div className="text-sm text-yellow-600">Khách sạn</div>
+                  <div className="text-sm text-yellow-600">Hotel</div>
             </div>
             
             <div className="bg-purple-50 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-purple-600">
                 {Math.floor((new Date().getTime() - new Date(user.createAt).getTime()) / (1000 * 60 * 60 * 24))}
               </div>
-              <div className="text-sm text-purple-600">Ngày tham gia</div>
+                              <div className="text-sm text-purple-600">Join Date</div>
             </div>
           </div>
         </div>

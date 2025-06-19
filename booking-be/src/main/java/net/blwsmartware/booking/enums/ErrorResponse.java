@@ -58,18 +58,18 @@ public enum ErrorResponse {
     HOTEL_HAS_BOOKINGS(2004, "Cannot delete hotel that has bookings!", HttpStatus.BAD_REQUEST),
     HOTEL_ACCESS_DENIED(2005, "You do not have permission to access this hotel!", HttpStatus.FORBIDDEN),
     HOTEL_NOT_AVAILABLE(2006, "Hotel is not available for booking!", HttpStatus.BAD_REQUEST),
-
+    
     // Room type-related errors
     ROOM_TYPE_NOT_FOUND(3001, "Room type not found!", HttpStatus.NOT_FOUND),
     ROOM_TYPE_NAME_ALREADY_EXISTS(3002, "Room type name already exists for this hotel!", HttpStatus.BAD_REQUEST),
     ROOM_TYPE_HAS_BOOKINGS(3003, "Cannot delete room type that has bookings!", HttpStatus.BAD_REQUEST),
     INSUFFICIENT_ROOMS_AVAILABLE(3004, "Not enough rooms available!", HttpStatus.BAD_REQUEST),
-
+    
     // Review-related errors
     REVIEW_NOT_FOUND(4001, "Review not found!", HttpStatus.NOT_FOUND),
     REVIEW_ALREADY_EXISTS(4002, "User has already reviewed this hotel!", HttpStatus.BAD_REQUEST),
     REVIEW_NOT_ALLOWED(4003, "User is not allowed to review this hotel!", HttpStatus.FORBIDDEN),
-
+    
     // Booking-related errors
     BOOKING_NOT_FOUND(5001, "Booking not found!", HttpStatus.NOT_FOUND),
     BOOKING_ALREADY_CANCELLED(5002, "Booking is already cancelled!", HttpStatus.BAD_REQUEST),
@@ -88,7 +88,7 @@ public enum ErrorResponse {
     LARGE_GROUP_NEEDS_APPROVAL(5015, "Large groups (8+ guests) require special approval!", HttpStatus.BAD_REQUEST),
     BOOKING_CONFLICT_DETECTED(5016, "Booking conflict detected with existing reservations!", HttpStatus.CONFLICT),
     ROOM_UNDER_MAINTENANCE(5017, "Room is under maintenance during selected dates!", HttpStatus.BAD_REQUEST),
-
+    
     // Enhanced errors
     PAYMENT_FAILED(1508, "Payment failed!", HttpStatus.BAD_REQUEST),
     INVALID_BOOKING_STATUS(1509, "Invalid booking status!", HttpStatus.BAD_REQUEST),

@@ -69,4 +69,4 @@ public class RoomType {
 
     @Column(name = "updated_by")
     UUID updatedBy;
-}
+} 

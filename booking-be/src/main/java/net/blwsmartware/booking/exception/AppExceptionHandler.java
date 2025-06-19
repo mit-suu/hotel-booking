@@ -16,7 +16,7 @@ import java.util.StringJoiner;
 
 @ControllerAdvice
 @Slf4j
-public class IdentityExceptionHandler {
+public class AppExceptionHandler {
 
     private MessageResponse<?> responseBody(ErrorResponse err) {
         return MessageResponse.builder().success(false).code(err.getCode()).message(err.getMessage()).build();
@@ -34,8 +34,8 @@ public class IdentityExceptionHandler {
         return ResponseEntity.status(ErrorResponse.UNCATEGORIZED_ERROR.getHttpCode()).body(responseBody(ErrorResponse.UNCATEGORIZED_ERROR));
     }
 
-    @ExceptionHandler(value = IdentityRuntimeException.class)
-    public ResponseEntity<MessageResponse<?>> handleIdentityException(IdentityRuntimeException exception) {
+    @ExceptionHandler(value = AppRuntimeException.class)
+    public ResponseEntity<MessageResponse<?>> handleIdentityException(AppRuntimeException exception) {
         return ResponseEntity.status(exception.getErrorResponse().getHttpCode()).body(responseBody(exception.getErrorResponse()));
 
     }

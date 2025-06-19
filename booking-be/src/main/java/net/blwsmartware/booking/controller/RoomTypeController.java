@@ -27,7 +27,7 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class RoomTypeController {
-
+    
     RoomTypeService roomTypeService;
     
     // Admin endpoints
@@ -119,9 +119,9 @@ public class RoomTypeController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "name") String sortBy) {
-
+        
         DataResponse<RoomTypeResponse> response = roomTypeService.getMyRoomTypes(pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<RoomTypeResponse>>builder()
@@ -129,7 +129,7 @@ public class RoomTypeController {
                         .result(response)
                         .build());
     }
-
+    
     @GetMapping("/host/hotel/{hotelId}/room-types")
     @IsHost
     public ResponseEntity<MessageResponse<DataResponse<RoomTypeResponse>>> getMyHotelRoomTypes(
@@ -137,9 +137,9 @@ public class RoomTypeController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "name") String sortBy) {
-
+        
         DataResponse<RoomTypeResponse> response = roomTypeService.getMyHotelRoomTypes(hotelId, pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<RoomTypeResponse>>builder()
@@ -147,12 +147,12 @@ public class RoomTypeController {
                         .result(response)
                         .build());
     }
-
+    
     @PostMapping("/host")
     @IsHost
     public ResponseEntity<MessageResponse<RoomTypeResponse>> createMyRoomType(@Valid @RequestBody RoomTypeCreateRequest request) {
         RoomTypeResponse response = roomTypeService.createMyRoomType(request);
-
+        
         return ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<RoomTypeResponse>builder()
@@ -160,14 +160,14 @@ public class RoomTypeController {
                         .result(response)
                         .build());
     }
-
+    
     @PutMapping("/host/{id}")
     @IsHost
     public ResponseEntity<MessageResponse<RoomTypeResponse>> updateMyRoomType(
             @PathVariable UUID id,
             @Valid @RequestBody RoomTypeCreateRequest request) {
         RoomTypeResponse response = roomTypeService.updateMyRoomType(id, request);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<RoomTypeResponse>builder()
@@ -175,24 +175,24 @@ public class RoomTypeController {
                         .result(response)
                         .build());
     }
-
+    
     @DeleteMapping("/host/{id}")
     @IsHost
     public ResponseEntity<?> deleteMyRoomType(@PathVariable UUID id) {
         roomTypeService.deleteMyRoomType(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.builder()
                         .message("Room type deleted successfully")
                         .build());
     }
-
+    
     @GetMapping("/host/{id}")
     @IsHost
     public ResponseEntity<MessageResponse<RoomTypeResponse>> getMyRoomTypeById(@PathVariable UUID id) {
         RoomTypeResponse response = roomTypeService.getMyRoomTypeById(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<RoomTypeResponse>builder()
@@ -233,7 +233,7 @@ public class RoomTypeController {
     @GetMapping("/{id}")
     public ResponseEntity<MessageResponse<RoomTypeResponse>> getRoomTypeById(@PathVariable UUID id) {
         RoomTypeResponse response = roomTypeService.getRoomTypeById(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<RoomTypeResponse>builder()
@@ -241,16 +241,16 @@ public class RoomTypeController {
                         .result(response)
                         .build());
     }
-
+    
     @GetMapping("/hotel/{hotelId}")
     public ResponseEntity<MessageResponse<DataResponse<RoomTypeResponse>>> getRoomTypesByHotel(
             @PathVariable UUID hotelId,
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "name") String sortBy) {
-
+        
         DataResponse<RoomTypeResponse> response = roomTypeService.getRoomTypesByHotel(hotelId, pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<RoomTypeResponse>>builder()
@@ -282,9 +282,9 @@ public class RoomTypeController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "pricePerNight") String sortBy) {
-
+        
         DataResponse<RoomTypeResponse> response = roomTypeService.getAvailableRoomTypesByHotel(hotelId, pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<RoomTypeResponse>>builder()
@@ -334,10 +334,10 @@ public class RoomTypeController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "pricePerNight") String sortBy) {
-
+        
         DataResponse<RoomTypeResponse> response = roomTypeService.getRoomTypesByPriceRange(
                 minPrice, maxPrice, pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<RoomTypeResponse>>builder()
@@ -345,15 +345,15 @@ public class RoomTypeController {
                         .result(response)
                         .build());
     }
-
+    
     @GetMapping("/available")
     public ResponseEntity<MessageResponse<DataResponse<RoomTypeResponse>>> getAvailableRoomTypes(
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "pricePerNight") String sortBy) {
-
+        
         DataResponse<RoomTypeResponse> response = roomTypeService.getAvailableRoomTypes(pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<RoomTypeResponse>>builder()
@@ -361,4 +361,4 @@ public class RoomTypeController {
                         .result(response)
                         .build());
     }
-}
+} 

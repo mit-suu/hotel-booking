@@ -38,20 +38,20 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class HotelServiceImpl implements HotelService {
-
+    
     HotelRepository hotelRepository;
     UserRepository userRepository;
     ReviewRepository reviewRepository;
     HotelMapper hotelMapper;
-
+    
     @Override
     @IsAdmin
     public DataResponse<HotelResponse> getAllHotels(Integer pageNumber, Integer pageSize, String sortBy) {
         log.info("Getting all hotels with pagination: page={}, size={}, sortBy={}", pageNumber, pageSize, sortBy);
-
+        
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
         Page<Hotel> hotelPage = hotelRepository.findAll(pageable);
-
+        
         // Debug: Log raw entities from database
         log.info("=== DATABASE ENTITIES DEBUG ===");
         log.info("Total hotels from DB: {}", hotelPage.getContent().size());
@@ -61,7 +61,7 @@ public class HotelServiceImpl implements HotelService {
             log.info("  - isActive: {} (type: {})", hotel.isActive(), hotel.isActive() ? "true" : "false");
             log.info("  - isFeatured: {} (type: {})", hotel.isFeatured(), hotel.isFeatured() ? "true" : "false");
         });
-
+        
         List<HotelResponse> hotelResponses = hotelPage.getContent().stream()
                 .map(hotelMapper::toResponse)
                 .toList();
@@ -105,7 +105,7 @@ public class HotelServiceImpl implements HotelService {
         
         return DataResponseUtils.convertPageInfo(hotelPage, hotelResponses);
     }
-
+    
     @Override
     public HotelResponse getHotelById(UUID id) {
         log.info("Getting hotel by ID: {} (public API)", id);
@@ -249,24 +249,24 @@ public class HotelServiceImpl implements HotelService {
         
         return response;
     }
-
+    
     @Override
     @IsAdmin
     @Transactional
     public HotelResponse toggleFeaturedStatus(UUID id) {
         log.info("Toggling hotel featured status: {}", id);
-
+        
         Hotel hotel = hotelRepository.findById(id)
                 .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
         
         hotel.setFeatured(!hotel.isFeatured());
         hotel.setUpdatedBy(getCurrentUserId());
-
+        
         Hotel updatedHotel = hotelRepository.save(hotel);
-
+        
         return hotelMapper.toResponse(updatedHotel);
     }
-
+    
     @Override
     public DataResponse<HotelResponse> searchHotels(String keyword, Integer pageNumber, Integer pageSize, String sortBy) {
         log.info("Searching hotels with keyword: {}", keyword);
@@ -366,30 +366,30 @@ public class HotelServiceImpl implements HotelService {
     @Override
     public DataResponse<HotelResponse> getHotelsByOwner(UUID ownerId, Integer pageNumber, Integer pageSize, String sortBy) {
         log.info("Getting hotels by owner: {}", ownerId);
-
+        
         // Validate owner exists
         userRepository.findById(ownerId)
                 .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
         
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
         Page<Hotel> hotelPage = hotelRepository.findByOwnerId(ownerId, pageable);
-
+        
         List<HotelResponse> hotelResponses = hotelPage.getContent().stream()
                 .map(hotelMapper::toResponseWithoutRelations)
                 .toList();
-
+        
         return DataResponseUtils.convertPageInfo(hotelPage, hotelResponses);
     }
-
+    
     @Override
     @IsHost
     public DataResponse<HotelResponse> getMyHotels(Integer pageNumber, Integer pageSize, String sortBy) {
         log.info("Getting current user's hotels");
-
+        
         UUID currentUserId = getCurrentUserId();
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
         Page<Hotel> hotelPage = hotelRepository.findByOwnerId(currentUserId, pageable);
-
+        
         List<HotelResponse> hotelResponses = hotelPage.getContent().stream()
                 .map(hotelMapper::toResponseWithoutRelations)
                 .toList();
@@ -444,12 +444,12 @@ public class HotelServiceImpl implements HotelService {
         
         return hotelRepository.countByOwnerId(ownerId);
     }
-
+    
     @Override
     public boolean isHotelNameExistsInCity(String name, String city) {
         return hotelRepository.existsByNameAndCity(name, city);
     }
-
+    
     // Helper methods
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -457,7 +457,7 @@ public class HotelServiceImpl implements HotelService {
         return userRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
     }
-
+    
     private UUID getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return UUID.fromString(authentication.getName());
@@ -493,12 +493,12 @@ public class HotelServiceImpl implements HotelService {
         UUID currentUserId = getCurrentUserId();
         Hotel hotel = hotelRepository.findById(hotelId)
                 .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
-
+        
         if (!hotel.getOwner().getId().equals(currentUserId)) {
             throw new AppRuntimeException(ErrorResponse.HOTEL_ACCESS_DENIED);
         }
     }
-
+    
     /**
      * Get hotel by ID and validate ownership
      */
@@ -510,52 +510,52 @@ public class HotelServiceImpl implements HotelService {
         if (!hotel.getOwner().getId().equals(currentUserId)) {
             throw new AppRuntimeException(ErrorResponse.HOTEL_ACCESS_DENIED);
         }
-
+        
         return hotel;
     }
 
     // ===== HOST OPERATIONS =====
-
+    
     @Override
     @IsHost
     public HotelResponse getMyHotelById(UUID id) {
         log.info("Host getting hotel details: {}", id);
-
+        
         Hotel hotel = getMyHotelEntity(id);
         return hotelMapper.toResponse(hotel);
     }
-
+    
     @Override
     @IsHost
     @Transactional
     public HotelResponse createMyHotel(HotelCreateRequest request) {
         log.info("Host creating new hotel: {}", request.getName());
-
+        
         // Host can only create hotel for themselves
         User currentUser = getCurrentUser();
-
+        
         // Check if hotel name already exists in the same city
         if (hotelRepository.existsByNameAndCity(request.getName(), request.getCity())) {
             throw new AppRuntimeException(ErrorResponse.HOTEL_NAME_ALREADY_EXISTS);
         }
-
+        
         // Convert request to entity
         Hotel hotel = hotelMapper.toEntity(request);
         hotel.setOwner(currentUser);
         hotel.setCreatedBy(getCurrentUserId());
         hotel.setUpdatedBy(getCurrentUserId());
-
+        
         // Host cannot set featured status - only admin can
         hotel.setFeatured(false);
-
+        
         // Save hotel
         Hotel savedHotel = hotelRepository.save(hotel);
-
+        
         return hotelMapper.toResponse(savedHotel);
     }
-
+    
     @Override
-    @IsHost
+    @IsHost  
     @Transactional
     public HotelResponse updateMyHotel(UUID id, HotelUpdateRequest request) {
         log.info("Host updating hotel: {}", id);
@@ -576,7 +576,7 @@ public class HotelServiceImpl implements HotelService {
         // Update hotel
         hotelMapper.updateEntity(hotel, request);
         hotel.setUpdatedBy(getCurrentUserId());
-
+        
         // Restore featured status - only admin can change this
         hotel.setFeatured(currentFeaturedStatus);
 
@@ -584,37 +584,37 @@ public class HotelServiceImpl implements HotelService {
 
         return hotelMapper.toResponse(updatedHotel);
     }
-
+    
     @Override
     @IsHost
     @Transactional
     public void deleteMyHotel(UUID id) {
         log.info("Host deleting hotel: {}", id);
-
+        
         Hotel hotel = getMyHotelEntity(id);
-
+        
         // TODO: Check if hotel has any bookings when booking entity is implemented
         // For now, we'll allow deletion
-
+        
         hotelRepository.delete(hotel);
     }
-
+    
     @Override
     @IsHost
     @Transactional
     public HotelResponse toggleMyHotelStatus(UUID id) {
         log.info("Host toggling hotel status: {}", id);
-
+        
         Hotel hotel = getMyHotelEntity(id);
-
+        
         hotel.setActive(!hotel.isActive());
         hotel.setUpdatedBy(getCurrentUserId());
-
+        
         Hotel updatedHotel = hotelRepository.save(hotel);
-
+        
         return hotelMapper.toResponse(updatedHotel);
     }
-
+    
     // Host Statistics
     @Override
     @IsHost
@@ -622,9 +622,9 @@ public class HotelServiceImpl implements HotelService {
         UUID currentUserId = getCurrentUserId();
         return hotelRepository.countByOwnerId(currentUserId);
     }
-
+    
     @Override
-    @IsHost
+    @IsHost  
     public Long getMyActiveHotelsCount() {
         UUID currentUserId = getCurrentUserId();
         return hotelRepository.countByOwnerIdAndIsActiveTrue(currentUserId);
@@ -632,12 +632,12 @@ public class HotelServiceImpl implements HotelService {
 
     @Override
     public DataResponse<HotelResponse> searchHotelsWithFilters(
-            String city, String country, Integer starRating,
+            String city, String country, Integer starRating, 
             BigDecimal minPrice, BigDecimal maxPrice, String amenities,
             Integer pageNumber, Integer pageSize, String sortBy) {
-        log.info("Searching hotels with filters - city: {}, country: {}, stars: {}, minPrice: {}, maxPrice: {}, amenities: {}",
+        log.info("Searching hotels with filters - city: {}, country: {}, stars: {}, minPrice: {}, maxPrice: {}, amenities: {}", 
                 city, country, starRating, minPrice, maxPrice, amenities);
-
+        
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
         Page<Hotel> hotelPage = hotelRepository.findActiveWithFiltersAndAmenities(
                 city, country, starRating, null, minPrice, maxPrice, amenities, pageable);
@@ -655,9 +655,9 @@ public class HotelServiceImpl implements HotelService {
     @Override
     public List<String> getAvailableAmenities() {
         log.info("Getting all available amenities from hotels");
-
+        
         List<String> rawAmenities = hotelRepository.findAllAmenitiesRaw();
-
+        
         // Parse comma-separated amenities and create unique list
         List<String> allAmenities = rawAmenities.stream()
                 .filter(amenitiesString -> amenitiesString != null && !amenitiesString.trim().isEmpty())
@@ -667,9 +667,9 @@ public class HotelServiceImpl implements HotelService {
                 .distinct()
                 .sorted()
                 .toList();
-
+        
         log.info("Found {} unique amenities from {} hotel records", allAmenities.size(), rawAmenities.size());
-
+        
         return allAmenities;
     }
-}
+} 

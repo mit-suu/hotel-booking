@@ -40,7 +40,7 @@ const LoginPage: React.FC = () => {
       const from = location.state?.from?.pathname || '/';
       navigate(from, { replace: true });
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
+      setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -170,7 +170,7 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-6 grid gap-3">
+            {/* <div className="mt-6 grid gap-3">
               <button
                 type="button"
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
@@ -178,7 +178,7 @@ const LoginPage: React.FC = () => {
                 <span className="sr-only">Sign in with Google</span>
                 Google
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

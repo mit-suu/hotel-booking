@@ -37,7 +37,7 @@ public class Hotel {
 
     @Column(name = "location")
     String location;
-
+    
     String phone;
     String email;
     String website;
@@ -96,4 +96,4 @@ public class Hotel {
 
     @Column(name = "updated_by")
     UUID updatedBy;
-}
+} 

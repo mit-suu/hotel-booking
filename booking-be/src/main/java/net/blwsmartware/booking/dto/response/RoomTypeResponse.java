@@ -25,14 +25,14 @@ public class RoomTypeResponse {
     String imageUrl;
     boolean isActive;
     String amenities;
-
+    
     // Hotel information
     UUID hotelId;
     String hotelName;
-
+    
     // Audit fields
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
     UUID createdBy;
     UUID updatedBy;
-}
+} 

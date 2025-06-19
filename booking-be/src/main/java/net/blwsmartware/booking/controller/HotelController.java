@@ -25,16 +25,16 @@ import java.util.UUID;
 
 /**
  * Hotel Management Controller
- *
+ * 
  * URL Structure (Fixed conflicts):
  * - Admin URLs:     /hotels/admin/...
- * - Host URLs:      /hotels/host/...
+ * - Host URLs:      /hotels/host/...  
  * - Public URLs:    /hotels/{staticPath} (search, city, country, etc.)
  * - Public Details: /hotels/{id} (hotel details by ID)
- *
+ * 
  * This structure avoids URL conflicts and provides clear separation between:
  * - Admin: Full management of ALL hotels
- * - Host: Management of OWNED hotels only
+ * - Host: Management of OWNED hotels only 
  * - Public: Read-only access to active hotels
  */
 @RestController
@@ -43,9 +43,9 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class HotelController {
-
+    
     HotelService hotelService;
-
+    
     // ===== ADMIN ENDPOINTS =====
     @GetMapping("/admin")
     @IsAdmin
@@ -53,20 +53,20 @@ public class HotelController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = PagePrepare.SORT_BY) String sortBy) {
-
+        
         DataResponse<HotelResponse> response = hotelService.getAllHotels(pageNumber, pageSize, sortBy);
-
+        
         // Debug logging
         log.info("=== HOTEL RESPONSE DEBUG ===");
         log.info("Total hotels returned: {}", response.getContent().size());
-
+        
         response.getContent().forEach((hotel) -> {
             log.info("Hotel {}:", hotel.getName());
             log.info("  - ID: {}", hotel.getId());
             log.info("  - isActive: {}", hotel.isActive());
             log.info("  - isFeatured: {} ", hotel.isFeatured());
         });
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<HotelResponse>>builder()
@@ -173,9 +173,9 @@ public class HotelController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = PagePrepare.SORT_BY) String sortBy) {
-
+        
         DataResponse<HotelResponse> response = hotelService.getHotelsByOwner(ownerId, pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<HotelResponse>>builder()
@@ -244,9 +244,9 @@ public class HotelController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = PagePrepare.SORT_BY) String sortBy) {
-
+        
         DataResponse<HotelResponse> response = hotelService.getMyHotels(pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<HotelResponse>>builder()
@@ -281,7 +281,7 @@ public class HotelController {
     @IsHost
     public ResponseEntity<MessageResponse<HotelResponse>> getMyHotelById(@PathVariable UUID id) {
         HotelResponse response = hotelService.getMyHotelById(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<HotelResponse>builder()
@@ -289,12 +289,12 @@ public class HotelController {
                         .result(response)
                         .build());
     }
-
+    
     @PostMapping("/host")
     @IsHost
     public ResponseEntity<MessageResponse<HotelResponse>> createMyHotel(@Valid @RequestBody HotelCreateRequest request) {
         HotelResponse response = hotelService.createMyHotel(request);
-
+        
         return ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<HotelResponse>builder()
@@ -302,14 +302,14 @@ public class HotelController {
                         .result(response)
                         .build());
     }
-
+    
     @PutMapping("/host/{id}")
     @IsHost
     public ResponseEntity<MessageResponse<HotelResponse>> updateMyHotel(
             @PathVariable UUID id,
             @Valid @RequestBody HotelUpdateRequest request) {
         HotelResponse response = hotelService.updateMyHotel(id, request);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<HotelResponse>builder()
@@ -317,12 +317,12 @@ public class HotelController {
                         .result(response)
                         .build());
     }
-
+    
     @DeleteMapping("/host/{id}")
     @IsHost
     public ResponseEntity<?> deleteMyHotel(@PathVariable UUID id) {
         hotelService.deleteMyHotel(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.builder()
@@ -348,7 +348,7 @@ public class HotelController {
     @IsHost
     public ResponseEntity<MessageResponse<Long>> getMyHotelsCount() {
         Long count = hotelService.getMyHotelsCount();
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<Long>builder()
@@ -374,7 +374,7 @@ public class HotelController {
     @GetMapping("/{id}")
     public ResponseEntity<MessageResponse<HotelResponse>> getHotelById(@PathVariable UUID id) {
         HotelResponse response = hotelService.getHotelById(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<HotelResponse>builder()
@@ -382,16 +382,16 @@ public class HotelController {
                         .result(response)
                         .build());
     }
-
+    
     @GetMapping("/search")
     public ResponseEntity<MessageResponse<DataResponse<HotelResponse>>> searchHotels(
             @RequestParam String keyword,
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "name") String sortBy) {
-
+        
         DataResponse<HotelResponse> response = hotelService.searchHotels(keyword, pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<HotelResponse>>builder()
@@ -509,7 +509,7 @@ public class HotelController {
     @GetMapping("/amenities")
     public ResponseEntity<MessageResponse<List<String>>> getAvailableAmenities() {
         List<String> amenities = hotelService.getAvailableAmenities();
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<List<String>>builder()
@@ -517,4 +517,4 @@ public class HotelController {
                         .result(amenities)
                         .build());
     }
-}
+} 

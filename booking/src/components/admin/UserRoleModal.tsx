@@ -55,15 +55,15 @@ const UserRoleModal: React.FC<UserRoleModalProps> = ({
       
       // Fallback to predefined roles if API fails
       const fallbackRoles = [
-        { id: 1, name: 'USER', description: 'Người dùng thông thường có thể đặt phòng' },
-        { id: 2, name: 'HOST', description: 'Chủ khách sạn có thể quản lý tài sản' },
-        { id: 3, name: 'ADMIN', description: 'Quản trị viên hệ thống với toàn quyền' }
+        { id: 1, name: 'USER', description: 'Regular users who can make bookings' },
+        { id: 2, name: 'HOST', description: 'Hotel owners who can manage properties' },
+        { id: 3, name: 'ADMIN', description: 'System administrators with full permissions' }
       ];
       
       setAvailableRoles(fallbackRoles);
       console.log('Using fallback roles:', fallbackRoles);
       
-      showToast('warning', 'Cảnh báo', 'Không thể tải danh sách vai trò từ server. Sử dụng danh sách mặc định.');
+      showToast('warning', 'Warning', 'Unable to load role list from server. Using default list.');
     } finally {
       setLoadingRoles(false);
     }
@@ -98,7 +98,7 @@ const UserRoleModal: React.FC<UserRoleModalProps> = ({
 
   const handleSave = async () => {
     if (selectedRoleIds.length === 0) {
-      showToast('warning', 'Cảnh báo', 'Vui lòng chọn ít nhất một vai trò');
+      showToast('warning', 'Warning', 'Please select at least one role');
       return;
     }
 
@@ -121,7 +121,7 @@ const UserRoleModal: React.FC<UserRoleModalProps> = ({
       const response = await userAPI.updateUserRoles(user.id, updateData);
       console.log('Update response:', response.data);
       
-      showToast('success', 'Thành công', 'Đã cập nhật vai trò người dùng thành công');
+      showToast('success', 'Success', 'User roles updated successfully');
       onSuccess();
       onClose();
     } catch (error: any) {
@@ -129,19 +129,19 @@ const UserRoleModal: React.FC<UserRoleModalProps> = ({
       console.error('Error:', error);
       console.error('Response:', error.response?.data);
       
-      let errorMessage = 'Có lỗi xảy ra khi cập nhật vai trò';
+      let errorMessage = 'An error occurred while updating roles';
       
       if (error.response?.status === 403) {
-        errorMessage = 'Bạn không có quyền cập nhật vai trò người dùng';
+        errorMessage = 'You do not have permission to update user roles';
       } else if (error.response?.status === 404) {
-        errorMessage = 'Không tìm thấy người dùng hoặc vai trò';
+        errorMessage = 'User or role not found';
       } else if (error.response?.status === 400) {
-        errorMessage = error.response?.data?.message || 'Dữ liệu không hợp lệ';
+        errorMessage = error.response?.data?.message || 'Invalid data';
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
       
-      showToast('error', 'Lỗi', errorMessage);
+      showToast('error', 'Error', errorMessage);
     } finally {
       setSaving(false);
     }
@@ -150,11 +150,11 @@ const UserRoleModal: React.FC<UserRoleModalProps> = ({
   const getRoleDisplayName = (roleName: string) => {
     switch (roleName) {
       case 'ADMIN':
-        return 'Quản trị viên';
+        return 'Administrator';
       case 'HOST':
-        return 'Chủ khách sạn';
+        return 'Hotel Owner';
       case 'USER':
-        return 'Người dùng';
+        return 'User';
       default:
         return roleName;
     }
@@ -192,7 +192,7 @@ const UserRoleModal: React.FC<UserRoleModalProps> = ({
               {user.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Quản lý vai trò</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Role Management</h2>
               <p className="text-sm text-gray-600">{user.name} (@{user.username})</p>
             </div>
           </div>
@@ -210,10 +210,10 @@ const UserRoleModal: React.FC<UserRoleModalProps> = ({
             <div className="mb-6">
               <h3 className="text-lg font-medium text-gray-900 mb-2 flex items-center">
                 <Shield className="h-5 w-5 mr-2" />
-                Chọn vai trò cho người dùng
+                Select roles for user
               </h3>
               <p className="text-sm text-gray-600">
-                Chọn một hoặc nhiều vai trò để gán cho người dùng này. Mỗi vai trò sẽ cung cấp các quyền hạn khác nhau trong hệ thống.
+                Select one or more roles to assign to this user. Each role provides different permissions in the system.
               </p>
             </div>
 
@@ -229,7 +229,7 @@ const UserRoleModal: React.FC<UserRoleModalProps> = ({
             {/* Available Roles */}
             {!loadingRoles && (
               <div className="space-y-3">
-                <h4 className="text-sm font-medium text-gray-700">Tất cả vai trò có sẵn:</h4>
+                <h4 className="text-sm font-medium text-gray-700">All available roles:</h4>
                 {availableRoles.map((role) => {
                   const isSelected = selectedRoleIds.includes(role.id);
                   const isCurrentRole = user.roles.some(userRole => userRole.id === role.id);
@@ -260,7 +260,7 @@ const UserRoleModal: React.FC<UserRoleModalProps> = ({
                               </span>
                               {isCurrentRole && (
                                 <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 border border-green-200">
-                                  Hiện tại
+                                  Current
                                 </span>
                               )}
                             </div>
@@ -282,9 +282,9 @@ const UserRoleModal: React.FC<UserRoleModalProps> = ({
                     <AlertCircle className="h-5 w-5 text-yellow-400" />
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-yellow-800">Cảnh báo</h3>
+                    <h3 className="text-sm font-medium text-yellow-800">Warning</h3>
                     <div className="mt-2 text-sm text-yellow-700">
-                      <p>Người dùng phải có ít nhất một vai trò để có thể truy cập hệ thống.</p>
+                      <p>User must have at least one role to access the system.</p>
                     </div>
                   </div>
                 </div>
@@ -310,9 +310,9 @@ const UserRoleModal: React.FC<UserRoleModalProps> = ({
                     <AlertCircle className="h-5 w-5 text-blue-400" />
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-blue-800">Có thay đổi</h3>
+                    <h3 className="text-sm font-medium text-blue-800">Changes Made</h3>
                     <div className="mt-2 text-sm text-blue-700">
-                      <p>Bạn đã thay đổi vai trò của người dùng. Nhấn "Lưu thay đổi" để áp dụng.</p>
+                      <p>You have changed the user's roles. Click "Save Changes" to apply.</p>
                     </div>
                   </div>
                 </div>
@@ -328,7 +328,7 @@ const UserRoleModal: React.FC<UserRoleModalProps> = ({
             disabled={saving}
             className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors"
           >
-            Hủy
+            Cancel
           </button>
           <button
             onClick={handleSave}
@@ -338,12 +338,12 @@ const UserRoleModal: React.FC<UserRoleModalProps> = ({
             {saving ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Đang lưu...
+                Saving...
               </>
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />
-                Lưu thay đổi
+                Save Changes
               </>
             )}
           </button>
