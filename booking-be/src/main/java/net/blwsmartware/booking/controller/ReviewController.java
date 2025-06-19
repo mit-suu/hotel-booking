@@ -1,11 +1,9 @@
-
 package net.blwsmartware.booking.controller;
 
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-// Logging enabled
 import lombok.extern.slf4j.Slf4j;
 import net.blwsmartware.booking.constant.PagePrepare;
 import net.blwsmartware.booking.dto.request.ReviewCreateRequest;
@@ -26,191 +24,207 @@ import java.util.UUID;
 @RequestMapping("/reviews")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-// Logging enabled
 @Slf4j
 public class ReviewController {
 
-    ReviewService reviewSvc;
+    ReviewService reviewService;
 
-    // ========== ADMIN ENDPOINTS ==========
-
+    // Admin endpoints
     @GetMapping("/admin")
     @IsAdmin
-    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> fetchAllReviews(
-            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNum,
-            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "createdAt") String sortKey) {
+    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> getAllReviews(
+            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "createdAt", required = false) String sortBy) {
 
-        return ResponseEntity.status(HttpStatus.OK)
+        return ResponseEntity
+                .status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<ReviewResponse>>builder()
-                        .result(reviewSvc.getAllReviews(pageNum, pageSize, sortKey))
+                        .result(reviewService.getAllReviews(pageNumber, pageSize, sortBy))
                         .build());
     }
 
     @GetMapping("/admin/filter")
     @IsAdmin
-    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> fetchFilteredReviews(
+    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> getAllReviewsWithFilters(
             @RequestParam(required = false) UUID hotelId,
             @RequestParam(required = false) UUID userId,
             @RequestParam(required = false) Integer rating,
-            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNum,
-            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "createdAt") String sortKey) {
+            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "createdAt", required = false) String sortBy) {
 
-        return ResponseEntity.status(HttpStatus.OK)
+        return ResponseEntity
+                .status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<ReviewResponse>>builder()
-                        .result(reviewSvc.getAllReviewsWithFilters(hotelId, userId, rating, pageNum, pageSize, sortKey))
+                        .result(reviewService.getAllReviewsWithFilters(hotelId, userId, rating, pageNumber, pageSize, sortBy))
                         .build());
     }
 
     @DeleteMapping("/admin/{id}")
     @IsAdmin
-    public ResponseEntity<?> removeReview(@PathVariable UUID id) {
-        reviewSvc.deleteReview(id);
+    public ResponseEntity<?> deleteReview(@PathVariable UUID id) {
+        reviewService.deleteReview(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/admin/user/{userId}")
     @IsAdmin
-    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> fetchUserReviewsAdmin(
+    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> getReviewsByUser(
             @PathVariable UUID userId,
-            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNum,
-            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "createdAt") String sortKey) {
+            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "createdAt", required = false) String sortBy) {
 
-        return ResponseEntity.status(HttpStatus.OK)
+        return ResponseEntity
+                .status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<ReviewResponse>>builder()
-                        .result(reviewSvc.getReviewsByUser(userId, pageNum, pageSize, sortKey))
+                        .result(reviewService.getReviewsByUser(userId, pageNumber, pageSize, sortBy))
                         .build());
     }
 
+    // Statistics endpoints
     @GetMapping("/admin/stats/total")
     @IsAdmin
-    public ResponseEntity<MessageResponse<Long>> fetchTotalReviewCount() {
-        return ResponseEntity.status(HttpStatus.OK)
+    public ResponseEntity<MessageResponse<Long>> getTotalReviewsCount() {
+        return ResponseEntity
+                .status(HttpStatus.OK)
                 .body(MessageResponse.<Long>builder()
-                        .result(reviewSvc.getTotalReviewsCount())
+                        .result(reviewService.getTotalReviewsCount())
                         .build());
     }
+
+
 
     @GetMapping("/admin/stats/hotel/{hotelId}")
     @IsAdmin
-    public ResponseEntity<MessageResponse<Long>> countHotelReviews(@PathVariable UUID hotelId) {
-        return ResponseEntity.status(HttpStatus.OK)
+    public ResponseEntity<MessageResponse<Long>> getReviewsCountByHotel(@PathVariable UUID hotelId) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
                 .body(MessageResponse.<Long>builder()
-                        .result(reviewSvc.getReviewsCountByHotel(hotelId))
+                        .result(reviewService.getReviewsCountByHotel(hotelId))
                         .build());
     }
 
     @GetMapping("/admin/stats/user/{userId}")
     @IsAdmin
-    public ResponseEntity<MessageResponse<Long>> countUserReviews(@PathVariable UUID userId) {
-        return ResponseEntity.status(HttpStatus.OK)
+    public ResponseEntity<MessageResponse<Long>> getReviewsCountByUser(@PathVariable UUID userId) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
                 .body(MessageResponse.<Long>builder()
-                        .result(reviewSvc.getReviewsCountByUser(userId))
+                        .result(reviewService.getReviewsCountByUser(userId))
                         .build());
     }
 
-    // ========== PUBLIC ENDPOINTS ==========
-
+    // Public endpoints
     @GetMapping("/{id}")
-    public ResponseEntity<MessageResponse<ReviewResponse>> fetchReviewById(@PathVariable UUID id) {
-        return ResponseEntity.status(HttpStatus.OK)
+    public ResponseEntity<MessageResponse<ReviewResponse>> getReviewById(@PathVariable UUID id) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
                 .body(MessageResponse.<ReviewResponse>builder()
-                        .result(reviewSvc.getReviewById(id))
+                        .result(reviewService.getReviewById(id))
                         .build());
     }
 
     @GetMapping("/hotel/{hotelId}")
-    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> fetchHotelReviews(
+    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> getReviewsByHotel(
             @PathVariable UUID hotelId,
-            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNum,
-            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "createdAt") String sortKey) {
+            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "createdAt", required = false) String sortBy) {
 
-        return ResponseEntity.status(HttpStatus.OK)
+        return ResponseEntity
+                .status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<ReviewResponse>>builder()
-                        .result(reviewSvc.getReviewsByHotel(hotelId, pageNum, pageSize, sortKey))
+                        .result(reviewService.getReviewsByHotel(hotelId, pageNumber, pageSize, sortBy))
                         .build());
     }
 
+
+
     @GetMapping("/hotel/{hotelId}/average-rating")
-    public ResponseEntity<MessageResponse<Double>> avgHotelRating(@PathVariable UUID hotelId) {
-        return ResponseEntity.status(HttpStatus.OK)
+    public ResponseEntity<MessageResponse<Double>> getAverageRatingByHotel(@PathVariable UUID hotelId) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
                 .body(MessageResponse.<Double>builder()
-                        .result(reviewSvc.getAverageRatingByHotel(hotelId))
+                        .result(reviewService.getAverageRatingByHotel(hotelId))
                         .build());
     }
 
     @GetMapping("/rating/{rating}")
-    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> fetchByRating(
+    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> getReviewsByRating(
             @PathVariable Integer rating,
-            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNum,
-            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "createdAt") String sortKey) {
+            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "createdAt", required = false) String sortBy) {
 
-        return ResponseEntity.status(HttpStatus.OK)
+        return ResponseEntity
+                .status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<ReviewResponse>>builder()
-                        .result(reviewSvc.getReviewsByRating(rating, pageNum, pageSize, sortKey))
+                        .result(reviewService.getReviewsByRating(rating, pageNumber, pageSize, sortBy))
                         .build());
     }
 
     @GetMapping("/search")
-    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> searchForReviews(
+    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> searchReviews(
             @RequestParam String keyword,
-            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNum,
-            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "createdAt") String sortKey) {
+            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "createdAt", required = false) String sortBy) {
 
-        return ResponseEntity.status(HttpStatus.OK)
+        return ResponseEntity
+                .status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<ReviewResponse>>builder()
-                        .result(reviewSvc.searchReviews(keyword, pageNum, pageSize, sortKey))
+                        .result(reviewService.searchReviews(keyword, pageNumber, pageSize, sortBy))
                         .build());
     }
 
-    // ========== USER ENDPOINTS ==========
-
+    // User endpoints
     @PostMapping
-    public ResponseEntity<MessageResponse<ReviewResponse>> submitReview(@Valid @RequestBody ReviewCreateRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
+    public ResponseEntity<MessageResponse<ReviewResponse>> createReview(@Valid @RequestBody ReviewCreateRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
                 .body(MessageResponse.<ReviewResponse>builder()
-                        .result(reviewSvc.createReview(request))
+                        .result(reviewService.createReview(request))
                         .build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MessageResponse<ReviewResponse>> modifyReview(
+    public ResponseEntity<MessageResponse<ReviewResponse>> updateReview(
             @PathVariable UUID id,
             @Valid @RequestBody ReviewUpdateRequest request) {
-
-        return ResponseEntity.status(HttpStatus.OK)
+        return ResponseEntity
+                .status(HttpStatus.OK)
                 .body(MessageResponse.<ReviewResponse>builder()
-                        .result(reviewSvc.updateReview(id, request))
+                        .result(reviewService.updateReview(id, request))
                         .build());
     }
 
     @GetMapping("/my")
-    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> getOwnReviews(
-            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNum,
-            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
-            @RequestParam(value = "sortBy", defaultValue = "createdAt") String sortKey) {
+    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> getMyReviews(
+            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "createdAt", required = false) String sortBy) {
 
-        return ResponseEntity.status(HttpStatus.OK)
+        return ResponseEntity
+                .status(HttpStatus.OK)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<ReviewResponse>>builder()
-                        .result(reviewSvc.getMyReviews(pageNum, pageSize, sortKey))
+                        .result(reviewService.getMyReviews(pageNumber, pageSize, sortBy))
                         .build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> removeOwnReview(@PathVariable UUID id) {
-        reviewSvc.deleteMyReview(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    public ResponseEntity<?> deleteMyReview(@PathVariable UUID id) {
+        reviewService.deleteMyReview(id);
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .build();
     }
-}
+} 
