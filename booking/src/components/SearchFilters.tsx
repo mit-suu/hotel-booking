@@ -86,7 +86,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ filters, onChange, onClos
         {/* Rating */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Đánh giá tối thiểu
+            Minimum Rating
           </label>
           <div className="flex items-center">
             <input

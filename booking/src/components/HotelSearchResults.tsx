@@ -110,18 +110,16 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
               <span>{roomType.size}</span>
             </div>
 
-            <div className="flex flex-wrap gap-1 mt-2">
-              {roomType.amenities.slice(0, 4).map((amenity, index) => (
-                <span key={index} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
-                  {getAmenityIcon(amenity)}
-                  <span className="ml-1">{amenity}</span>
-                </span>
-              ))}
-              {roomType.amenities.length > 4 && (
-                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                  +{roomType.amenities.length - 4} khác
-                </span>
-              )}
+            <div className="mt-2">
+              <div className="text-xs text-gray-600 mb-1">Tiện ích phòng:</div>
+              <div className="flex flex-wrap gap-1">
+                {roomType.amenities.map((amenity, index) => (
+                  <span key={index} className="inline-flex items-center px-2 py-1 bg-green-50 text-green-700 text-xs rounded border border-green-200">
+                    {getAmenityIcon(amenity)}
+                    <span className="ml-1">{amenity}</span>
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -289,18 +287,16 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
                   </p>
 
                   {/* Hotel Amenities */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {hotel.amenities.slice(0, 6).map((amenity, index) => (
-                      <span key={index} className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                        {getAmenityIcon(amenity)}
-                        <span className="ml-1">{amenity}</span>
-                      </span>
-                    ))}
-                    {hotel.amenities.length > 6 && (
-                      <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                        +{hotel.amenities.length - 6} khác
-                      </span>
-                    )}
+                  <div className="mb-4">
+                    <div className="text-xs text-gray-600 mb-1">Tiện ích khách sạn:</div>
+                    <div className="flex flex-wrap gap-2">
+                      {hotel.amenities.map((amenity, index) => (
+                        <span key={index} className="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded border border-blue-200">
+                          {getAmenityIcon(amenity)}
+                          <span className="ml-1">{amenity}</span>
+                        </span>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Action Buttons */}
