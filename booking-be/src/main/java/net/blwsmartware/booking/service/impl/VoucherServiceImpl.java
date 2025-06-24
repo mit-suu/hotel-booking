@@ -18,7 +18,6 @@ import net.blwsmartware.booking.repository.*;
 import net.blwsmartware.booking.service.VoucherService;
 import net.blwsmartware.booking.util.DataResponseUtils;
 import net.blwsmartware.booking.validator.IsAdmin;
-import net.blwsmartware.booking.validator.IsHost;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -43,7 +41,6 @@ import java.util.UUID;
 public class VoucherServiceImpl implements VoucherService {
 
     VoucherRepository voucherRepository;
-    VoucherUsageRepository voucherUsageRepository;
     HotelRepository hotelRepository;
     UserRepository userRepository;
     BookingRepository bookingRepository;
@@ -246,18 +243,14 @@ public class VoucherServiceImpl implements VoucherService {
     public VoucherValidationResponse validateVoucher(VoucherValidationRequest request) {
         log.info("Validating voucher code: {} for hotel: {}", request.getCode(), request.getHotelId());
         
-        // Use priority-based lookup: Admin ALL_HOTELS > Host SPECIFIC_HOTELS > Admin SPECIFIC_HOTELS
-        List<Voucher> vouchers = voucherRepository.findByCodeWithPriority(request.getCode(), request.getHotelId());
+        Voucher voucher = voucherRepository.findByCode(request.getCode()).orElse(null);
         
-        if (vouchers.isEmpty()) {
+        if (voucher == null) {
             return VoucherValidationResponse.builder()
                     .valid(false)
                     .message("Voucher not found")
                     .build();
         }
-        
-        // Get the highest priority voucher (first one due to ORDER BY)
-        Voucher voucher = vouchers.get(0);
         
         if (!voucher.isActive()) {
             return VoucherValidationResponse.builder()
@@ -299,43 +292,9 @@ public class VoucherServiceImpl implements VoucherService {
     @Override
     public List<VoucherResponse> getAvailableVouchersForHotel(UUID hotelId) {
         log.info("Getting available vouchers for hotel: {}", hotelId);
-        
-        LocalDateTime now = LocalDateTime.now();
-        
-        // Get admin global vouchers (highest priority)
-        List<Voucher> adminGlobalVouchers = voucherRepository.findActiveAdminGlobalVouchers(now);
-        
-        // Get specific vouchers for this hotel (both admin and host)
-        List<Voucher> specificVouchers = voucherRepository.findActiveSpecificVouchersForHotel(hotelId, now);
-        
-        // Combine and maintain priority order: Admin Global > Host Specific > Admin Specific
-        List<Voucher> allVouchers = new ArrayList<>();
-        
-        // Add admin global vouchers first
-        allVouchers.addAll(adminGlobalVouchers);
-        
-        // Add specific vouchers, but group by host vs admin
-        List<Voucher> hostSpecificVouchers = specificVouchers.stream()
-                .filter(v -> {
-                    // Check if this voucher belongs to the hotel owner (host)
-                    try {
-                        Hotel hotel = hotelRepository.findById(hotelId).orElse(null);
-                        return hotel != null && v.getCreatedBy().equals(hotel.getCreatedBy());
-                    } catch (Exception e) {
-                        return false;
-                    }
-                })
-                .toList();
-        
-        List<Voucher> adminSpecificVouchers = specificVouchers.stream()
-                .filter(v -> !hostSpecificVouchers.contains(v))
-                .toList();
-        
-        // Add in priority order
-        allVouchers.addAll(hostSpecificVouchers);
-        allVouchers.addAll(adminSpecificVouchers);
-        
-        return voucherMapper.toResponseListWithoutHotels(allVouchers);
+
+        List<Voucher> vouchers = voucherRepository.findActiveVouchersApplicableToHotel(hotelId, LocalDateTime.now());
+        return voucherMapper.toResponseListWithoutHotels(vouchers);
     }
 
     @Override
@@ -353,15 +312,8 @@ public class VoucherServiceImpl implements VoucherService {
     public VoucherResponse applyVoucher(String voucherCode, UUID userId, UUID bookingId, BigDecimal originalAmount, UUID hotelId) {
         log.info("Applying voucher {} for user {} on booking {}", voucherCode, userId, bookingId);
         
-        // Use priority-based lookup: Admin ALL_HOTELS > Host SPECIFIC_HOTELS > Admin SPECIFIC_HOTELS
-        List<Voucher> vouchers = voucherRepository.findByCodeWithPriority(voucherCode, hotelId);
-        
-        if (vouchers.isEmpty()) {
-            throw new AppRuntimeException(ErrorResponse.VOUCHER_NOT_FOUND);
-        }
-        
-        // Get the highest priority voucher (first one due to ORDER BY)
-        Voucher voucher = vouchers.get(0);
+        Voucher voucher = voucherRepository.findByCode(voucherCode)
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.VOUCHER_NOT_FOUND));
         
         if (!voucher.isActive()) {
             throw new AppRuntimeException(ErrorResponse.VOUCHER_NOT_ACTIVE);
@@ -501,253 +453,4 @@ public class VoucherServiceImpl implements VoucherService {
         List<Voucher> expiringVouchers = voucherRepository.findExpiringVouchers(now, in24Hours);
         return voucherMapper.toResponseListWithoutHotels(expiringVouchers);
     }
-    
-    // ===== HOST OPERATIONS IMPLEMENTATION =====
-    
-    @Override
-    @IsHost
-    public DataResponse<VoucherResponse> getHostVouchers(UUID hostId, Integer pageNumber, Integer pageSize, String sortBy) {
-        log.info("Getting vouchers for host: {} with pagination: page={}, size={}, sort={}", hostId, pageNumber, pageSize, sortBy);
-        
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
-        Page<Voucher> voucherPage = voucherRepository.findByCreatedBy(hostId, pageable);
-        
-        List<VoucherResponse> voucherResponses = voucherMapper.toResponseListWithoutHotels(voucherPage.getContent());
-        
-        return DataResponseUtils.convertPageInfo(voucherPage, voucherResponses);
-    }
-    
-    @Override
-    @IsHost
-    public DataResponse<VoucherResponse> getHostVouchersByStatus(UUID hostId, VoucherStatus status, Integer pageNumber, Integer pageSize, String sortBy) {
-        log.info("Getting vouchers for host: {} by status: {} with pagination: page={}, size={}, sort={}", hostId, status, pageNumber, pageSize, sortBy);
-        
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
-        Page<Voucher> voucherPage = voucherRepository.findByCreatedByAndStatus(hostId, status, pageable);
-        
-        List<VoucherResponse> voucherResponses = voucherMapper.toResponseListWithoutHotels(voucherPage.getContent());
-        
-        return DataResponseUtils.convertPageInfo(voucherPage, voucherResponses);
-    }
-    
-    @Override
-    @IsHost
-    public VoucherResponse getHostVoucherById(UUID hostId, UUID voucherId) {
-        log.info("Getting voucher {} for host: {}", voucherId, hostId);
-        
-        Voucher voucher = voucherRepository.findById(voucherId)
-                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.VOUCHER_NOT_FOUND));
-        
-        // Verify the voucher belongs to the host
-        if (!voucher.getCreatedBy().equals(hostId)) {
-            throw new AppRuntimeException(ErrorResponse.ACCESS_DENIED);
-        }
-        
-        return voucherMapper.toResponse(voucher);
-    }
-    
-    @Override
-    @IsHost
-    @Transactional
-    public VoucherResponse createHostVoucher(UUID hostId, VoucherCreateRequest request) {
-        log.info("Creating new voucher for host: {} with code: {}", hostId, request.getCode());
-        
-        // Check if voucher code already exists globally (to avoid conflict with admin vouchers)
-        if (voucherRepository.existsByCode(request.getCode())) {
-            throw new AppRuntimeException(ErrorResponse.VOUCHER_CODE_ALREADY_EXISTS);
-        }
-        
-        // Additional validation: Host cannot create ALL_HOTELS vouchers
-        if (request.getApplicableScope() == ApplicableScope.ALL_HOTELS) {
-            throw new AppRuntimeException(ErrorResponse.ACCESS_DENIED); // Only admin can create ALL_HOTELS vouchers
-        }
-        
-        // Verify that selected hotels belong to the host
-        if (request.getApplicableScope() == ApplicableScope.SPECIFIC_HOTELS && request.getHotelIds() != null) {
-            List<Hotel> hotels = hotelRepository.findAllById(request.getHotelIds());
-            if (hotels.size() != request.getHotelIds().size()) {
-                throw new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND);
-            }
-            
-            // Verify all hotels belong to the host
-            boolean allHotelsOwnedByHost = hotels.stream().allMatch(hotel -> hotel.getCreatedBy().equals(hostId));
-            if (!allHotelsOwnedByHost) {
-                throw new AppRuntimeException(ErrorResponse.ACCESS_DENIED);
-            }
-        } else {
-            // Host must specify hotels - cannot create voucher without hotel selection
-            throw new AppRuntimeException(ErrorResponse.HOTEL_SELECTION_REQUIRED);
-        }
-        
-        // Convert request to entity
-        Voucher voucher = voucherMapper.toEntity(request);
-        voucher.setCreatedBy(hostId);
-        voucher.setUpdatedBy(hostId);
-        
-        // Handle hotel assignments for specific scope
-        List<Hotel> hotels = hotelRepository.findAllById(request.getHotelIds());
-        voucher.setApplicableHotels(hotels);
-        
-        Voucher savedVoucher = voucherRepository.save(voucher);
-        log.info("Successfully created voucher with ID: {} for host: {}", savedVoucher.getId(), hostId);
-        
-        return voucherMapper.toResponse(savedVoucher);
-    }
-    
-    @Override
-    @IsHost
-    @Transactional
-    public VoucherResponse updateHostVoucher(UUID hostId, UUID voucherId, VoucherUpdateRequest request) {
-        log.info("Updating voucher {} for host: {}", voucherId, hostId);
-        
-        Voucher voucher = voucherRepository.findById(voucherId)
-                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.VOUCHER_NOT_FOUND));
-        
-        // Verify the voucher belongs to the host
-        if (!voucher.getCreatedBy().equals(hostId)) {
-            throw new AppRuntimeException(ErrorResponse.ACCESS_DENIED);
-        }
-        
-        // Additional validation: Host cannot update to ALL_HOTELS scope
-        if (request.getApplicableScope() != null && request.getApplicableScope() == ApplicableScope.ALL_HOTELS) {
-            throw new AppRuntimeException(ErrorResponse.ACCESS_DENIED); // Only admin can create/update ALL_HOTELS vouchers
-        }
-        
-        // Verify that selected hotels belong to the host
-        if (request.getApplicableScope() != null && 
-            request.getApplicableScope() == ApplicableScope.SPECIFIC_HOTELS && 
-            request.getHotelIds() != null) {
-            List<Hotel> hotels = hotelRepository.findAllById(request.getHotelIds());
-            
-            // Verify all hotels belong to the host
-            boolean allHotelsOwnedByHost = hotels.stream().allMatch(hotel -> hotel.getCreatedBy().equals(hostId));
-            if (!allHotelsOwnedByHost) {
-                throw new AppRuntimeException(ErrorResponse.ACCESS_DENIED);
-            }
-        }
-        
-        voucherMapper.updateEntity(voucher, request);
-        voucher.setUpdatedBy(hostId);
-        
-        // Handle hotel assignments update - Host vouchers must always have specific hotels
-        if (request.getApplicableScope() != null) {
-            if (request.getApplicableScope() == ApplicableScope.SPECIFIC_HOTELS && request.getHotelIds() != null) {
-                List<Hotel> hotels = hotelRepository.findAllById(request.getHotelIds());
-                voucher.setApplicableHotels(hotels);
-            }
-            // Note: We don't handle ALL_HOTELS case since host cannot set that scope
-        }
-        
-        Voucher updatedVoucher = voucherRepository.save(voucher);
-        return voucherMapper.toResponse(updatedVoucher);
-    }
-    
-    @Override
-    @IsHost
-    @Transactional
-    public void deleteHostVoucher(UUID hostId, UUID voucherId) {
-        log.info("Deleting voucher {} for host: {}", voucherId, hostId);
-        
-        Voucher voucher = voucherRepository.findById(voucherId)
-                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.VOUCHER_NOT_FOUND));
-        
-        // Verify the voucher belongs to the host
-        if (!voucher.getCreatedBy().equals(hostId)) {
-            throw new AppRuntimeException(ErrorResponse.ACCESS_DENIED);
-        }
-        
-        // Check if voucher has been used - throw exception to inform host
-        long usageCount = voucherUsageRepository.countByVoucherId(voucherId);
-        if (usageCount > 0) {
-            log.warn("Attempted to delete voucher {} with {} usage records by host {}", voucher.getCode(), usageCount, hostId);
-            throw new AppRuntimeException(ErrorResponse.VOUCHER_HAS_USAGE_RECORDS);
-        } else {
-            voucherRepository.delete(voucher);
-            log.info("Voucher {} deleted successfully by host {}", voucher.getCode(), hostId);
-        }
-    }
-    
-    @Override
-    @IsHost
-    @Transactional
-    public VoucherResponse toggleHostVoucherStatus(UUID hostId, UUID voucherId) {
-        log.info("Toggling status for voucher {} by host: {}", voucherId, hostId);
-        
-        Voucher voucher = voucherRepository.findById(voucherId)
-                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.VOUCHER_NOT_FOUND));
-        
-        // Verify the voucher belongs to the host
-        if (!voucher.getCreatedBy().equals(hostId)) {
-            throw new AppRuntimeException(ErrorResponse.ACCESS_DENIED);
-        }
-        
-        if (voucher.getStatus() == VoucherStatus.ACTIVE) {
-            voucher.setStatus(VoucherStatus.INACTIVE);
-        } else if (voucher.getStatus() == VoucherStatus.INACTIVE) {
-            voucher.setStatus(VoucherStatus.ACTIVE);
-        }
-        
-        voucher.setUpdatedBy(hostId);
-        Voucher updatedVoucher = voucherRepository.save(voucher);
-        
-        return voucherMapper.toResponse(updatedVoucher);
-    }
-    
-    @Override
-    @IsHost
-    public DataResponse<VoucherResponse> searchHostVouchers(UUID hostId, String keyword, Integer pageNumber, Integer pageSize, String sortBy) {
-        log.info("Searching vouchers with keyword: {} for host: {}", keyword, hostId);
-        
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
-        Page<Voucher> voucherPage = voucherRepository.searchVouchersByHost(hostId, keyword, pageable);
-        
-        List<VoucherResponse> voucherResponses = voucherMapper.toResponseListWithoutHotels(voucherPage.getContent());
-        
-        return DataResponseUtils.convertPageInfo(voucherPage, voucherResponses);
-    }
-    
-    @Override
-    @IsHost
-    public DataResponse<VoucherResponse> searchHostVouchersByHotel(UUID hostId, UUID hotelId, Integer pageNumber, Integer pageSize, String sortBy) {
-        log.info("Searching vouchers for host: {} and hotel: {}", hostId, hotelId);
-        
-        // Verify the hotel belongs to the host
-        Hotel hotel = hotelRepository.findById(hotelId)
-                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
-        
-        if (!hotel.getCreatedBy().equals(hostId)) {
-            throw new AppRuntimeException(ErrorResponse.ACCESS_DENIED);
-        }
-        
-        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).descending());
-        Page<Voucher> voucherPage = voucherRepository.findVouchersByHostAndHotel(hostId, hotelId, pageable);
-        
-        List<VoucherResponse> voucherResponses = voucherMapper.toResponseListWithoutHotels(voucherPage.getContent());
-        
-        return DataResponseUtils.convertPageInfo(voucherPage, voucherResponses);
-    }
-    
-    @Override
-    @IsHost
-    public Long getHostVouchersCount(UUID hostId) {
-        return voucherRepository.countByCreatedBy(hostId);
-    }
-    
-    @Override
-    @IsHost
-    public Long getHostActiveVouchersCount(UUID hostId) {
-        return voucherRepository.countByCreatedByAndStatus(hostId, VoucherStatus.ACTIVE);
-    }
-    
-    @Override
-    @IsHost
-    public Long getHostExpiredVouchersCount(UUID hostId) {
-        return voucherRepository.countByCreatedByAndStatus(hostId, VoucherStatus.EXPIRED);
-    }
-    
-    @Override
-    @IsHost
-    public Long getHostUsedUpVouchersCount(UUID hostId) {
-        return voucherRepository.countByCreatedByAndStatus(hostId, VoucherStatus.USED_UP);
-    }
-} 
+}

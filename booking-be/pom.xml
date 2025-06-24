@@ -90,12 +90,7 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-        <dependency>
-            <groupId>com.cloudinary</groupId>
-            <artifactId>cloudinary-core</artifactId>
-            <version>1.39.0</version>
-        </dependency>
-    </dependencies>
+	</dependencies>
 	<dependencyManagement>
 		<dependencies>
 			<dependency>

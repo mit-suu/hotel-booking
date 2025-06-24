@@ -189,26 +189,4 @@ public interface HotelRepository extends JpaRepository<Hotel, UUID> {
     // Get hotel statistics - count active featured hotels 
     @Query("SELECT COUNT(h) FROM Hotel h WHERE h.isFeatured = true AND h.isActive = true")
     long countActiveFeaturedHotels();
-
-    // ===== REVENUE ANALYSIS QUERIES =====
-    @Query("SELECT AVG(h.commissionRate) FROM Hotel h WHERE h.isActive = true")
-    Optional<BigDecimal> getAverageCommissionRate();
-
-    @Query("SELECT h FROM Hotel h WHERE " +
-           "(:searchTerm IS NULL OR :searchTerm = '' OR " +
-           "LOWER(h.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-           "LOWER(h.owner.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-           "LOWER(h.city) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-           "LOWER(h.country) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) AND " +
-           "(:isActive IS NULL OR h.isActive = :isActive)")
-    Page<Hotel> findHotelsForRevenue(@Param("searchTerm") String searchTerm, 
-                                     @Param("isActive") Boolean isActive, 
-                                     Pageable pageable);
-    
-    @Query("SELECT COALESCE(SUM(h.totalRevenue), 0) FROM Hotel h WHERE h.isActive = true")
-    BigDecimal getTotalRevenue();
-    
-    @Query("SELECT COALESCE(SUM(h.commissionEarned), 0) FROM Hotel h WHERE h.isActive = true")
-    BigDecimal getTotalCommissionEarned();
-
-}
+} 

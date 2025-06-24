@@ -18,6 +18,8 @@ public class AdminDashboardResponse {
     
     // Room type statistics
     Long totalRoomTypes;
+    Long activeRoomTypes;
+    Long inactiveRoomTypes;
     
     // Review statistics
     Long totalReviews;
@@ -48,6 +50,8 @@ public class AdminDashboardResponse {
     @FieldDefaults(level = AccessLevel.PRIVATE)
     public static class RoomTypeStats {
         Long totalRoomTypes;
+        Long activeRoomTypes;
+        Long inactiveRoomTypes;
     }
     
     @Data

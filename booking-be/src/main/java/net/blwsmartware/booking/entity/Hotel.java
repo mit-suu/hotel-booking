@@ -72,18 +72,6 @@ public class Hotel {
     @Column(name = "pet_policy", columnDefinition = "TEXT")
     String petPolicy;
 
-    @Column(name = "commission_rate", precision = 5, scale = 2)
-    @Builder.Default
-    BigDecimal commissionRate = new BigDecimal("15.00");
-
-    @Column(name = "total_revenue", precision = 15, scale = 2)
-    @Builder.Default
-    BigDecimal totalRevenue = BigDecimal.ZERO;
-
-    @Column(name = "commission_earned", precision = 15, scale = 2)
-    @Builder.Default
-    BigDecimal commissionEarned = BigDecimal.ZERO;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     User owner; // HOST

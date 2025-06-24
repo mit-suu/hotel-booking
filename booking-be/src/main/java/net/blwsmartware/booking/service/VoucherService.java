@@ -47,21 +47,4 @@ public interface VoucherService {
     boolean isVoucherCodeExists(String code);
     void updateVoucherStatuses(); // Scheduled method to update expired vouchers
     List<VoucherResponse> getExpiringVouchers(); // Get vouchers expiring soon
-    
-    // ===== HOST OPERATIONS =====
-    DataResponse<VoucherResponse> getHostVouchers(UUID hostId, Integer pageNumber, Integer pageSize, String sortBy);
-    DataResponse<VoucherResponse> getHostVouchersByStatus(UUID hostId, VoucherStatus status, Integer pageNumber, Integer pageSize, String sortBy);
-    VoucherResponse getHostVoucherById(UUID hostId, UUID voucherId);
-    VoucherResponse createHostVoucher(UUID hostId, VoucherCreateRequest request);
-    VoucherResponse updateHostVoucher(UUID hostId, UUID voucherId, VoucherUpdateRequest request);
-    void deleteHostVoucher(UUID hostId, UUID voucherId);
-    VoucherResponse toggleHostVoucherStatus(UUID hostId, UUID voucherId);
-    DataResponse<VoucherResponse> searchHostVouchers(UUID hostId, String keyword, Integer pageNumber, Integer pageSize, String sortBy);
-    DataResponse<VoucherResponse> searchHostVouchersByHotel(UUID hostId, UUID hotelId, Integer pageNumber, Integer pageSize, String sortBy);
-    
-    // Host Statistics
-    Long getHostVouchersCount(UUID hostId);
-    Long getHostActiveVouchersCount(UUID hostId);
-    Long getHostExpiredVouchersCount(UUID hostId);
-    Long getHostUsedUpVouchersCount(UUID hostId);
-} 
+}
