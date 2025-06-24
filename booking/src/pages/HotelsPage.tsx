@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Search, MapPin, Star, Filter, ChevronLeft, ChevronRight, Calendar, Users, CreditCard } from 'lucide-react';
 import { hotelAPI, HotelFilterParams, HotelResponse, roomTypeAPI } from '../services/api';
+import { getImageProps } from '../utils/imageUtils';
 
 interface FiltersState {
   priceRange: string;
@@ -385,10 +386,10 @@ const HotelsPage: React.FC = () => {
       {/* Page Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Khách sạn & Resort</h1>
-          <p className="text-xl text-blue-100">
-            Khám phá hàng ngàn khách sạn tuyệt vời trên khắp Việt Nam
-          </p>
+                          <h1 className="text-4xl font-bold mb-4">Hotels & Resorts</h1>
+                <p className="text-xl text-blue-100">
+                  Explore thousands of amazing hotels across Vietnam
+                </p>
         </div>
       </div>
 
@@ -670,13 +671,8 @@ const HotelsPage: React.FC = () => {
                 <div key={hotel.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="relative">
                     <img
-                        src={getImageUrl(hotel.imageUrl)}
-                      alt={hotel.name}
+                      {...getImageProps(hotel.imageUrl, 'hotel', hotel.name)}
                       className="w-full h-48 object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg';
-                        }}
                     />
                       {hotel.featured && (
                         <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">
