@@ -15,8 +15,6 @@ public class ReviewResponse {
     UUID id;
     Integer rating;
     String comment;
-    boolean isVerified;
-    boolean isApproved;
     Integer helpfulCount;
 
     UUID hotelId;

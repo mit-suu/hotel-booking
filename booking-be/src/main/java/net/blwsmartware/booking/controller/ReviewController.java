@@ -13,6 +13,7 @@ import net.blwsmartware.booking.dto.response.MessageResponse;
 import net.blwsmartware.booking.dto.response.ReviewResponse;
 import net.blwsmartware.booking.service.ReviewService;
 import net.blwsmartware.booking.validator.IsAdmin;
+import net.blwsmartware.booking.validator.IsHost;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -154,7 +155,23 @@ public class ReviewController {
                         .result(reviewService.getAverageRatingByHotel(hotelId))
                         .build());
     }
-
+    
+    @GetMapping("/hotel/{hotelId}/can-review")
+    public ResponseEntity<MessageResponse<Boolean>> canUserReviewHotel(@PathVariable UUID hotelId) {
+        // Get current user ID from security context
+        String currentUserId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        boolean canReview = reviewService.canUserReviewHotel(UUID.fromString(currentUserId), hotelId);
+        
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(MessageResponse.<Boolean>builder()
+                        .message(canReview ? "User can review this hotel" : "User cannot review this hotel")
+                        .result(canReview)
+                        .build());
+    }
+    
     @GetMapping("/rating/{rating}")
     public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> getReviewsByRating(
             @PathVariable Integer rating,
@@ -223,8 +240,165 @@ public class ReviewController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteMyReview(@PathVariable UUID id) {
         reviewService.deleteMyReview(id);
+        return ResponseEntity.noContent().build();
+    }
+    
+    // ===== HOST ENDPOINTS =====
+    
+    @GetMapping("/host")
+    @IsHost
+    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> getHostReviews(
+            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "createdAt", required = false) String sortBy) {
+        
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        DataResponse<ReviewResponse> response = reviewService.getHostReviews(
+                UUID.fromString(currentHostId), pageNumber, pageSize, sortBy);
+        
         return ResponseEntity
-                .status(HttpStatus.NO_CONTENT)
-                .build();
+                .status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<ReviewResponse>>builder()
+                        .message("Host reviews retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @GetMapping("/host/filter")
+    @IsHost
+    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> getHostReviewsWithFilters(
+            @RequestParam(required = false) UUID hotelId,
+            @RequestParam(required = false) Integer rating,
+            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "createdAt", required = false) String sortBy) {
+        
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        DataResponse<ReviewResponse> response = reviewService.getHostReviewsWithFilters(
+                UUID.fromString(currentHostId), hotelId, rating, pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<ReviewResponse>>builder()
+                        .message("Host reviews with filters retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @GetMapping("/host/hotel/{hotelId}")
+    @IsHost
+    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> getHostReviewsByHotel(
+            @PathVariable UUID hotelId,
+            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "createdAt", required = false) String sortBy) {
+        
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        DataResponse<ReviewResponse> response = reviewService.getHostReviewsByHotel(
+                UUID.fromString(currentHostId), hotelId, pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<ReviewResponse>>builder()
+                        .message("Host reviews by hotel retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @GetMapping("/host/search")
+    @IsHost
+    public ResponseEntity<MessageResponse<DataResponse<ReviewResponse>>> searchHostReviews(
+            @RequestParam String keyword,
+            @RequestParam(value = "pageNumber", defaultValue = PagePrepare.PAGE_NUMBER, required = false) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(value = "sortBy", defaultValue = "createdAt", required = false) String sortBy) {
+        
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        DataResponse<ReviewResponse> response = reviewService.searchHostReviews(
+                UUID.fromString(currentHostId), keyword, pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<ReviewResponse>>builder()
+                        .message("Host reviews search completed successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    // Host Statistics endpoints
+    @GetMapping("/host/stats/total")
+    @IsHost
+    public ResponseEntity<MessageResponse<Long>> getHostReviewsCount() {
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        Long count = reviewService.getHostReviewsCount(UUID.fromString(currentHostId));
+        
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(MessageResponse.<Long>builder()
+                        .message("Host reviews count retrieved successfully")
+                        .result(count)
+                        .build());
+    }
+    
+    @GetMapping("/host/stats/hotel/{hotelId}")
+    @IsHost
+    public ResponseEntity<MessageResponse<Long>> getHostReviewsCountByHotel(@PathVariable UUID hotelId) {
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        Long count = reviewService.getHostReviewsCountByHotel(UUID.fromString(currentHostId), hotelId);
+        
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(MessageResponse.<Long>builder()
+                        .message("Host reviews count by hotel retrieved successfully")
+                        .result(count)
+                        .build());
+    }
+    
+    @GetMapping("/host/stats/average-rating")
+    @IsHost
+    public ResponseEntity<MessageResponse<Double>> getHostAverageRating() {
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        Double averageRating = reviewService.getHostAverageRating(UUID.fromString(currentHostId));
+        
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(MessageResponse.<Double>builder()
+                        .message("Host average rating retrieved successfully")
+                        .result(averageRating)
+                        .build());
+    }
+    
+    @GetMapping("/host/stats/hotel/{hotelId}/average-rating")
+    @IsHost
+    public ResponseEntity<MessageResponse<Double>> getHostAverageRatingByHotel(@PathVariable UUID hotelId) {
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        Double averageRating = reviewService.getHostAverageRatingByHotel(UUID.fromString(currentHostId), hotelId);
+        
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(MessageResponse.<Double>builder()
+                        .message("Host average rating by hotel retrieved successfully")
+                        .result(averageRating)
+                        .build());
     }
 } 
