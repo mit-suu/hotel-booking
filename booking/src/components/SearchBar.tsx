@@ -88,7 +88,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ className = '', variant = 'defaul
                 ${isCompact ? 'w-full py-2' : 'px-6 py-2'}`}
             >
               <Search size={20} className={isCompact ? 'mr-2' : ''} />
-              {isCompact && <span>Tìm kiếm</span>}
+              {isCompact && <span>Search</span>}
             </button>
           </div>
         </div>

@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import net.blwsmartware.booking.entity.User;
 import net.blwsmartware.booking.enums.ErrorResponse;
-import net.blwsmartware.booking.exception.IdentityRuntimeException;
+import net.blwsmartware.booking.exception.AppRuntimeException;
 import net.blwsmartware.booking.repository.UserRepository;
 import net.blwsmartware.booking.security.CustomUserDetails;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,19 +27,19 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username)  {
 
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
         if(!user.isActive() ) {
-            throw  new IdentityRuntimeException(ErrorResponse.USER_BLOCKED) ;
+            throw  new AppRuntimeException(ErrorResponse.USER_BLOCKED) ;
         }
         else if(!user.isEmailVerified()) {
-            throw  new IdentityRuntimeException(ErrorResponse.USER_NOT_VERIFICATION) ;
+            throw  new AppRuntimeException(ErrorResponse.USER_NOT_VERIFICATION) ;
         }
         return new CustomUserDetails(user);
     }
     public UserDetails loadUserByID(String id)  {
 
         User user = userRepository.findById(UUID.fromString(id))
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
         return new CustomUserDetails(user);
     }
 }
