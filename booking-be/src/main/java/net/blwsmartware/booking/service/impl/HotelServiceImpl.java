@@ -145,16 +145,19 @@ public class HotelServiceImpl implements HotelService {
         if (hotelRepository.existsByNameAndCity(request.getName(), request.getCity())) {
             throw new AppRuntimeException(ErrorResponse.HOTEL_NAME_ALREADY_EXISTS);
         }
+
+        log.info("Admin creating hotel with request: {}", request);
         
         // Convert request to entity
         Hotel hotel = hotelMapper.toEntity(request);
+        log.info("Hotel entity created: {}", hotel);
         hotel.setOwner(owner);
         hotel.setCreatedBy(getCurrentUserId());
         hotel.setUpdatedBy(getCurrentUserId());
         
         // Save hotel
         Hotel savedHotel = hotelRepository.save(hotel);
-        
+        log.info("Admin done");
         return hotelMapper.toResponse(savedHotel);
     }
     
@@ -263,7 +266,24 @@ public class HotelServiceImpl implements HotelService {
         hotel.setUpdatedBy(getCurrentUserId());
 
         Hotel updatedHotel = hotelRepository.save(hotel);
-
+        
+        return hotelMapper.toResponse(updatedHotel);
+    }
+    
+    @Override
+    @IsAdmin
+    @Transactional
+    public HotelResponse updateCommissionRate(UUID id, BigDecimal commissionRate) {
+        log.info("Updating hotel commission rate: {} to {}%", id, commissionRate);
+        
+        Hotel hotel = hotelRepository.findById(id)
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.HOTEL_NOT_FOUND));
+        
+        hotel.setCommissionRate(commissionRate);
+        hotel.setUpdatedBy(getCurrentUserId());
+        
+        Hotel updatedHotel = hotelRepository.save(hotel);
+        
         return hotelMapper.toResponse(updatedHotel);
     }
 

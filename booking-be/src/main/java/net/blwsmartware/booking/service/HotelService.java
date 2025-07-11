@@ -21,6 +21,7 @@ public interface HotelService {
     void deleteHotelByAdmin(UUID id);
     HotelResponse toggleHotelStatus(UUID id);
     HotelResponse toggleFeaturedStatus(UUID id);
+    HotelResponse updateCommissionRate(UUID id, BigDecimal commissionRate);
     DataResponse<HotelResponse> getHotelsByOwner(UUID ownerId, Integer pageNumber, Integer pageSize, String sortBy);
 
     // Admin Statistics

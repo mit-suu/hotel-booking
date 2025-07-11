@@ -33,7 +33,7 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     Page<Review> findByUserId(UUID userId, Pageable pageable);
     List<Review> findByUserId(UUID userId);
 
-
+    long countByHotelId(UUID hotelId);
 
     // Find reviews by rating
     Page<Review> findByRating(Integer rating, Pageable pageable);

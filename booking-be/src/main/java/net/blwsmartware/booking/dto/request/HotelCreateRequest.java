@@ -65,6 +65,11 @@ public class HotelCreateRequest {
     @Size(max = 1000, message = "Pet policy cannot exceed 1000 characters")
     String petPolicy;
 
+    @DecimalMin(value = "0.00", message = "Commission rate must be at least 0%")
+    @DecimalMax(value = "100.00", message = "Commission rate cannot exceed 100%")
+    @Digits(integer = 3, fraction = 2, message = "Commission rate format is invalid")
+    BigDecimal commissionRate = new BigDecimal("15.00");
+
     UUID ownerId; // Optional - if not provided, will use current user
 
     Boolean isActive = true;

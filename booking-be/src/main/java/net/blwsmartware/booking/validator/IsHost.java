@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasRole(@roleValidator.HOST_ROLE)")
+@PreAuthorize("hasRole(@roleValidator.HOST_ROLE) or hasRole(@roleValidator.ADMIN_ROLE)")
 public @interface IsHost {
 }

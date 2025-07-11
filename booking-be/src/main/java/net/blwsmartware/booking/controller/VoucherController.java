@@ -17,6 +17,7 @@ import net.blwsmartware.booking.dto.response.VoucherValidationResponse;
 import net.blwsmartware.booking.enums.VoucherStatus;
 import net.blwsmartware.booking.service.VoucherService;
 import net.blwsmartware.booking.validator.IsAdmin;
+import net.blwsmartware.booking.validator.IsHost;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -299,4 +300,241 @@ public class VoucherController {
                         .result(response)
                         .build());
     }
-}
+    
+    // ===== HOST ENDPOINTS =====
+    
+    @GetMapping("/host")
+    @IsHost
+    public ResponseEntity<MessageResponse<DataResponse<VoucherResponse>>> getHostVouchers(
+            @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
+            @RequestParam(defaultValue = "createdAt") String sortBy) {
+        
+        // Get current host ID from security context
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        DataResponse<VoucherResponse> response = voucherService.getHostVouchers(
+                UUID.fromString(currentHostId), pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<VoucherResponse>>builder()
+                        .message("Host vouchers retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @GetMapping("/host/status/{status}")
+    @IsHost
+    public ResponseEntity<MessageResponse<DataResponse<VoucherResponse>>> getHostVouchersByStatus(
+            @PathVariable VoucherStatus status,
+            @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
+            @RequestParam(defaultValue = "createdAt") String sortBy) {
+        
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        DataResponse<VoucherResponse> response = voucherService.getHostVouchersByStatus(
+                UUID.fromString(currentHostId), status, pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<VoucherResponse>>builder()
+                        .message("Host vouchers by status retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @GetMapping("/host/{id}")
+    @IsHost
+    public ResponseEntity<MessageResponse<VoucherResponse>> getHostVoucherById(@PathVariable UUID id) {
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        VoucherResponse response = voucherService.getHostVoucherById(UUID.fromString(currentHostId), id);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<VoucherResponse>builder()
+                        .message("Host voucher retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @PostMapping("/host")
+    @IsHost
+    public ResponseEntity<MessageResponse<VoucherResponse>> createHostVoucher(@Valid @RequestBody VoucherCreateRequest request) {
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        VoucherResponse response = voucherService.createHostVoucher(UUID.fromString(currentHostId), request);
+        
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<VoucherResponse>builder()
+                        .message("Host voucher created successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @PutMapping("/host/{id}")
+    @IsHost
+    public ResponseEntity<MessageResponse<VoucherResponse>> updateHostVoucher(
+            @PathVariable UUID id,
+            @Valid @RequestBody VoucherUpdateRequest request) {
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        VoucherResponse response = voucherService.updateHostVoucher(UUID.fromString(currentHostId), id, request);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<VoucherResponse>builder()
+                        .message("Host voucher updated successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @DeleteMapping("/host/{id}")
+    @IsHost
+    public ResponseEntity<MessageResponse<Void>> deleteHostVoucher(@PathVariable UUID id) {
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        voucherService.deleteHostVoucher(UUID.fromString(currentHostId), id);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<Void>builder()
+                        .message("Host voucher deleted successfully")
+                        .build());
+    }
+    
+    @PatchMapping("/host/{id}/toggle-status")
+    @IsHost
+    public ResponseEntity<MessageResponse<VoucherResponse>> toggleHostVoucherStatus(@PathVariable UUID id) {
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        VoucherResponse response = voucherService.toggleHostVoucherStatus(UUID.fromString(currentHostId), id);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<VoucherResponse>builder()
+                        .message("Host voucher status toggled successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @GetMapping("/host/search")
+    @IsHost
+    public ResponseEntity<MessageResponse<DataResponse<VoucherResponse>>> searchHostVouchers(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
+            @RequestParam(defaultValue = "createdAt") String sortBy) {
+        
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        DataResponse<VoucherResponse> response = voucherService.searchHostVouchers(
+                UUID.fromString(currentHostId), keyword, pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<VoucherResponse>>builder()
+                        .message("Host voucher search completed successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    @GetMapping("/host/hotel/{hotelId}")
+    @IsHost
+    public ResponseEntity<MessageResponse<DataResponse<VoucherResponse>>> getHostVouchersByHotel(
+            @PathVariable UUID hotelId,
+            @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
+            @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
+            @RequestParam(defaultValue = "createdAt") String sortBy) {
+        
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        DataResponse<VoucherResponse> response = voucherService.searchHostVouchersByHotel(
+                UUID.fromString(currentHostId), hotelId, pageNumber, pageSize, sortBy);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<VoucherResponse>>builder()
+                        .message("Host vouchers for hotel retrieved successfully")
+                        .result(response)
+                        .build());
+    }
+    
+    // ===== HOST STATISTICS ENDPOINTS =====
+    
+    @GetMapping("/host/stats/total")
+    @IsHost
+    public ResponseEntity<MessageResponse<Long>> getHostVouchersCount() {
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        Long count = voucherService.getHostVouchersCount(UUID.fromString(currentHostId));
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<Long>builder()
+                        .message("Host vouchers count retrieved successfully")
+                        .result(count)
+                        .build());
+    }
+    
+    @GetMapping("/host/stats/active")
+    @IsHost
+    public ResponseEntity<MessageResponse<Long>> getHostActiveVouchersCount() {
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        Long count = voucherService.getHostActiveVouchersCount(UUID.fromString(currentHostId));
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<Long>builder()
+                        .message("Host active vouchers count retrieved successfully")
+                        .result(count)
+                        .build());
+    }
+    
+    @GetMapping("/host/stats/expired")
+    @IsHost
+    public ResponseEntity<MessageResponse<Long>> getHostExpiredVouchersCount() {
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        Long count = voucherService.getHostExpiredVouchersCount(UUID.fromString(currentHostId));
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<Long>builder()
+                        .message("Host expired vouchers count retrieved successfully")
+                        .result(count)
+                        .build());
+    }
+    
+    @GetMapping("/host/stats/used-up")
+    @IsHost
+    public ResponseEntity<MessageResponse<Long>> getHostUsedUpVouchersCount() {
+        String currentHostId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        
+        Long count = voucherService.getHostUsedUpVouchersCount(UUID.fromString(currentHostId));
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<Long>builder()
+                        .message("Host used up vouchers count retrieved successfully")
+                        .result(count)
+                        .build());
+    }
+} 
