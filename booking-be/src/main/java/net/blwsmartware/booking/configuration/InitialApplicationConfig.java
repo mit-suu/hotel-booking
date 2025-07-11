@@ -16,9 +16,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.HashSet;
-import java.util.Set;
-
 @Configuration
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -60,17 +57,13 @@ public class InitialApplicationConfig {
                         .name(PredefinedRole.HOST_ROLE)
                         .description("Owner")
                         .build());
-                Set<Role> roles = new HashSet<>();
-                roles.add(admin);
-                roles.add(user);
-                roles.add(host);
 
                 User userAdmin = User.builder()
                         .email(adminEmail)
                         .name(adminName)
                         .username(adminUsername)
                         .password(passwordEncoder.encode(adminPassword))
-                        .roles(roles)
+                        .role(admin)
                         .emailVerified(true)
                         .build();
                 userRepository.save(userAdmin);
