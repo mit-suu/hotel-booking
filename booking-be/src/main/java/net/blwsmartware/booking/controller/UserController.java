@@ -58,6 +58,22 @@ public class UserController {
                 );
     }
 
+    @GetMapping("/hosts")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<DataResponse<UserResponse>>> getHosts(
+            @RequestParam(value = "pageNumber",defaultValue = PagePrepare.PAGE_NUMBER,required = false) Integer pageNumber,
+            @RequestParam(value = "pageSize", defaultValue = PagePrepare.PAGE_SIZE, required = false) Integer pageSize,
+            @RequestParam(value = "sortBy",defaultValue = "fullName", required = false) String sortBy) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<DataResponse<UserResponse>>builder()
+                    .message("Hosts retrieved successfully")
+                    .result(userService.getHostUsers(pageNumber,pageSize,sortBy))
+                    .build()
+                );
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<MessageResponse<UserResponse>> getUser(@PathVariable UUID id){
 
@@ -154,11 +170,12 @@ public class UserController {
     }
     
     @PutMapping("/role/{id}")
-    public ResponseEntity<MessageResponse<UserResponse>> updateRoleOfUser(@RequestBody RoleOfUpdate roles, @PathVariable UUID id) {
+    @IsAdmin
+    public ResponseEntity<MessageResponse<UserResponse>> updateUserRole(@PathVariable UUID id, @RequestBody @Valid RoleOfUpdate request) {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(MessageResponse.<UserResponse>builder()
-                        .result(userService.updateRoleOfUser(id,roles))
+                        .result(userService.updateUserRole(id, request))
                         .build()
                 );
     }
@@ -174,6 +191,30 @@ public class UserController {
                 );
     }
 
+    @PostMapping("/request-host")
+    public ResponseEntity<MessageResponse<UserResponse>> requestHost() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        UUID userId = UUID.fromString(authentication.getName());
+        
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(MessageResponse.<UserResponse>builder()
+                        .result(userService.requestHost(userId))
+                        .build()
+                );
+    }
+
+    @PutMapping("/approve-host/{id}")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<UserResponse>> approveHostRequest(@PathVariable UUID id) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(MessageResponse.<UserResponse>builder()
+                        .result(userService.approveHostRequest(id))
+                        .build()
+                );
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
 
@@ -181,6 +222,21 @@ public class UserController {
 
         return ResponseEntity.noContent().build();
 
+    }
+
+    // ===== STATISTICS ENDPOINTS =====
+    
+    @GetMapping("/admin/stats/total")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<Long>> getTotalUsersCount() {
+        Long count = userService.getTotalUsersCount();
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<Long>builder()
+                        .message("Total users count retrieved successfully")
+                        .result(count)
+                        .build());
     }
 
 }
