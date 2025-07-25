@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 public interface RoomTypeService {
-
+    
     // Admin operations
     DataResponse<RoomTypeResponse> getAllRoomTypes(Integer pageNumber, Integer pageSize, String sortBy);
     DataResponse<RoomTypeResponse> getAllRoomTypesWithFilters(
@@ -30,18 +30,19 @@ public interface RoomTypeService {
     // Hotel-specific operations
     DataResponse<RoomTypeResponse> getRoomTypesByHotel(UUID hotelId, Integer pageNumber, Integer pageSize, String sortBy);
     DataResponse<RoomTypeResponse> getAvailableRoomTypesByHotel(UUID hotelId, Integer pageNumber, Integer pageSize, String sortBy);
-
+    
     // Search and filter operations
     DataResponse<RoomTypeResponse> searchRoomTypes(String keyword, Integer pageNumber, Integer pageSize, String sortBy);
     DataResponse<RoomTypeResponse> getRoomTypesByOccupancy(Integer minOccupancy, Integer pageNumber, Integer pageSize, String sortBy);
     DataResponse<RoomTypeResponse> getRoomTypesByPriceRange(
             BigDecimal minPrice, BigDecimal maxPrice, Integer pageNumber, Integer pageSize, String sortBy);
     DataResponse<RoomTypeResponse> getAvailableRoomTypes(Integer pageNumber, Integer pageSize, String sortBy);
-
+    
     // Statistics
     Long getTotalRoomTypesCount();
     Long getRoomTypesCountByHotel(UUID hotelId);
-
+    Long getMyRoomTypesCount();
+    
     // Validation methods
     boolean isRoomTypeNameExistsForHotel(String name, UUID hotelId);
-}
+} 

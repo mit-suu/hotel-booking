@@ -10,8 +10,7 @@ import net.blwsmartware.booking.dto.response.UserResponse;
 import net.blwsmartware.booking.entity.Role;
 import net.blwsmartware.booking.entity.User;
 import net.blwsmartware.booking.enums.ErrorResponse;
-import net.blwsmartware.booking.exception.IdentityRuntimeException;
-import net.blwsmartware.booking.exception.JwtAuthException;
+import net.blwsmartware.booking.exception.AppRuntimeException;
 import net.blwsmartware.booking.mapper.UserMapper;
 import net.blwsmartware.booking.repository.RoleRepository;
 import net.blwsmartware.booking.repository.UserRepository;
@@ -24,7 +23,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -58,19 +56,18 @@ public class UserServiceImp implements UserService {
     public UserResponse createUser(UserRequest request) {
 
         if(userRepository.findByEmail(request.getEmail()).isPresent() ) {
-           throw  new IdentityRuntimeException(ErrorResponse.EMAIL_EXISTED);
+           throw  new AppRuntimeException(ErrorResponse.EMAIL_EXISTED);
         }
         else if (userRepository.findByUsername(request.getUsername()).isPresent() ) {
-            throw  new IdentityRuntimeException(ErrorResponse.USERNAME_EXISTED);
+            throw  new AppRuntimeException(ErrorResponse.USERNAME_EXISTED);
         }
 
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         Role roleUserDefault = roleRepository.findByName(PredefinedRole.USER_ROLE)
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.ROLE_NOT_EXISTED) );
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.ROLE_NOT_EXISTED) );
 
-        Set<Role> roleSet = Set.of(roleUserDefault);
-        user.setRoles(roleSet);
+        user.setRole(roleUserDefault);
 
         String code = generateRandomString(6);
         user.setCode(code);
@@ -95,15 +92,15 @@ public class UserServiceImp implements UserService {
     @Override
     public UserResponse confirmEmail(ConfirmEmailRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.EMAIL_EXISTED) );
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.EMAIL_EXISTED) );
         if (user.getCodeExpr() != null) {
 
             Instant exp = user.getCodeExpr().toInstant();
             if (exp.isBefore(Instant.now() )) {
-                throw new IdentityRuntimeException(ErrorResponse.CODE_EXPIRED);
+                throw new AppRuntimeException(ErrorResponse.CODE_EXPIRED);
             }
             if( !user.getCode().equals(request.getCode().toUpperCase())) {
-                throw new IdentityRuntimeException(ErrorResponse.CODE_INVALID);
+                throw new AppRuntimeException(ErrorResponse.CODE_INVALID);
             }
 
             user.setCode(null);
@@ -111,7 +108,7 @@ public class UserServiceImp implements UserService {
             user.setCodeExpr(null);
             userRepository.save(user) ;
         }
-        else throw new IdentityRuntimeException(ErrorResponse.CODE_NOT_FOUND);
+        else throw new AppRuntimeException(ErrorResponse.CODE_NOT_FOUND);
 
         return userMapper.toUserResponse(user);
     }
@@ -119,7 +116,7 @@ public class UserServiceImp implements UserService {
     @Override
     public UserResponse resendCodeMail(ResendEmailRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.EMAIL_EXISTED) );
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.EMAIL_EXISTED) );
 
         String code = generateRandomString(6);
         user.setCode(code);
@@ -144,15 +141,15 @@ public class UserServiceImp implements UserService {
     @Override
     public UserResponse newPass(NewPassRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.EMAIL_EXISTED) );
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.EMAIL_EXISTED) );
         if (user.getCodeExpr() != null ) {
 
             Instant exp = user.getCodeExpr().toInstant();
             if (exp.isBefore(Instant.now() )) {
-                throw new IdentityRuntimeException(ErrorResponse.CODE_EXPIRED);
+                throw new AppRuntimeException(ErrorResponse.CODE_EXPIRED);
             }
             if( !user.getCode().equals(request.getCode().toUpperCase())) {
-                throw new IdentityRuntimeException(ErrorResponse.CODE_INVALID);
+                throw new AppRuntimeException(ErrorResponse.CODE_INVALID);
             }
 
 
@@ -163,7 +160,7 @@ public class UserServiceImp implements UserService {
             userRepository.save(user) ;
 
         }
-        else throw new IdentityRuntimeException(ErrorResponse.CODE_NOT_FOUND);
+        else throw new AppRuntimeException(ErrorResponse.CODE_NOT_FOUND);
 
         return userMapper.toUserResponse(user);
     }
@@ -179,30 +176,48 @@ public class UserServiceImp implements UserService {
     }
 
     @Override
+    @IsAdmin
+    public DataResponse<UserResponse> getHostUsers(Integer pageNumber, Integer pageSize, String sortBy) {
+        
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by(sortBy).ascending());
+        
+        // Find role HOST
+        Role hostRole = roleRepository.findByName(PredefinedRole.HOST_ROLE)
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.ROLE_NOT_EXISTED));
+        
+        // Find users with HOST role
+        Page<User> pageOfUsers = userRepository.findByRole(hostRole, pageable);
+        List<User> userList = pageOfUsers.getContent();
+        List<UserResponse> userResponses = userList.stream().map(userMapper::toUserResponse).toList();
+        
+        return DataResponseUtils.convertPageInfo(pageOfUsers, userResponses);
+    }
+
+    @Override
     public UserResponse getUserByID(UUID id) {
         return userMapper.toUserResponse(userRepository.findById(id)
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND))
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND))
         );
     }
 
     @Override
     public UserResponse getUserByEmail(String email) {
         return userMapper.toUserResponse(userRepository.findByEmail(email)
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND))
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND))
         );
     }
 
     @Override
     public UserResponse getUserByUsername(String username) {
         return userMapper.toUserResponse(userRepository.findByUsername(username)
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND))
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND))
         );
     }
 
     @Override
     public UserResponse updateUser(UUID id, UserUpdate request) {
         User old = userRepository.findById(id)
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
 
         userMapper.updateUser(request,old);
         
@@ -212,7 +227,7 @@ public class UserServiceImp implements UserService {
     @Override
     public UserResponse updateProfile(UUID id, ProfileUpdateRequest request) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
 
         userMapper.updateProfile(request, user);
         
@@ -222,11 +237,11 @@ public class UserServiceImp implements UserService {
     @Override
     public UserResponse updatePassword(UUID id, PasswordUpdateRequest request) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
 
         // Verify current password
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-            throw new IdentityRuntimeException(ErrorResponse.PASSWORD_INCORRECT);
+            throw new AppRuntimeException(ErrorResponse.PASSWORD_INCORRECT);
         }
 
         // Update password
@@ -239,7 +254,7 @@ public class UserServiceImp implements UserService {
     @IsAdmin
     public UserResponse adminUpdatePassword(UUID id, AdminPasswordUpdateRequest request) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
 
         // Admin can update password without current password verification
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
@@ -249,20 +264,60 @@ public class UserServiceImp implements UserService {
 
     @Override
     @IsAdmin
-    public UserResponse updateRoleOfUser(UUID id, RoleOfUpdate request) {
-        User old = userRepository.findById(id)
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND));
-        var roles = roleRepository.findAllById(request.getRoleIds());
-        old.setRoles(new HashSet<>(roles));
-        return userMapper.toUserResponse(userRepository.save(old));
+    public UserResponse updateUserRole(UUID id, RoleOfUpdate request) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
+        
+        Role newRole = roleRepository.findById(request.getRoleId())
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.ROLE_NOT_EXISTED));
+        
+        user.setRole(newRole);
+        return userMapper.toUserResponse(userRepository.save(user));
     }
 
     @Override
     @IsAdmin
     public UserResponse toggleEmailVerification(UUID id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IdentityRuntimeException(ErrorResponse.USER_NOT_FOUND));
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
         user.setEmailVerified(!user.isEmailVerified());
+        return userMapper.toUserResponse(userRepository.save(user));
+    }
+
+    @Override
+    public UserResponse requestHost(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
+        
+        // Check if user already has HOST role
+        if (user.isHost()) {
+            throw new AppRuntimeException(ErrorResponse.USER_ALREADY_HOST);
+        }
+        
+        user.setHostRequested(true);
+        return userMapper.toUserResponse(userRepository.save(user));
+    }
+
+    @Override
+    @IsAdmin
+    public UserResponse approveHostRequest(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
+        
+        // Check if user has requested host role
+        if (!user.isHostRequested()) {
+            throw new AppRuntimeException(ErrorResponse.HOST_REQUEST_NOT_FOUND);
+        }
+        
+        // Add HOST role to user
+        Role hostRole = roleRepository.findByName(PredefinedRole.HOST_ROLE)
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.ROLE_NOT_EXISTED));
+        
+        user.setRole(hostRole);
+        
+        // Reset host request flag
+        user.setHostRequested(false);
+        
         return userMapper.toUserResponse(userRepository.save(user));
     }
 

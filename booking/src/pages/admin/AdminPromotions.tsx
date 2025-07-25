@@ -1,456 +1,512 @@
-"use client"
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Plus, Edit, Trash, Calendar, Percent, Tag, Filter, Clock, Check, X, AlertCircle } from 'lucide-react';
+import { voucherAPI, hotelAPI } from '../../services/api';
+import { VoucherResponse, VoucherStatus, DiscountType, ApplicableScope, VoucherFilterParams } from '../../types/voucher';
+import VoucherForm from '../../components/VoucherForm';
+import VoucherDeleteConfirmModal from '../../components/VoucherDeleteConfirmModal';
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Search, Plus, Edit, Trash, Calendar, Percent, Tag, Filter, Clock, Check, X } from "lucide-react"
-
-interface Promotion {
-  id: string
-  code: string
-  name: string
-  description: string
-  discountType: "percentage" | "fixed"
-  discountValue: number
-  startDate: string
-  endDate: string
-  minBookingValue?: number
-  maxDiscount?: number
-  usageLimit?: number
-  usageCount: number
-  applicableHotels: "all" | "specific"
-  hotelIds?: string[]
-  status: "active" | "scheduled" | "expired" | "disabled"
+interface AlertState {
+  show: boolean;
+  type: 'success' | 'error';
+  message: string;
 }
 
-export default function AdminPromotionsPage() {
-  const router = useRouter()
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [selectedPromotions, setSelectedPromotions] = useState<string[]>([])
-  const [isSelectAll, setIsSelectAll] = useState(false)
+const AdminPromotions: React.FC = () => {
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<VoucherStatus | 'all'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [vouchers, setVouchers] = useState<VoucherResponse[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingVoucher, setEditingVoucher] = useState<VoucherResponse | null>(null);
+  const [hotels, setHotels] = useState<any[]>([]);
 
-  // Sample promotions data
-  const promotions: Promotion[] = []
+  const [alert, setAlert] = useState<AlertState>({ show: false, type: 'success', message: '' });
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    voucher: VoucherResponse | null;
+    hasUsageRecords: boolean;
+  }>({ isOpen: false, voucher: null, hasUsageRecords: false });
 
-  const itemsPerPage = 5
+  const itemsPerPage = 10;
 
-  // Filter promotions based on search term and status
-  const filteredPromotions = promotions.filter((promotion) => {
-    const matchesSearch =
-        promotion.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        promotion.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        promotion.description.toLowerCase().includes(searchTerm.toLowerCase())
+  // Load data on component mount
+  useEffect(() => {
+    loadVouchers();
+    loadHotels();
+  }, [currentPage, statusFilter, searchTerm]);
 
-    const matchesStatus = statusFilter === "all" || promotion.status === statusFilter
+  const loadVouchers = async () => {
+    setLoading(true);
+    try {
+      const params: VoucherFilterParams = {
+        pageNumber: currentPage - 1,
+        pageSize: itemsPerPage,
+        sortBy: 'createdAt'
+      };
 
-    return matchesSearch && matchesStatus
-  })
+      if (statusFilter !== 'all') {
+        params.status = statusFilter as VoucherStatus;
+      }
 
-  // Pagination
-  const totalPages = Math.ceil(filteredPromotions.length / itemsPerPage)
-  const paginatedPromotions = filteredPromotions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+      if (searchTerm) {
+        params.name = searchTerm;
+      }
+
+      let response;
+      if (searchTerm) {
+        response = await voucherAPI.searchVouchers(searchTerm, params);
+      } else {
+        response = await voucherAPI.getAllVouchers(params);
+      }
+
+      if (response.data.success) {
+        setVouchers(response.data.result.content);
+        setTotalPages(response.data.result.totalPages);
+        setTotalElements(response.data.result.totalElements);
+      }
+    } catch (error) {
+      showAlert('error', 'Unable to load voucher list');
+      console.error('Error loading vouchers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadHotels = async () => {
+    try {
+      const response = await hotelAPI.getAllHotels(0, 1000);
+      if (response.data.success) {
+        setHotels(response.data.result.content);
+      }
+    } catch (error) {
+      console.error('Error loading hotels:', error);
+    }
+  };
+
+  const showAlert = (type: 'success' | 'error', message: string) => {
+    setAlert({ show: true, type, message });
+    setTimeout(() => setAlert({ show: false, type: 'success', message: '' }), 5000);
+  };
+
+  const handleCreateVoucher = async (data: any) => {
+    setLoading(true);
+    try {
+      const response = await voucherAPI.createVoucher(data);
+      if (response.data.success) {
+        showAlert('success', 'Voucher created successfully');
+        setShowForm(false);
+        loadVouchers();
+      }
+    } catch (error: any) {
+      showAlert('error', error.response?.data?.message || 'Unable to create voucher');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateVoucher = async (data: any) => {
+    if (!editingVoucher) return;
+    
+    setLoading(true);
+    try {
+      const response = await voucherAPI.updateVoucher(editingVoucher.id, data);
+      if (response.data.success) {
+        showAlert('success', 'Voucher updated successfully');
+        setShowForm(false);
+        setEditingVoucher(null);
+        loadVouchers();
+      }
+    } catch (error: any) {
+      showAlert('error', error.response?.data?.message || 'Unable to update voucher');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteVoucher = (voucher: VoucherResponse) => {
+    setDeleteModal({
+      isOpen: true,
+      voucher,
+      hasUsageRecords: voucher.usageCount > 0
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteModal.voucher) return;
+
+    try {
+      const response = await voucherAPI.deleteVoucher(deleteModal.voucher.id);
+      if (response.data.success) {
+        showAlert('success', 'Voucher deleted successfully');
+        loadVouchers();
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || 'Unable to delete voucher';
+      if (error.response?.status === 409) { // Conflict - has usage records
+        setDeleteModal(prev => ({ ...prev, hasUsageRecords: true }));
+        return; // Don't close modal, show disable option
+      }
+      showAlert('error', errorMessage);
+    } finally {
+      setDeleteModal({ isOpen: false, voucher: null, hasUsageRecords: false });
+    }
+  };
+
+  const handleDisableInstead = async () => {
+    if (!deleteModal.voucher) return;
+
+    try {
+      // Toggle to inactive if currently active
+      if (deleteModal.voucher.status === VoucherStatus.ACTIVE) {
+        const response = await voucherAPI.toggleVoucherStatus(deleteModal.voucher.id);
+        if (response.data.success) {
+          showAlert('success', 'Voucher disabled successfully');
+          loadVouchers();
+        }
+      } else {
+        showAlert('success', 'Voucher is already disabled');
+      }
+    } catch (error: any) {
+      showAlert('error', error.response?.data?.message || 'Unable to disable voucher');
+    } finally {
+      setDeleteModal({ isOpen: false, voucher: null, hasUsageRecords: false });
+    }
+  };
+
+  const handleToggleStatus = async (voucherId: string) => {
+    try {
+      const response = await voucherAPI.toggleVoucherStatus(voucherId);
+      if (response.data.success) {
+        showAlert('success', 'Status updated successfully');
+        loadVouchers();
+      }
+    } catch (error: any) {
+      showAlert('error', error.response?.data?.message || 'Unable to update status');
+    }
+  };
 
   const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" }
-    return new Date(dateString).toLocaleDateString("vi-VN", options)
-  }
+    const options: Intl.DateTimeFormatOptions = { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return new Date(dateString).toLocaleDateString('vi-VN', options);
+  };
 
   const formatCurrency = (amount: number) => {
-    return amount.toLocaleString("vi-VN") + "đ"
-  }
+    return amount.toLocaleString('vi-VN') + 'đ';
+  };
 
-  const handleSelectAll = () => {
-    if (isSelectAll) {
-      setSelectedPromotions([])
-    } else {
-      setSelectedPromotions(paginatedPromotions.map((promotion) => promotion.id))
+  const getStatusBadge = (status: VoucherStatus) => {
+    const statusConfig = {
+      [VoucherStatus.ACTIVE]: { color: 'bg-green-100 text-green-800', icon: Check, text: 'Active' },
+      [VoucherStatus.INACTIVE]: { color: 'bg-gray-100 text-gray-800', icon: X, text: 'Inactive' },
+      [VoucherStatus.EXPIRED]: { color: 'bg-red-100 text-red-800', icon: Clock, text: 'Expired' },
+      [VoucherStatus.USED_UP]: { color: 'bg-orange-100 text-orange-800', icon: Tag, text: 'Used Up' }
+    };
+
+    const config = statusConfig[status];
+    const IconComponent = config.icon;
+
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+        <IconComponent size={12} className="mr-1" />
+        {config.text}
+      </span>
+    );
+  };
+
+  const getDiscountText = (voucher: VoucherResponse) => {
+    if (voucher.discountType === DiscountType.PERCENTAGE) {
+      return `${voucher.discountValue}% (max ${formatCurrency(voucher.maxDiscount || 0)})`;
     }
-    setIsSelectAll(!isSelectAll)
-  }
-
-  const handleSelectPromotion = (promotionId: string) => {
-    if (selectedPromotions.includes(promotionId)) {
-      setSelectedPromotions(selectedPromotions.filter((id) => id !== promotionId))
-    } else {
-      setSelectedPromotions([...selectedPromotions, promotionId])
-    }
-  }
-
-  const handleAddPromotion = () => {
-    router.push("/admin/promotions/add")
-  }
-
-  const handleEditPromotion = (promotionId: string) => {
-    router.push(`/admin/promotions/edit/${promotionId}`)
-  }
-
-  const handleDeletePromotion = (promotionId: string) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa mã khuyến mãi này không?")) {
-      // Delete promotion logic would go here
-      alert(`Đã xóa mã khuyến mãi có ID: ${promotionId}`)
-    }
-  }
-
-  const handleDeleteSelected = () => {
-    if (selectedPromotions.length === 0) return
-
-    if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedPromotions.length} mã khuyến mãi đã chọn không?`)) {
-      // Delete selected promotions logic would go here
-      alert(`Đã xóa ${selectedPromotions.length} mã khuyến mãi`)
-      setSelectedPromotions([])
-    }
-  }
-
-  const handleActivatePromotion = (promotionId: string) => {
-    // Activate promotion logic would go here
-    alert(`Đã kích hoạt mã khuyến mãi có ID: ${promotionId}`)
-  }
-
-  const handleDeactivatePromotion = (promotionId: string) => {
-    // Deactivate promotion logic would go here
-    alert(`Đã vô hiệu hóa mã khuyến mãi có ID: ${promotionId}`)
-  }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return (
-            <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Đang hoạt động</span>
-        )
-      case "scheduled":
-        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Lên lịch</span>
-      case "expired":
-        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">Đã hết hạn</span>
-      case "disabled":
-        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Đã vô hiệu</span>
-      default:
-        return null
-    }
-  }
-
-  const getDiscountText = (promotion: Promotion) => {
-    if (promotion.discountType === "percentage") {
-      return `${promotion.discountValue}%`
-    } else {
-      return formatCurrency(promotion.discountValue)
-    }
-  }
+    return formatCurrency(voucher.discountValue);
+  };
 
   const getProgressBarWidth = (used: number, total?: number) => {
-    if (!total) return "0%"
-    const percentage = (used / total) * 100
-    return `${Math.min(percentage, 100)}%`
+    if (!total) return 0;
+    return Math.min((used / total) * 100, 100);
+  };
+
+  const handleEditVoucher = (voucher: VoucherResponse) => {
+    setEditingVoucher(voucher);
+    setShowForm(true);
+  };
+
+  const handleAddVoucher = () => {
+    setEditingVoucher(null);
+    setShowForm(true);
+  };
+
+  if (showForm) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <VoucherForm
+          voucher={editingVoucher || undefined}
+          onSubmit={editingVoucher ? handleUpdateVoucher : handleCreateVoucher}
+          onCancel={() => {
+            setShowForm(false);
+            setEditingVoucher(null);
+          }}
+          isLoading={loading}
+          hotels={hotels}
+        />
+      </div>
+    );
   }
 
   return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
-            <h1 className="text-xl sm:text-2xl font-bold">Quản lý khuyến mãi</h1>
-            <button
-                onClick={handleAddPromotion}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-            >
-              <Plus size={20} className="mr-2" />
-              Thêm khuyến mãi mới
-            </button>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Voucher Management</h1>
+              <p className="text-gray-600 mt-1">Create and manage discount vouchers</p>
+            </div>
+          {/* <button
+              onClick={handleAddVoucher}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
+          >
+            <Plus size={20} className="mr-2" />
+              Create New Voucher
+          </button> */}
+          </div>
+        </div>
+      </div>
+
+      {/* Alert */}
+      {alert.show && (
+        <div className={`mx-6 mt-4 p-4 rounded-lg flex items-center ${
+          alert.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+        }`}>
+          <AlertCircle size={20} className="mr-2" />
+          {alert.message}
+        </div>
+      )}
+
+      {/* Filters */}
+      <div className="px-6 py-4">
+        <div className="bg-white rounded-lg p-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                  placeholder="Search by name or voucher code..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as VoucherStatus | 'all')}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Status</option>
+                <option value={VoucherStatus.ACTIVE}>Active</option>
+                <option value={VoucherStatus.INACTIVE}>Inactive</option>
+                <option value={VoucherStatus.EXPIRED}>Expired</option>
+                <option value={VoucherStatus.USED_UP}>Used Up</option>
+              </select>
+            </div>
+          </div>
+            </div>
           </div>
 
-          {/* Filters and Search */}
-          <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div className="flex-1 relative">
-                <input
-                    type="text"
-                    placeholder="Tìm kiếm theo mã, tên, mô tả..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+      {/* Content */}
+      <div className="px-6 pb-6">
+        <div className="bg-white rounded-lg shadow-sm">
+          {/* Table Header */}
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-700 font-medium">
+                Voucher Management
               </div>
-              <div className="flex items-center">
-                <Filter className="h-5 w-5 text-gray-400 mr-2" />
-                <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="active">Đang hoạt động</option>
-                  <option value="scheduled">Lên lịch</option>
-                  <option value="expired">Đã hết hạn</option>
-                  <option value="disabled">Đã vô hiệu</option>
-                </select>
+              <div className="text-sm text-gray-500">
+                Total: {totalElements} vouchers
               </div>
             </div>
           </div>
 
-          {/* Promotions List */}
-          <div className="space-y-4">
-            {paginatedPromotions.map((promotion) => (
-                <div key={promotion.id} className="bg-white rounded-lg shadow-md overflow-hidden p-6">
-                  <div className="w-full">
-                    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
-                      <div>
-                        <div className="flex items-center mb-2">
-                          <input
-                              type="checkbox"
-                              checked={selectedPromotions.includes(promotion.id)}
-                              onChange={() => handleSelectPromotion(promotion.id)}
-                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-3"
-                          />
-                          <h3 className="text-lg font-semibold text-gray-900">{promotion.name}</h3>
-                          <span className="ml-3 px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">
-                        {promotion.code}
-                      </span>
-                          <span className="ml-2">{getStatusBadge(promotion.status)}</span>
-                        </div>
-                        <p className="text-gray-600">{promotion.description}</p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                            onClick={() => handleEditPromotion(promotion.id)}
-                            className="px-3 py-1 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors flex items-center"
-                        >
-                          <Edit size={16} className="mr-1" />
-                          Sửa
-                        </button>
-                        {promotion.status === "active" || promotion.status === "scheduled" ? (
-                            <button
-                                onClick={() => handleDeactivatePromotion(promotion.id)}
-                                className="px-3 py-1 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors flex items-center"
-                            >
-                              <X size={16} className="mr-1" />
-                              Vô hiệu
-                            </button>
-                        ) : (
-                            <button
-                                onClick={() => handleActivatePromotion(promotion.id)}
-                                className="px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center"
-                            >
-                              <Check size={16} className="mr-1" />
-                              Kích hoạt
-                            </button>
-                        )}
-                        <button
-                            onClick={() => handleDeletePromotion(promotion.id)}
-                            className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center"
-                        >
-                          <Trash size={16} className="mr-1" />
-                          Xóa
-                        </button>
-                      </div>
+          {/* Table Content */}
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : vouchers.length === 0 ? (
+            <div className="text-center py-12">
+              <Tag size={48} className="mx-auto text-gray-400 mb-4" />
+              <p className="text-gray-500">No vouchers available</p>
+                  </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Voucher
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Discount
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Duration
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Usage
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {vouchers.map((voucher) => (
+                      <tr key={voucher.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div>
+                              <div className="flex items-center">
+                                <Tag size={16} className="text-blue-600 mr-2" />
+                                <span className="font-semibold text-blue-600">{voucher.code}</span>
+                              </div>
+                              <div className="text-sm font-medium text-gray-900 mt-1">{voucher.name}</div>
+                              {voucher.description && (
+                                <div className="text-sm text-gray-500 mt-1">{voucher.description}</div>
+                      )}
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {/* Discount Info */}
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-gray-700 flex items-center">
-                          <Percent size={16} className="mr-2" />
-                          Thông tin giảm giá
-                        </h4>
-                        <p className="text-gray-900 font-medium text-lg">{getDiscountText(promotion)}</p>
-                        {promotion.minBookingValue && (
-                            <p className="text-gray-600 text-sm">
-                              Giá trị đơn tối thiểu: {formatCurrency(promotion.minBookingValue)}
-                            </p>
-                        )}
-                        {promotion.maxDiscount && (
-                            <p className="text-gray-600 text-sm">Giảm tối đa: {formatCurrency(promotion.maxDiscount)}</p>
-                        )}
-                        <p className="text-gray-600 text-sm">
-                          Áp dụng cho: {promotion.applicableHotels === "all" ? "Tất cả khách sạn" : "Khách sạn được chọn"}
-                        </p>
-                      </div>
-
-                      {/* Date Info */}
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-gray-700 flex items-center">
-                          <Calendar size={16} className="mr-2" />
-                          Thời gian áp dụng
-                        </h4>
-                        <p className="text-gray-600">
-                          Bắt đầu: <span className="text-gray-900">{formatDate(promotion.startDate)}</span>
-                        </p>
-                        <p className="text-gray-600">
-                          Kết thúc: <span className="text-gray-900">{formatDate(promotion.endDate)}</span>
-                        </p>
-                        <div className="flex items-center text-sm">
-                          <Clock size={14} className="mr-1 text-gray-500" />
-                          {new Date(promotion.startDate) > new Date() ? (
-                              <span className="text-blue-600">Sắp bắt đầu</span>
-                          ) : new Date(promotion.endDate) < new Date() ? (
-                              <span className="text-gray-600">Đã kết thúc</span>
-                          ) : (
-                              <span className="text-green-600">Đang diễn ra</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Usage Info */}
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-gray-700 flex items-center">
-                          <Tag size={16} className="mr-2" />
-                          Thông tin sử dụng
-                        </h4>
-                        <p className="text-gray-600">
-                          Đã sử dụng: <span className="text-gray-900">{promotion.usageCount}</span>
-                          {promotion.usageLimit && <span className="text-gray-600"> / {promotion.usageLimit}</span>}
-                        </p>
-                        {promotion.usageLimit && (
-                            <div className="w-full bg-gray-200 rounded-full h-2.5">
-                              <div
-                                  className="bg-blue-600 h-2.5 rounded-full"
-                                  style={{ width: getProgressBarWidth(promotion.usageCount, promotion.usageLimit) }}
-                              ></div>
+                  </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <Percent size={16} className="text-green-600 mr-2" />
+                            <span className="text-sm font-medium text-green-600">
+                              {getDiscountText(voucher)}
+                            </span>
+                          </div>
+                          {voucher.minBookingValue && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              Minimum: {formatCurrency(voucher.minBookingValue)}
                             </div>
-                        )}
-                        {promotion.usageLimit && promotion.usageCount >= promotion.usageLimit && (
-                            <p className="text-red-600 text-sm">Đã đạt giới hạn sử dụng</p>
-                        )}
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center text-sm text-gray-500">
+                            <Calendar size={16} className="mr-2" />
+                            <div>
+                              <div>{formatDate(voucher.startDate)}</div>
+                              <div className="text-xs">to {formatDate(voucher.endDate)}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {voucher.usageCount} / {voucher.usageLimit || '∞'}
+                          </div>
+                          {voucher.usageLimit && (
+                            <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                              <div
+                                className="bg-blue-600 h-2 rounded-full"
+                                style={{ width: `${getProgressBarWidth(voucher.usageCount, voucher.usageLimit)}%` }}
+                        ></div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-            ))}
-
-            {paginatedPromotions.length === 0 && (
-                <div className="bg-white rounded-lg shadow-md p-8 text-center">
-                  <h3 className="text-xl font-medium text-gray-900 mb-2">Không tìm thấy khuyến mãi nào</h3>
-                  <p className="text-gray-600 mb-6">Không có khuyến mãi nào phù hợp với tiêu chí tìm kiếm của bạn.</p>
-                  <button
-                      onClick={handleAddPromotion}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center"
-                  >
-                    <Plus size={20} className="mr-2" />
-                    Thêm khuyến mãi mới
-                  </button>
-                </div>
-            )}
-
-            {/* Bulk Actions */}
-            {selectedPromotions.length > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex justify-between items-center">
-                  <span className="text-blue-700">Đã chọn {selectedPromotions.length} khuyến mãi</span>
-                  <div className="flex gap-2">
-                    <button
-                        onClick={handleDeleteSelected}
-                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors flex items-center"
-                    >
-                      <Trash size={16} className="mr-1" />
-                      Xóa đã chọn
-                    </button>
-                  </div>
-                </div>
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="bg-white rounded-lg shadow-md p-4 flex items-center justify-between">
-                  <div className="flex-1 flex justify-between sm:hidden">
-                    <button
-                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                        disabled={currentPage === 1}
-                        className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                            currentPage === 1
-                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                : "bg-white text-gray-700 hover:bg-gray-50"
-                        }`}
-                    >
-                      Trước
-                    </button>
-                    <button
-                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                        disabled={currentPage === totalPages}
-                        className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                            currentPage === totalPages
-                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                : "bg-white text-gray-700 hover:bg-gray-50"
-                        }`}
-                    >
-                      Sau
-                    </button>
-                  </div>
-                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm text-gray-700">
-                        Hiển thị <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> đến{" "}
-                        <span className="font-medium">
-                      {Math.min(currentPage * itemsPerPage, filteredPromotions.length)}
-                    </span>{" "}
-                        trong tổng số <span className="font-medium">{filteredPromotions.length}</span> khuyến mãi
-                      </p>
-                    </div>
-                    <div>
-                      <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                        <button
-                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                            disabled={currentPage === 1}
-                            className={`relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium ${
-                                currentPage === 1 ? "text-gray-300 cursor-not-allowed" : "text-gray-500 hover:bg-gray-50"
-                            }`}
-                        >
-                          <span className="sr-only">Trang trước</span>
-                          <svg
-                              className="h-5 w-5"
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                              aria-hidden="true"
-                          >
-                            <path
-                                fillRule="evenodd"
-                                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                            />
-                          </svg>
-                        </button>
-                        {Array.from({ length: totalPages }).map((_, index) => (
+                    )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getStatusBadge(voucher.status)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center space-x-2">
                             <button
-                                key={index}
-                                onClick={() => setCurrentPage(index + 1)}
-                                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                                    currentPage === index + 1
-                                        ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
-                                        : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
-                                }`}
+                              onClick={() => handleEditVoucher(voucher)}
+                              className="text-blue-600 hover:text-blue-900"
                             >
-                              {index + 1}
+                              <Edit size={16} />
                             </button>
-                        ))}
-                        <button
-                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                            disabled={currentPage === totalPages}
-                            className={`relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium ${
-                                currentPage === totalPages
-                                    ? "text-gray-300 cursor-not-allowed"
-                                    : "text-gray-500 hover:bg-gray-50"
-                            }`}
-                        >
-                          <span className="sr-only">Trang sau</span>
-                          <svg
-                              className="h-5 w-5"
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                              aria-hidden="true"
-                          >
-                            <path
-                                fillRule="evenodd"
-                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                clipRule="evenodd"
-                            />
-                          </svg>
-                        </button>
-                      </nav>
-                    </div>
+                            <button
+                              onClick={() => handleToggleStatus(voucher.id)}
+                              className="text-yellow-600 hover:text-yellow-900"
+                            >
+                              {voucher.status === VoucherStatus.ACTIVE ? <X size={16} /> : <Check size={16} />}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteVoucher(voucher)}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              <Trash size={16} />
+                            </button>
                   </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+                <div className="px-6 py-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-700">
+                      Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalElements)} of {totalElements} vouchers
+                    </div>
+                    <div className="flex items-center space-x-2">
+                <button
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                        className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                      <span className="text-sm text-gray-700">
+                        {currentPage} / {totalPages}
+                      </span>
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
                 </div>
-            )}
-          </div>
+              </div>
+            </div>
+          )}
+            </>
+          )}
         </div>
       </div>
-  )
-}
+
+      {/* Delete Confirmation Modal */}
+      <VoucherDeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, voucher: null, hasUsageRecords: false })}
+        onConfirmDelete={handleConfirmDelete}
+        onDisableInstead={handleDisableInstead}
+        voucherCode={deleteModal.voucher?.code || ''}
+        hasUsageRecords={deleteModal.hasUsageRecords}
+      />
+    </div>
+  );
+};
+
+export default AdminPromotions;
+

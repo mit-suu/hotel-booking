@@ -10,7 +10,7 @@ import java.util.List;
 
 @Mapper(componentModel = "spring", uses = {RoomTypeMapper.class, ReviewMapper.class})
 public interface HotelMapper {
-
+    
     // Convert Hotel entity to HotelResponse with full details
     @Named("toResponse")
     @Mapping(target = "ownerId", source = "owner.id")
@@ -26,7 +26,7 @@ public interface HotelMapper {
     @Mapping(target = "roomTypes", source = "roomTypes", qualifiedByName = "toResponse")
     @Mapping(target = "recentReviews", source = "reviews", qualifiedByName = "toResponseWithoutHotel")
     HotelResponse toResponse(Hotel hotel);
-
+    
     // Convert Hotel entity to HotelResponse without relationships (for list view)
     @Named("toResponseWithoutRelations")
     @Mapping(target = "ownerId", source = "owner.id")
@@ -42,7 +42,7 @@ public interface HotelMapper {
     @Mapping(target = "roomTypes", ignore = true)
     @Mapping(target = "recentReviews", ignore = true)
     HotelResponse toResponseWithoutRelations(Hotel hotel);
-
+    
     // Convert HotelCreateRequest to Hotel entity
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "owner", ignore = true) // Will be set manually
@@ -54,7 +54,7 @@ public interface HotelMapper {
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
     Hotel toEntity(HotelCreateRequest request);
-
+    
     // Update Hotel entity from HotelUpdateRequest
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "owner", ignore = true)
@@ -67,15 +67,15 @@ public interface HotelMapper {
     @Mapping(target = "updatedBy", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateEntity(@MappingTarget Hotel hotel, HotelUpdateRequest request);
-
+    
     // Convert list of Hotel entities to list of HotelResponse with full details
     @IterableMapping(qualifiedByName = "toResponse")
     List<HotelResponse> toResponseList(List<Hotel> hotels);
-
+    
     // Convert list of Hotel entities to list of HotelResponse without relations
     @IterableMapping(qualifiedByName = "toResponseWithoutRelations")
     List<HotelResponse> toResponseListWithoutRelations(List<Hotel> hotels);
-
+    
     // Helper method to build location string
     default String buildLocation(String address, String city, String country) {
         StringBuilder location = new StringBuilder();
@@ -92,13 +92,13 @@ public interface HotelMapper {
         }
         return location.length() > 0 ? location.toString() : null;
     }
-
+    
     // Helper method to build location string for updates (handles null values)
-    default String buildLocationForUpdate(String newAddress, String newCity, String newCountry,
-                                          String currentAddress, String currentCity, String currentCountry) {
+    default String buildLocationForUpdate(String newAddress, String newCity, String newCountry, 
+                                        String currentAddress, String currentCity, String currentCountry) {
         String address = newAddress != null ? newAddress : currentAddress;
         String city = newCity != null ? newCity : currentCity;
         String country = newCountry != null ? newCountry : currentCountry;
         return buildLocation(address, city, country);
     }
-}
+} 

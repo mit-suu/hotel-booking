@@ -20,7 +20,7 @@ const EmailVerificationPage: React.FC = () => {
   const location = useLocation();
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Lấy email từ state hoặc localStorage
+  // Get email from state or localStorage
   useEffect(() => {
     const email = location.state?.email || localStorage.getItem('verificationEmail') || '';
     setFormData(prev => ({ ...prev, email }));
@@ -29,7 +29,7 @@ const EmailVerificationPage: React.FC = () => {
     }
   }, [location.state]);
 
-  // Countdown timer cho resend code
+  // Countdown timer for resend code
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -38,23 +38,23 @@ const EmailVerificationPage: React.FC = () => {
   }, [countdown]);
 
   const handleCodeChange = (index: number, value: string) => {
-    if (value.length > 1) return; // Chỉ cho phép 1 ký tự
+    if (value.length > 1) return; // Only allow 1 character
     
     const newCode = [...verificationCode];
     newCode[index] = value;
     setVerificationCode(newCode);
     
-    // Cập nhật formData
+    // Update formData
     setFormData(prev => ({ ...prev, code: newCode.join('') }));
     
-    // Tự động focus vào ô tiếp theo
+    // Auto focus to next input
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    // Xử lý phím Backspace
+    // Handle Backspace key
     if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -69,10 +69,10 @@ const EmailVerificationPage: React.FC = () => {
     try {
       const resendData: ResendCodeRequest = { email: formData.email };
       await authAPI.resendCode(resendData);
-      setSuccess('Mã xác nhận mới đã được gửi đến email của bạn.');
-      setCountdown(60); // 60 giây countdown
+      setSuccess('A new verification code has been sent to your email.');
+      setCountdown(60); // 60 seconds countdown
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Không thể gửi lại mã. Vui lòng thử lại.');
+      setError(err.response?.data?.message || 'Unable to resend code. Please try again.');
     } finally {
       setResendLoading(false);
     }
@@ -83,9 +83,9 @@ const EmailVerificationPage: React.FC = () => {
     setError('');
     setSuccess('');
 
-    // Kiểm tra mã xác nhận
+    // Check verification code
     if (formData.code.length !== 6) {
-      setError('Vui lòng nhập đầy đủ mã xác nhận 6 ký tự.');
+      setError('Please enter the complete 6-character verification code.');
       return;
     }
 
@@ -93,20 +93,20 @@ const EmailVerificationPage: React.FC = () => {
 
     try {
       await authAPI.confirmEmail(formData);
-      setSuccess('Xác nhận email thành công!');
+      setSuccess('Email verification successful!');
       setIsVerified(true);
       
-      // Xóa email khỏi localStorage
+      // Remove email from localStorage
       localStorage.removeItem('verificationEmail');
       
-      // Chuyển hướng đến trang đăng nhập sau 3 giây
+      // Redirect to login page after 3 seconds
       setTimeout(() => {
         navigate('/login', { 
-          state: { message: 'Email đã được xác nhận thành công. Vui lòng đăng nhập.' }
+          state: { message: 'Email has been verified successfully. Please log in.' }
         });
       }, 3000);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Mã xác nhận không đúng. Vui lòng thử lại.');
+      setError(err.response?.data?.message || 'Invalid verification code. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -115,7 +115,7 @@ const EmailVerificationPage: React.FC = () => {
   const handleSkipVerification = () => {
     localStorage.removeItem('verificationEmail');
     navigate('/login', { 
-      state: { message: 'Bạn có thể xác nhận email sau trong phần cài đặt tài khoản.' }
+      state: { message: 'You can verify your email later in account settings.' }
     });
   };
 
@@ -126,13 +126,13 @@ const EmailVerificationPage: React.FC = () => {
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10 text-center">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Xác nhận thành công!
+              Verification successful!
             </h2>
             <p className="text-gray-600 mb-4">
-              Email của bạn đã được xác nhận thành công.
+              Your email has been verified successfully.
             </p>
             <p className="text-sm text-gray-500">
-              Đang chuyển hướng đến trang đăng nhập...
+              Redirecting to login page...
             </p>
           </div>
         </div>
@@ -149,21 +149,21 @@ const EmailVerificationPage: React.FC = () => {
             className="flex items-center text-blue-600 hover:text-blue-500 transition-colors"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
-            Quay lại đăng ký
+            Back to registration
           </Link>
         </div>
         
         <div className="text-center mb-6">
           <Mail className="h-16 w-16 text-blue-500 mx-auto mb-4" />
           <h2 className="text-3xl font-bold text-gray-900">
-            Xác nhận email
+            Email verification
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Nhập mã xác nhận 6 ký tự đã được gửi đến email của bạn
+            Enter the 6-character verification code sent to your email
           </p>
           {formData.email && (
             <p className="mt-1 text-xs text-gray-500">
-              Mã đã được gửi đến: <span className="font-medium">{formData.email}</span>
+              Code sent to: <span className="font-medium">{formData.email}</span>
             </p>
           )}
         </div>
@@ -184,10 +184,10 @@ const EmailVerificationPage: React.FC = () => {
           )}
           
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Mã xác nhận 6 ký tự */}
+            {/* 6-character verification code */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
-                Mã xác nhận
+                Verification code
               </label>
               <div className="flex space-x-2 justify-center">
                 {verificationCode.map((digit, index) => (
@@ -215,10 +215,10 @@ const EmailVerificationPage: React.FC = () => {
                 >
                   <RefreshCw className={`h-4 w-4 mr-1 ${resendLoading ? 'animate-spin' : ''}`} />
                   {countdown > 0 
-                    ? `Gửi lại sau ${countdown}s` 
+                    ? `Resend in ${countdown}s` 
                     : resendLoading 
-                      ? 'Đang gửi...' 
-                      : 'Gửi lại mã'
+                      ? 'Sending...' 
+                      : 'Resend code'
                   }
                 </button>
               </div>
@@ -230,7 +230,7 @@ const EmailVerificationPage: React.FC = () => {
                 disabled={loading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Đang xác nhận...' : 'Xác nhận email'}
+                {loading ? 'Verifying...' : 'Verify email'}
               </button>
                
             </div>
@@ -238,13 +238,13 @@ const EmailVerificationPage: React.FC = () => {
 
           <div className="mt-6 text-center">
             <p className="text-xs text-gray-500">
-              Không nhận được email? Kiểm tra thư mục spam hoặc{' '}
+              Didn't receive the email? Check your spam folder or{' '}
               <button 
                 onClick={handleResendCode}
                 disabled={countdown > 0 || resendLoading}
                 className="text-blue-600 hover:text-blue-500 disabled:text-gray-400"
               >
-                gửi lại mã
+                resend code
               </button>
             </p>
           </div>

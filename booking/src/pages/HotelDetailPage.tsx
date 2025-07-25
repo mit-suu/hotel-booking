@@ -3,13 +3,14 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   MapPin, Star, Phone, Mail, Globe, Clock, Users, 
   Wifi, Car, Utensils, Dumbbell, Waves, Coffee,
-  ChevronLeft, Calendar, ArrowRight 
+  ChevronLeft, Calendar, ArrowRight, Edit3, Check, X
 } from 'lucide-react';
 import { hotelAPI, HotelResponse, roomTypeAPI, RoomTypeResponse, reviewAPI } from '../services/api';
 import ReviewForm from '../components/ReviewForm';
 import ReviewEditForm from '../components/ReviewEditForm';
 import ReviewDisplay from '../components/ReviewDisplay';
 import { useAuth } from '../contexts/AuthContext';
+import { getImageProps } from '../utils/imageUtils';
 
 const HotelDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,8 +34,19 @@ const HotelDetailPage: React.FC = () => {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [userExistingReview, setUserExistingReview] = useState<any | null>(null);
   const [checkingUserReview, setCheckingUserReview] = useState(false);
+  const [canReview, setCanReview] = useState<boolean>(false);
+  const [checkingCanReview, setCheckingCanReview] = useState(false);
+  
+  // Search edit state
+  const [isEditingSearch, setIsEditingSearch] = useState(false);
+  const [isValidatingSearch, setIsValidatingSearch] = useState(false);
+  const [editSearchData, setEditSearchData] = useState({
+    checkInDate: checkInDate,
+    checkOutDate: checkOutDate,
+    guestCount: guestCount
+  });
 
-  // Calculate number of nights
+  // Calculate number of nights (will be updated when URL changes)
   const numberOfNights = Math.max(1, Math.ceil(
     (new Date(checkOutDate).getTime() - new Date(checkInDate).getTime()) / (1000 * 60 * 60 * 24)
   ));
@@ -79,11 +91,22 @@ const HotelDetailPage: React.FC = () => {
     fetchHotelDetails();
   }, [id]);
 
+  // Update edit search data when URL parameters change
+  useEffect(() => {
+    setEditSearchData({
+      checkInDate: checkInDate,
+      checkOutDate: checkOutDate,
+      guestCount: guestCount
+    });
+  }, [checkInDate, checkOutDate, guestCount]);
+
   useEffect(() => {
     if (user && id) {
       checkUserExistingReview();
+      checkCanReviewHotel();
     } else {
       setUserExistingReview(null);
+      setCanReview(false);
     }
   }, [user, id]);
 
@@ -116,10 +139,7 @@ const HotelDetailPage: React.FC = () => {
     return <Star className="h-5 w-5" />;
   };
 
-  // Get image URL with fallback
-  const getImageUrl = (imageUrl?: string) => {
-    return imageUrl || 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg';
-  };
+
 
   // Check if user has existing review for this hotel
   const checkUserExistingReview = async () => {
@@ -148,7 +168,7 @@ const HotelDetailPage: React.FC = () => {
     setShowReviewForm(false);
     setUserExistingReview(null); // Reset so we can fetch updated review
     // Refresh reviews and check user review again
-    Promise.all([fetchHotelDetails(), checkUserExistingReview()]);
+    Promise.all([fetchHotelDetails(), checkUserExistingReview(), checkCanReviewHotel()]);
     alert('Your review has been submitted successfully!');
   };
 
@@ -156,7 +176,7 @@ const HotelDetailPage: React.FC = () => {
   const handleReviewUpdateSuccess = () => {
     setShowReviewForm(false);
     // Refresh reviews and user review
-    Promise.all([fetchHotelDetails(), checkUserExistingReview()]);
+    Promise.all([fetchHotelDetails(), checkUserExistingReview(), checkCanReviewHotel()]);
     alert('Your review has been updated!');
   };
 
@@ -164,9 +184,222 @@ const HotelDetailPage: React.FC = () => {
   const handleReviewDeleteSuccess = () => {
     setShowReviewForm(false);
     setUserExistingReview(null); // Clear existing review
-    // Refresh reviews
-    fetchHotelDetails();
+    // Refresh reviews and can review status
+    Promise.all([fetchHotelDetails(), checkCanReviewHotel()]);
     alert('Your review has been deleted!');
+  };
+
+  // Check if user can review this hotel (has completed booking)
+  const checkCanReviewHotel = async () => {
+    if (!user || !id) return;
+    
+    try {
+      setCheckingCanReview(true);
+      const response = await reviewAPI.canReviewHotel(id);
+      if (response.data.success) {
+        setCanReview(response.data.result);
+      }
+    } catch (error) {
+      console.error('Error checking review eligibility:', error);
+      setCanReview(false);
+    } finally {
+      setCheckingCanReview(false);
+    }
+  };
+
+  // Handle search edit
+  const handleSearchEdit = () => {
+    setIsEditingSearch(true);
+    setEditSearchData({
+      checkInDate: checkInDate,
+      checkOutDate: checkOutDate,
+      guestCount: guestCount
+    });
+  };
+
+  const handleSearchCancel = () => {
+    setIsEditingSearch(false);
+    setEditSearchData({
+      checkInDate: checkInDate,
+      checkOutDate: checkOutDate,
+      guestCount: guestCount
+    });
+  };
+
+  const handleSearchSave = async () => {
+    try {
+      setIsValidatingSearch(true);
+      
+      // Basic validation
+      const checkIn = new Date(editSearchData.checkInDate);
+      const checkOut = new Date(editSearchData.checkOutDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (checkIn < today) {
+        alert('❌ Check-in date cannot be in the past');
+        return;
+      }
+
+      if (checkOut <= checkIn) {
+        alert('❌ Check-out date must be after check-in date');
+        return;
+      }
+
+      if (editSearchData.guestCount < 1 || editSearchData.guestCount > 20) {
+        alert('❌ Guest count must be between 1 and 20');
+        return;
+      }
+
+      // Advanced validation with hotel data
+      const validationResult = await validateSearchWithHotel();
+      
+      if (!validationResult.isValid) {
+        const confirmMessage = validationResult.message + '\n\nDo you want to continue anyway?';
+        if (!confirm(confirmMessage)) {
+          return;
+        }
+      }
+
+      // Update URL with new search parameters
+      const newSearchParams = new URLSearchParams(location.search);
+      newSearchParams.set('checkIn', editSearchData.checkInDate);
+      newSearchParams.set('checkOut', editSearchData.checkOutDate);
+      newSearchParams.set('guests', editSearchData.guestCount.toString());
+
+      navigate(`${location.pathname}?${newSearchParams.toString()}`, { replace: true });
+      setIsEditingSearch(false);
+      
+      // Show success message
+      const nights = Math.ceil((new Date(editSearchData.checkOutDate).getTime() - new Date(editSearchData.checkInDate).getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (validationResult.isValid) {
+        alert(`✅ Search updated successfully!\n${editSearchData.guestCount} guest${editSearchData.guestCount > 1 ? 's' : ''} for ${nights} night${nights > 1 ? 's' : ''}.`);
+      } else {
+        alert(`⚠️ Search updated with warnings.\n${editSearchData.guestCount} guest${editSearchData.guestCount > 1 ? 's' : ''} for ${nights} night${nights > 1 ? 's' : ''}.`);
+      }
+    } catch (error) {
+      console.error('Error validating search:', error);
+      alert('❌ An error occurred while validating your search. Please try again.');
+    } finally {
+      setIsValidatingSearch(false);
+    }
+  };
+
+  const handleSearchInputChange = (field: string, value: string | number) => {
+    setEditSearchData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Validate search criteria with hotel data
+  const validateSearchWithHotel = async () => {
+    if (!hotel || !roomTypes.length) {
+      return {
+        isValid: false,
+        message: 'Hotel information is not available. Please try again later.'
+      };
+    }
+
+    const issues = [];
+    let hasAvailableRooms = false;
+    let hasCapacityForGuests = false;
+
+    // Check if any room type can accommodate the guest count
+    roomTypes.forEach(roomType => {
+      if (roomType.maxOccupancy >= editSearchData.guestCount) {
+        hasCapacityForGuests = true;
+        
+        // Check if this room type has available rooms
+        if (roomType.availableRooms > 0) {
+          hasAvailableRooms = true;
+        }
+      }
+    });
+
+    // Check guest capacity
+    if (!hasCapacityForGuests) {
+      const maxCapacity = Math.max(...roomTypes.map(rt => rt.maxOccupancy));
+      issues.push(`❌ Guest Capacity Issue: This hotel can accommodate maximum ${maxCapacity} guests per room, but you selected ${editSearchData.guestCount} guests.`);
+    }
+
+    // Check room availability (basic check - in real app would check specific dates)
+    if (!hasAvailableRooms && hasCapacityForGuests) {
+      issues.push(`⚠️ Availability Warning: No rooms are currently showing as available. This might be due to the selected dates or the rooms may be fully booked.`);
+    }
+
+    // Check date range reasonableness
+    const nights = Math.ceil((new Date(editSearchData.checkOutDate).getTime() - new Date(editSearchData.checkInDate).getTime()) / (1000 * 60 * 60 * 24));
+    if (nights > 30) {
+      issues.push(`⚠️ Extended Stay: You selected ${nights} nights, which is quite long. Please confirm this is correct.`);
+    }
+
+    // Check if dates are too far in the future
+    const monthsAhead = (new Date(editSearchData.checkInDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24 * 30);
+    if (monthsAhead > 12) {
+      issues.push(`⚠️ Advance Booking: Your check-in date is more than 12 months ahead. Availability may not be accurate.`);
+    }
+
+    // Check for weekend/holiday pricing (basic check)
+    const checkInDay = new Date(editSearchData.checkInDate).getDay();
+    const checkOutDay = new Date(editSearchData.checkOutDate).getDay();
+    if ((checkInDay === 5 || checkInDay === 6) || (checkOutDay === 0 || checkOutDay === 1)) {
+      issues.push(`💰 Pricing Note: Your stay includes weekends, which may have different pricing.`);
+    }
+
+    // Check if there are suitable room types available
+    if (hasCapacityForGuests) {
+      const suitableRooms = roomTypes.filter(rt => rt.maxOccupancy >= editSearchData.guestCount);
+      const availableSuitableRooms = suitableRooms.filter(rt => rt.availableRooms > 0);
+      
+      if (availableSuitableRooms.length === 0) {
+        issues.push(`⚠️ Room Availability: No rooms are currently available for ${editSearchData.guestCount} guests. Available room types: ${suitableRooms.map(rt => `${rt.name} (${rt.maxOccupancy} guests max)`).join(', ')}`);
+      } else {
+        // Show available options
+        const roomOptions = availableSuitableRooms.map(rt => 
+          `${rt.name} (${rt.maxOccupancy} guests, ${rt.availableRooms} rooms available)`
+        ).join(', ');
+        
+        if (availableSuitableRooms.length < suitableRooms.length) {
+          issues.push(`ℹ️ Available Options: ${roomOptions}`);
+        }
+      }
+    }
+
+    // Special occasion check (basic)
+    const month = new Date(editSearchData.checkInDate).getMonth() + 1;
+    const day = new Date(editSearchData.checkInDate).getDate();
+    
+    // Holiday periods that might affect availability/pricing
+    if ((month === 12 && day >= 20) || (month === 1 && day <= 7)) {
+      issues.push(`🎄 Holiday Period: Your stay is during the holiday season (Christmas/New Year), expect higher demand and pricing.`);
+    } else if (month === 2 && day >= 10 && day <= 20) {
+      issues.push(`🧧 Holiday Period: Your stay may coincide with Lunar New Year, which affects availability in Vietnam.`);
+    }
+
+    if (issues.length === 0) {
+      return {
+        isValid: true,
+        message: 'All criteria look good!'
+      };
+    }
+
+    // Categorize issues
+    const errors = issues.filter(issue => issue.includes('❌'));
+    const warnings = issues.filter(issue => issue.includes('⚠️') || issue.includes('💰'));
+
+    if (errors.length > 0) {
+      return {
+        isValid: false,
+        message: `Issues found:\n\n${errors.join('\n\n')}${warnings.length > 0 ? '\n\nAdditional notes:\n' + warnings.join('\n') : ''}`
+      };
+    }
+
+    return {
+      isValid: false,
+      message: `Please note:\n\n${warnings.join('\n\n')}`
+    };
   };
 
   if (loading) {
@@ -253,13 +486,8 @@ const HotelDetailPage: React.FC = () => {
         {/* Hero Image */}
         <div className="relative h-64 md:h-96 rounded-lg overflow-hidden mb-8">
           <img
-            src={getImageUrl(hotel.imageUrl)}
-            alt={hotel.name}
+            {...getImageProps(hotel.imageUrl, 'hotel', hotel.name)}
             className="w-full h-full object-cover"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg';
-            }}
           />
           {hotel.featured && (
             <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
@@ -413,13 +641,8 @@ const HotelDetailPage: React.FC = () => {
                       <div className="flex flex-col md:flex-row gap-6">
                         <div className="md:w-1/3">
                           <img
-                            src={getImageUrl(roomType.imageUrl)}
-                            alt={roomType.name}
+                            {...getImageProps(roomType.imageUrl, 'room', roomType.name)}
                             className="w-full h-48 object-cover rounded-lg"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg';
-                            }}
                           />
                         </div>
                         <div className="md:w-2/3">
@@ -542,11 +765,11 @@ const HotelDetailPage: React.FC = () => {
               <div className="space-y-6">
                 {/* Review Form Section */}
                 {user ? (
-                  <div className="bg-white border border-gray-200 rounded-lg p-6">
-                    {checkingUserReview ? (
+                  <div className="mb-8">
+                    {checkingUserReview || checkingCanReview ? (
                       <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                        <p className="text-gray-600">Checking your review...</p>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                        <p className="text-gray-600 mt-2">Checking review status...</p>
                       </div>
                     ) : userExistingReview ? (
                       // User has existing review - show edit option
@@ -595,8 +818,8 @@ const HotelDetailPage: React.FC = () => {
                           onDelete={handleReviewDeleteSuccess}
                         />
                       )
-                    ) : (
-                      // User doesn't have review - show create option
+                    ) : canReview ? (
+                      // User can review - show create option
                       !showReviewForm ? (
                         <div className="text-center">
                           <h4 className="text-lg font-medium text-gray-900 mb-2">
@@ -620,6 +843,16 @@ const HotelDetailPage: React.FC = () => {
                           onCancel={() => setShowReviewForm(false)}
                         />
                       )
+                    ) : (
+                      // User cannot review - show message
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                        <h4 className="text-lg font-medium text-gray-900 mb-2">
+                          Review not available
+                        </h4>
+                        <p className="text-gray-600 mb-4">
+                          Please book and complete your stay to leave a review.
+                        </p>
+                      </div>
                     )}
                   </div>
                 ) : (
@@ -704,19 +937,133 @@ const HotelDetailPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Search Context Display */}
-              <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-semibold text-blue-800 mb-2">Your Search</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center text-blue-700">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    {new Date(checkInDate).toLocaleDateString('vi-VN')} - {new Date(checkOutDate).toLocaleDateString('vi-VN')}
-                  </div>
-                  <div className="flex items-center text-blue-700">
-                    <Users className="h-4 w-4 mr-2" />
-                    {guestCount} guests • {numberOfNights} nights
-                  </div>
+              {/* Enhanced Search Context Display */}
+              <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-semibold text-blue-800">Your Search</h4>
+                  {!isEditingSearch && (
+                    <button
+                      onClick={handleSearchEdit}
+                      className="text-blue-600 hover:text-blue-700 p-1 rounded-md hover:bg-blue-100 transition-colors"
+                      title="Edit search criteria"
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
+
+                {!isEditingSearch ? (
+                  // Display mode
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center text-blue-700">
+                      <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span>{new Date(checkInDate).toLocaleDateString('en-US', { 
+                        weekday: 'short', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      })} - {new Date(checkOutDate).toLocaleDateString('en-US', { 
+                        weekday: 'short', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      })}</span>
+                    </div>
+                    <div className="flex items-center text-blue-700">
+                      <Users className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span>{guestCount} guest{guestCount > 1 ? 's' : ''} • {numberOfNights} night{numberOfNights > 1 ? 's' : ''}</span>
+                    </div>
+                  </div>
+                ) : (
+                  // Edit mode
+                  <div className="space-y-4">
+                    {/* Check-in Date */}
+                    <div>
+                      <label className="block text-xs font-medium text-blue-800 mb-1">
+                        Check-in Date
+                      </label>
+                      <input
+                        type="date"
+                        value={editSearchData.checkInDate}
+                        onChange={(e) => handleSearchInputChange('checkInDate', e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full px-3 py-2 text-sm border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    {/* Check-out Date */}
+                    <div>
+                      <label className="block text-xs font-medium text-blue-800 mb-1">
+                        Check-out Date
+                      </label>
+                      <input
+                        type="date"
+                        value={editSearchData.checkOutDate}
+                        onChange={(e) => handleSearchInputChange('checkOutDate', e.target.value)}
+                        min={editSearchData.checkInDate}
+                        className="w-full px-3 py-2 text-sm border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    {/* Guest Count */}
+                    <div>
+                      <label className="block text-xs font-medium text-blue-800 mb-1">
+                        Number of Guests
+                      </label>
+                      <select
+                        value={editSearchData.guestCount}
+                        onChange={(e) => handleSearchInputChange('guestCount', parseInt(e.target.value))}
+                        className="w-full px-3 py-2 text-sm border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        {Array.from({ length: 20 }, (_, i) => i + 1).map(num => (
+                          <option key={num} value={num}>
+                            {num} guest{num > 1 ? 's' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                                         {/* Info Message */}
+                     <div className="bg-blue-100 text-blue-700 text-xs p-2 rounded-md">
+                       <span className="font-medium">Note:</span> Changing search criteria may affect room availability and pricing.
+                     </div>
+
+                     {/* Action Buttons */}
+                     <div className="flex space-x-2 pt-2">
+                       <button
+                         onClick={handleSearchSave}
+                         disabled={isValidatingSearch}
+                         className={`flex-1 px-3 py-2 rounded-md transition-colors text-sm font-medium flex items-center justify-center ${
+                           isValidatingSearch 
+                             ? 'bg-blue-400 text-white cursor-not-allowed' 
+                             : 'bg-blue-600 text-white hover:bg-blue-700'
+                         }`}
+                       >
+                         {isValidatingSearch ? (
+                           <>
+                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                             Checking...
+                           </>
+                         ) : (
+                           <>
+                             <Check className="h-4 w-4 mr-1" />
+                             Apply
+                           </>
+                         )}
+                       </button>
+                       <button
+                         onClick={handleSearchCancel}
+                         disabled={isValidatingSearch}
+                         className={`flex-1 px-3 py-2 rounded-md transition-colors text-sm font-medium flex items-center justify-center ${
+                           isValidatingSearch 
+                             ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                             : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                         }`}
+                       >
+                         <X className="h-4 w-4 mr-1" />
+                         Cancel
+                       </button>
+                     </div>
+                  </div>
+                )}
               </div>
 
               {/* Booking Button */}

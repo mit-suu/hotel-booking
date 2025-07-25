@@ -58,18 +58,18 @@ public enum ErrorResponse {
     HOTEL_HAS_BOOKINGS(2004, "Cannot delete hotel that has bookings!", HttpStatus.BAD_REQUEST),
     HOTEL_ACCESS_DENIED(2005, "You do not have permission to access this hotel!", HttpStatus.FORBIDDEN),
     HOTEL_NOT_AVAILABLE(2006, "Hotel is not available for booking!", HttpStatus.BAD_REQUEST),
-
+    
     // Room type-related errors
     ROOM_TYPE_NOT_FOUND(3001, "Room type not found!", HttpStatus.NOT_FOUND),
     ROOM_TYPE_NAME_ALREADY_EXISTS(3002, "Room type name already exists for this hotel!", HttpStatus.BAD_REQUEST),
     ROOM_TYPE_HAS_BOOKINGS(3003, "Cannot delete room type that has bookings!", HttpStatus.BAD_REQUEST),
     INSUFFICIENT_ROOMS_AVAILABLE(3004, "Not enough rooms available!", HttpStatus.BAD_REQUEST),
-
+    
     // Review-related errors
     REVIEW_NOT_FOUND(4001, "Review not found!", HttpStatus.NOT_FOUND),
     REVIEW_ALREADY_EXISTS(4002, "User has already reviewed this hotel!", HttpStatus.BAD_REQUEST),
-    REVIEW_NOT_ALLOWED(4003, "User is not allowed to review this hotel!", HttpStatus.FORBIDDEN),
-
+    REVIEW_NOT_ALLOWED(4003, "You can only review hotels with confirmed or completed bookings!", HttpStatus.FORBIDDEN),
+    
     // Booking-related errors
     BOOKING_NOT_FOUND(5001, "Booking not found!", HttpStatus.NOT_FOUND),
     BOOKING_ALREADY_CANCELLED(5002, "Booking is already cancelled!", HttpStatus.BAD_REQUEST),
@@ -88,7 +88,8 @@ public enum ErrorResponse {
     LARGE_GROUP_NEEDS_APPROVAL(5015, "Large groups (8+ guests) require special approval!", HttpStatus.BAD_REQUEST),
     BOOKING_CONFLICT_DETECTED(5016, "Booking conflict detected with existing reservations!", HttpStatus.CONFLICT),
     ROOM_UNDER_MAINTENANCE(5017, "Room is under maintenance during selected dates!", HttpStatus.BAD_REQUEST),
-
+    BOOKING_ALREADY_CHECKED_IN(5018, "Guest has already checked in for this booking.", HttpStatus.BAD_REQUEST),
+    
     // Enhanced errors
     PAYMENT_FAILED(1508, "Payment failed!", HttpStatus.BAD_REQUEST),
     INVALID_BOOKING_STATUS(1509, "Invalid booking status!", HttpStatus.BAD_REQUEST),
@@ -105,6 +106,33 @@ public enum ErrorResponse {
     VOUCHER_MIN_BOOKING_VALUE_NOT_MET(6007, "Minimum booking value requirement not met!", HttpStatus.BAD_REQUEST),
     VOUCHER_ALREADY_USED_BY_USER(6008, "Voucher has already been used by this user!", HttpStatus.BAD_REQUEST),
     VOUCHER_HAS_USAGE_RECORDS(6009, "Voucher has been used in bookings. Please disable instead of deleting to preserve data integrity!", HttpStatus.CONFLICT),
+    HOTEL_SELECTION_REQUIRED(6010, "Host must select at least one hotel for voucher!", HttpStatus.BAD_REQUEST),
+
+    // File upload-related errors
+    FILE_UPLOAD_ERROR(7001, "File upload failed!", HttpStatus.BAD_REQUEST),
+    FILE_TOO_LARGE(7002, "File size exceeds maximum allowed limit (5MB)!", HttpStatus.BAD_REQUEST),
+    INVALID_FILE_TYPE(7003, "Invalid file type! Only images are allowed!", HttpStatus.BAD_REQUEST),
+    FILE_EMPTY(7004, "File cannot be empty!", HttpStatus.BAD_REQUEST),
+    FILE_PROCESSING_ERROR(7005, "Error processing file!", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    // VNPay-related errors
+    VNPAY_PAYMENT_URL_CREATION_FAILED(8001, "Failed to create VNPay payment URL!", HttpStatus.INTERNAL_SERVER_ERROR),
+    VNPAY_INVALID_SIGNATURE(8002, "Invalid VNPay signature!", HttpStatus.BAD_REQUEST),
+    VNPAY_TRANSACTION_NOT_FOUND(8003, "VNPay transaction not found!", HttpStatus.NOT_FOUND),
+    VNPAY_PAYMENT_FAILED(8004, "VNPay payment failed!", HttpStatus.BAD_REQUEST),
+    VNPAY_INVALID_AMOUNT(8005, "Invalid payment amount!", HttpStatus.BAD_REQUEST),
+    BOOKING_ALREADY_PAID(8006, "Booking has already been paid!", HttpStatus.BAD_REQUEST),
+
+    // Wallet-related errors
+    WALLET_INSUFFICIENT_BALANCE(9001, "Insufficient balance for withdrawal!", HttpStatus.BAD_REQUEST),
+    WALLET_BANK_ACCOUNT_REQUIRED(9002, "Please add bank account information before requesting withdrawal!", HttpStatus.BAD_REQUEST),
+    WALLET_TRANSACTION_NOT_FOUND(9003, "Transaction not found!", HttpStatus.NOT_FOUND),
+    WALLET_TRANSACTION_ALREADY_PROCESSED(9004, "Transaction is already processed!", HttpStatus.BAD_REQUEST),
+    WALLET_USER_INSUFFICIENT_BALANCE(9005, "User has insufficient balance!", HttpStatus.BAD_REQUEST),
+    
+    // Refund processing errors
+    REFUND_PROCESSING_FAILED(9006, "Failed to process refund. Please contact support.", HttpStatus.INTERNAL_SERVER_ERROR),
+    REFUND_PROCESSING_ERROR(9007, "Failed to process refund. Please try again.", HttpStatus.BAD_REQUEST),
 
     ;
 

@@ -29,7 +29,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     @Override
     public String uploadImage(MultipartFile file, String folder) {
         validateFile(file);
-
+        
         try {
             Map<String, Object> uploadParams = ObjectUtils.asMap(
                 "folder", folder,

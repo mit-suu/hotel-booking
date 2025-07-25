@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Calendar, MapPin, Users, CreditCard, Check, ChevronLeft, ChevronRight, 
   Clock, Star, Wifi, Car, Coffee, Banknote, Smartphone, AlertCircle,
-  User, Mail, Phone, MessageSquare
+  User, Mail, Phone, MessageSquare, Shield
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { bookingAPI, BookingCreateRequest, HotelResponse, RoomTypeResponse } from '../services/api';
+import { bookingAPI, BookingCreateRequest, HotelResponse, RoomTypeResponse, vnpayAPI } from '../services/api';
 import VoucherInput from './VoucherInput';
+import VNPayPaymentModal from './VNPayPaymentModal';
 
 interface EnhancedBookingFormProps {
   hotel: HotelResponse;
@@ -40,6 +41,8 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+  const [showVNPayModal, setShowVNPayModal] = useState(false);
+  const [vnpayLoading, setVnpayLoading] = useState(false);
 
   const [formData, setFormData] = useState<BookingCreateRequest>({
     hotelId: hotel.id,
@@ -48,7 +51,7 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
     checkOutDate,
     guests,
     totalAmount: 0,
-    paymentMethod: 'CASH_ON_CHECKIN',
+    paymentMethod: 'VNPAY',
     specialRequests: ''
   });
 
@@ -151,9 +154,7 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
       }
     }
 
-    if (currentStep === 3 && !formData.paymentMethod) {
-      newErrors.paymentMethod = 'Payment method is required';
-    }
+    // VNPay is the only payment method, so no validation needed
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -192,44 +193,50 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
   const handleSubmit = async () => {
     if (!validateCurrentStep() || !isAvailable) return;
 
-    setLoading(true);
+    // Only VNPay payment is available, show payment modal
+    setShowVNPayModal(true);
+  };
+
+  const handleVNPayPayment = async (bankCode: string) => {
+    setVnpayLoading(true);
     try {
-      // Include voucher code in booking data if applied
+      // First create the booking
       const bookingData = {
         ...formData,
         ...(appliedVoucherCode && { voucherCode: appliedVoucherCode })
       };
       
-      const response = await bookingAPI.createBooking(bookingData);
-      const bookingId = response.data.result.id;
+      const bookingResponse = await bookingAPI.createBooking(bookingData);
+      const bookingId = bookingResponse.data.result.id;
       
-      if (onSuccess) {
-        onSuccess(bookingId);
-      } else {
-        navigate(`/bookings/confirmation/${bookingId}`);
-      }
+      // Then create VNPay payment URL
+      const orderInfo = `Thanh toan dat phong ${hotel.name} - ${roomType.name}`;
+      const vnpayRequest = {
+        bookingId: bookingId,
+        amount: formData.totalAmount,
+        orderInfo: orderInfo,
+        bankCode: bankCode || undefined,
+        locale: 'vn'
+      };
+      
+      const paymentResponse = await vnpayAPI.createPayment(vnpayRequest);
+      const paymentUrl = paymentResponse.data.result.paymentUrl;
+      
+      // Redirect to VNPay
+      window.location.href = paymentUrl;
+      
     } catch (error: any) {
-      console.error('Error creating booking:', error);
-      console.log('Full error response:', error.response?.data);
-      
-      // Check for booking conflict by error code, HTTP status, or message
-      const errorCode = error.response?.data?.code;
-      const httpStatus = error.response?.status;
-      const errorMessage = error.response?.data?.message || '';
-      
-      if (errorCode === 5016 || // BOOKING_CONFLICT_DETECTED code
-          httpStatus === 409 || // HTTP CONFLICT status
-          errorMessage.includes('Booking conflict detected') || 
-          errorMessage.includes('overlapping bookings') ||
-          errorMessage.includes('conflict detected with existing reservations')) {
-        alert('Booking existed');
-      } else {
-        const fallbackMessage = errorMessage || 'Booking failed';
-        alert(fallbackMessage);
-      }
+      console.error('Error creating VNPay payment:', error);
+      const errorMessage = error.response?.data?.message || 'Không thể tạo giao dịch thanh toán';
+      alert(errorMessage);
     } finally {
-      setLoading(false);
+      setVnpayLoading(false);
+      setShowVNPayModal(false);
     }
+  };
+
+  const handleCloseVNPayModal = () => {
+    setShowVNPayModal(false);
   };
 
   const formatCurrency = (amount: number) => {
@@ -522,93 +529,39 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
           {currentStep === 3 && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-gray-900">Payment Method</h2>
-              <p className="text-gray-600">Choose how you'd like to pay for your booking.</p>
+              <p className="text-gray-600">Secure payment through VNPay digital wallet.</p>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  { 
-                    value: 'VNPAY', 
-                    label: 'VNPay', 
-                    desc: 'Thanh toán qua ví điện tử VNPay (Sắp ra mắt)',
-                    icon: 'smartphone',
-                    color: 'text-blue-600',
-                    disabled: true
-                  },
-                  { 
-                    value: 'CASH_ON_CHECKIN', 
-                    label: 'Thanh toán khi đặt phòng', 
-                    desc: 'Thanh toán bằng tiền mặt khi nhận phòng',
-                    icon: 'banknote',
-                    color: 'text-green-600',
-                    disabled: false
-                  }
-                ].map((method) => (
-                  <label
-                    key={method.value}
-                    className={`border-2 rounded-lg p-4 transition-all ${
-                      method.disabled 
-                        ? 'cursor-not-allowed bg-gray-50 border-gray-200 opacity-60'
-                        : `cursor-pointer ${
-                            formData.paymentMethod === method.value
-                              ? method.value === 'VNPAY' 
-                                ? 'border-blue-500 bg-blue-50'
-                                : 'border-green-500 bg-green-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value={method.value}
-                      checked={formData.paymentMethod === method.value}
-                      onChange={(e) => !method.disabled && handleInputChange('paymentMethod', e.target.value)}
-                      disabled={method.disabled}
-                      className="sr-only"
-                    />
+              {/* VNPay Payment Method - Selected by default */}
+              <div className="border-2 border-blue-500 bg-blue-50 rounded-lg p-6">
+                <div className="flex items-center">
+                  <Smartphone className="h-6 w-6 text-blue-600 mr-4" />
+                  <div className="flex-1">
                     <div className="flex items-center">
-                      {method.icon === 'smartphone' ? (
-                        <Smartphone className={`h-5 w-5 mr-3 ${
-                          method.disabled 
-                            ? 'text-gray-400' 
-                            : formData.paymentMethod === method.value ? method.color : 'text-gray-400'
-                        }`} />
-                      ) : (
-                        <Banknote className={`h-5 w-5 mr-3 ${
-                          method.disabled 
-                            ? 'text-gray-400' 
-                            : formData.paymentMethod === method.value ? method.color : 'text-gray-400'
-                        }`} />
-                      )}
-                      <div className="flex-1">
-                        <div className={`font-medium ${method.disabled ? 'text-gray-400' : ''}`}>
-                          {method.label}
-                        </div>
-                        <div className="text-sm text-gray-500">{method.desc}</div>
-                      </div>
-                      {formData.paymentMethod === method.value && !method.disabled && (
-                        <Check className={`h-5 w-5 ml-3 ${method.color}`} />
-                      )}
+                      <div className="font-semibold text-blue-800 text-lg">VNPay Digital Wallet</div>
+                      <Check className="h-5 w-5 ml-3 text-blue-600" />
                     </div>
-                  </label>
-                ))}
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-start">
-                  <Check className="h-5 w-5 text-blue-600 mt-0.5 mr-3" />
-                  <div>
-                    <h4 className="font-medium text-blue-800">Phương thức thanh toán an toàn</h4>
-                    <div className="text-blue-700 text-sm mt-1">
-                      {formData.paymentMethod === 'VNPAY' ? (
-                        <p>VNPay sử dụng công nghệ bảo mật tiên tiến để đảm bảo giao dịch an toàn. Thanh toán nhanh chóng và bảo mật.</p>
-                      ) : (
-                        <p>Bạn có thể thanh toán bằng tiền mặt khi nhận phòng tại khách sạn. Vui lòng chuẩn bị đúng số tiền.</p>
-                      )}
+                    <div className="text-blue-700 mt-1">
+                      Thanh toán qua ví điện tử VNPay - An toàn, nhanh chóng và bảo mật
+                    </div>
+                    <div className="mt-3 flex items-center space-x-4 text-sm text-blue-600">
+                      <div className="flex items-center">
+                        <Shield className="h-4 w-4 mr-1" />
+                        <span>Bảo mật SSL 256-bit</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-1" />
+                        <span>Xử lý tức thì</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Check className="h-4 w-4 mr-1" />
+                        <span>Đã được chứng nhận</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
+
+              
 
               {/* Voucher Section */}
               <VoucherInput
@@ -683,7 +636,7 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
                     <div className="space-y-2 text-sm">
                       <div>
                         <span className="text-gray-600">Payment Method:</span> 
-                        {formData.paymentMethod === 'VNPAY' ? ' VNPay' : ' Cash on Check-in'}
+                        VNPay Digital Wallet
                       </div>
                       <div className="border-t pt-2 mt-2">
                         <div className="flex justify-between">
@@ -782,6 +735,16 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
           )}
         </div>
       </div>
+
+      {/* VNPay Payment Modal */}
+      <VNPayPaymentModal
+        isOpen={showVNPayModal}
+        onClose={handleCloseVNPayModal}
+        onConfirm={handleVNPayPayment}
+        totalAmount={formData.totalAmount}
+        orderInfo={`Đặt phòng ${hotel.name} - ${roomType.name}`}
+        loading={vnpayLoading}
+      />
     </div>
   );
 };

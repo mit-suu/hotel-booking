@@ -37,7 +37,7 @@ public class Hotel {
 
     @Column(name = "location")
     String location;
-
+    
     String phone;
     String email;
     String website;
@@ -55,7 +55,7 @@ public class Hotel {
     String imageUrl;
 
     @Column(name = "is_active")
-    boolean isActive = true;
+    boolean isActive = false;
 
     @Column(name = "is_featured")
     boolean isFeatured = false;
@@ -72,6 +72,18 @@ public class Hotel {
     @Column(name = "pet_policy", columnDefinition = "TEXT")
     String petPolicy;
 
+    @Column(name = "commission_rate", precision = 5, scale = 2)
+    @Builder.Default
+    BigDecimal commissionRate = new BigDecimal("15.00");
+
+    @Column(name = "total_revenue", precision = 15, scale = 2)
+    @Builder.Default
+    BigDecimal totalRevenue = BigDecimal.ZERO;
+
+    @Column(name = "commission_earned", precision = 15, scale = 2)
+    @Builder.Default
+    BigDecimal commissionEarned = BigDecimal.ZERO;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     User owner; // HOST
@@ -82,7 +94,6 @@ public class Hotel {
     @OneToMany(mappedBy = "hotel", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     List<Review> reviews;
 
-    // Audit fields
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     LocalDateTime createdAt;

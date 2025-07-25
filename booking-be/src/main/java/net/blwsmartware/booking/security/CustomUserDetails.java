@@ -28,6 +28,7 @@ public class CustomUserDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
     }
+    
     private Set<GrantedAuthority> calculateAuthorities(User user) {
         Set<GrantedAuthority> authorities = new HashSet<>();
         if (user.getRole() != null) {
@@ -35,9 +36,11 @@ public class CustomUserDetails implements UserDetails {
         }
         return authorities;
     }
+    
     public UUID getID() {
         return user.getId() ;
     }
+    
     @Override
     public String getPassword() {
         return user.getPassword();

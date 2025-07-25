@@ -24,6 +24,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.UUID;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import net.blwsmartware.booking.entity.Booking;
+import java.util.Map;
+import net.blwsmartware.booking.repository.BookingRepository;
 
 @RestController
 @RequestMapping("/bookings")
@@ -31,11 +35,12 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class BookingController {
-
+    
     BookingService bookingService;
-
+    BookingRepository bookingRepository;
+    
     // ===== TEST ENDPOINT =====
-
+    
     @GetMapping("/auth-test")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<MessageResponse<String>> testAuthentication() {
@@ -46,15 +51,15 @@ public class BookingController {
                         .result("User is authenticated")
                         .build());
     }
-
+    
     // ===== GUEST OPERATIONS =====
-
+    
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<MessageResponse<BookingResponse>> createBooking(@Valid @RequestBody BookingCreateRequest request) {
         log.info("Creating booking for authenticated user");
         BookingResponse response = bookingService.createBooking(request);
-
+        
         return ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<BookingResponse>builder()
@@ -62,16 +67,39 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
+    @PostMapping("/scan-qr")
+    public ResponseEntity<?> scanQrCode(@RequestBody Map<String, Object> payload) {
+        String qrJson = (String) payload.get("qrCode");
+        ObjectMapper mapper = new ObjectMapper();
+        BookingResponse qrBooking;
+        try {
+            qrBooking = mapper.readValue(qrJson, BookingResponse.class);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid QR code");
+        }
+        // Lấy entity Booking từ repository
+        Booking booking = bookingRepository.findById(qrBooking.getId())
+            .orElseThrow(() -> new RuntimeException("Booking not found"));
+        if (booking.isQrCodeUsed()) {
+            return ResponseEntity.status(HttpStatus.GONE).body("QR code already used");
+        }
+        booking.setQrCodeUsed(true);
+        bookingService.save(booking);
+        // Trả về BookingResponse mới để frontend biết trạng thái
+        BookingResponse response = bookingService.getBookingById(qrBooking.getId());
+        return ResponseEntity.ok(response);
+    }
+    
     @GetMapping("/my")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<MessageResponse<DataResponse<BookingResponse>>> getMyBookings(
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "createdAt") String sortBy) {
-
+        
         DataResponse<BookingResponse> response = bookingService.getMyBookings(pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<BookingResponse>>builder()
@@ -79,12 +107,12 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     @GetMapping("/my/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<MessageResponse<BookingResponse>> getMyBookingById(@PathVariable UUID id) {
         BookingResponse response = bookingService.getMyBookingById(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<BookingResponse>builder()
@@ -92,14 +120,14 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     @PutMapping("/my/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<MessageResponse<BookingResponse>> updateMyBooking(
             @PathVariable UUID id,
             @Valid @RequestBody BookingUpdateRequest request) {
         BookingResponse response = bookingService.updateMyBooking(id, request);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<BookingResponse>builder()
@@ -107,14 +135,14 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     @PatchMapping("/my/{id}/cancel")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<MessageResponse<BookingResponse>> cancelMyBooking(
             @PathVariable UUID id,
             @RequestParam(required = false) String reason) {
         BookingResponse response = bookingService.cancelMyBooking(id, reason);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<BookingResponse>builder()
@@ -122,9 +150,9 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     // ===== HOST OPERATIONS =====
-
+    
     @GetMapping("/host")
     @IsHost
     public ResponseEntity<MessageResponse<DataResponse<BookingResponse>>> getHostBookings(
@@ -133,10 +161,10 @@ public class BookingController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "createdAt") String sortBy) {
-
+        
         DataResponse<BookingResponse> response = bookingService.getHostBookings(
                 status, paymentStatus, pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<BookingResponse>>builder()
@@ -144,12 +172,12 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     @GetMapping("/host/{id}")
     @IsHost
     public ResponseEntity<MessageResponse<BookingResponse>> getHostBookingById(@PathVariable UUID id) {
         BookingResponse response = bookingService.getHostBookingById(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<BookingResponse>builder()
@@ -157,14 +185,14 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     @PutMapping("/host/{id}")
     @IsHost
     public ResponseEntity<MessageResponse<BookingResponse>> updateHostBooking(
             @PathVariable UUID id,
             @Valid @RequestBody BookingUpdateRequest request) {
         BookingResponse response = bookingService.updateHostBooking(id, request);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<BookingResponse>builder()
@@ -172,12 +200,12 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     @PatchMapping("/host/{id}/confirm")
     @IsHost
     public ResponseEntity<MessageResponse<BookingResponse>> confirmBooking(@PathVariable UUID id) {
         BookingResponse response = bookingService.confirmBooking(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<BookingResponse>builder()
@@ -185,14 +213,14 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     @PatchMapping("/host/{id}/cancel")
     @IsHost
     public ResponseEntity<MessageResponse<BookingResponse>> cancelBooking(
             @PathVariable UUID id,
             @RequestParam(required = false) String reason) {
         BookingResponse response = bookingService.cancelBooking(id, reason);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<BookingResponse>builder()
@@ -200,12 +228,12 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     @PatchMapping("/host/{id}/complete")
     @IsHost
     public ResponseEntity<MessageResponse<BookingResponse>> completeBooking(@PathVariable UUID id) {
         BookingResponse response = bookingService.completeBooking(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<BookingResponse>builder()
@@ -213,12 +241,12 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     @PatchMapping("/host/{id}/confirm-payment")
     @IsHost
     public ResponseEntity<MessageResponse<BookingResponse>> confirmPaymentByHost(@PathVariable UUID id) {
         BookingResponse response = bookingService.confirmPayment(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<BookingResponse>builder()
@@ -226,14 +254,14 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     @PatchMapping("/host/{id}/process-cancellation")
     @IsHost
     public ResponseEntity<MessageResponse<BookingResponse>> processCancellation(
             @PathVariable UUID id,
             @Valid @RequestBody CancellationRequest request) {
         BookingResponse response = bookingService.processCancellation(id, request);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<BookingResponse>builder()
@@ -241,7 +269,19 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
+    @PatchMapping("/host/{id}/checkin")
+    @IsHost
+    public ResponseEntity<MessageResponse<BookingResponse>> checkInBookingByHost(@PathVariable UUID id) {
+        BookingResponse response = bookingService.checkInBookingByHost(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<BookingResponse>builder()
+                        .message("Guest checked in successfully")
+                        .result(response)
+                        .build());
+    }
+    
     @GetMapping("/hotel/{hotelId}")
     @IsHost
     public ResponseEntity<MessageResponse<DataResponse<BookingResponse>>> getBookingsByHotel(
@@ -250,10 +290,10 @@ public class BookingController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "createdAt") String sortBy) {
-
+        
         DataResponse<BookingResponse> response = bookingService.getBookingsByHotel(
                 hotelId, status, pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<BookingResponse>>builder()
@@ -261,9 +301,9 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     // ===== ADMIN OPERATIONS =====
-
+    
     @GetMapping("/admin")
     @IsAdmin
     public ResponseEntity<MessageResponse<DataResponse<BookingResponse>>> getAllBookings(
@@ -272,10 +312,10 @@ public class BookingController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "createdAt") String sortBy) {
-
+        
         DataResponse<BookingResponse> response = bookingService.getAllBookings(
                 status, paymentStatus, pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<BookingResponse>>builder()
@@ -283,12 +323,12 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     @GetMapping("/admin/{id}")
     @IsAdmin
     public ResponseEntity<MessageResponse<BookingResponse>> getBookingById(@PathVariable UUID id) {
         BookingResponse response = bookingService.getBookingById(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<BookingResponse>builder()
@@ -296,14 +336,14 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     @PutMapping("/admin/{id}")
     @IsAdmin
     public ResponseEntity<MessageResponse<BookingResponse>> updateBooking(
             @PathVariable UUID id,
             @Valid @RequestBody BookingUpdateRequest request) {
         BookingResponse response = bookingService.updateBooking(id, request);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<BookingResponse>builder()
@@ -311,24 +351,24 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     @DeleteMapping("/admin/{id}")
     @IsAdmin
     public ResponseEntity<MessageResponse<Void>> deleteBooking(@PathVariable UUID id) {
         bookingService.deleteBooking(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<Void>builder()
                         .message("Booking deleted successfully")
                         .build());
     }
-
+    
     @PatchMapping("/admin/{id}/confirm-payment")
     @IsAdmin
     public ResponseEntity<MessageResponse<BookingResponse>> confirmPaymentByAdmin(@PathVariable UUID id) {
         BookingResponse response = bookingService.confirmPayment(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<BookingResponse>builder()
@@ -336,9 +376,9 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     // ===== SEARCH & FILTER OPERATIONS =====
-
+    
     @GetMapping("/search")
     @PreAuthorize("hasRole('ADMIN') or hasRole('HOST')")
     public ResponseEntity<MessageResponse<DataResponse<BookingResponse>>> searchBookings(
@@ -346,9 +386,9 @@ public class BookingController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "createdAt") String sortBy) {
-
+        
         DataResponse<BookingResponse> response = bookingService.searchBookings(keyword, pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<BookingResponse>>builder()
@@ -356,7 +396,7 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     @GetMapping("/date-range")
     @PreAuthorize("hasRole('ADMIN') or hasRole('HOST')")
     public ResponseEntity<MessageResponse<DataResponse<BookingResponse>>> getBookingsByDateRange(
@@ -365,10 +405,10 @@ public class BookingController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "createdAt") String sortBy) {
-
+        
         DataResponse<BookingResponse> response = bookingService.getBookingsByDateRange(
                 startDate, endDate, pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<BookingResponse>>builder()
@@ -376,14 +416,14 @@ public class BookingController {
                         .result(response)
                         .build());
     }
-
+    
     // ===== STATISTICS ENDPOINTS =====
-
+    
     @GetMapping("/admin/stats/total")
     @IsAdmin
     public ResponseEntity<MessageResponse<Long>> getTotalBookingsCount() {
         Long count = bookingService.getTotalBookingsCount();
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<Long>builder()
@@ -391,12 +431,12 @@ public class BookingController {
                         .result(count)
                         .build());
     }
-
+    
     @GetMapping("/host/stats/total")
     @IsHost
     public ResponseEntity<MessageResponse<Long>> getHostBookingsCount() {
         Long count = bookingService.getHostBookingsCount();
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<Long>builder()
@@ -404,18 +444,19 @@ public class BookingController {
                         .result(count)
                         .build());
     }
-
-
-
+    
+    // ===== UTILITY ENDPOINTS =====
+    
     @GetMapping("/check-availability")
-
+    // Keep public for guest users to check availability before booking
+    // But should implement rate limiting in production
     public ResponseEntity<MessageResponse<Boolean>> checkRoomAvailability(
             @RequestParam UUID roomTypeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkInDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOutDate) {
-
+        
         Boolean isAvailable = bookingService.isRoomAvailable(roomTypeId, checkInDate, checkOutDate);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<Boolean>builder()
@@ -423,4 +464,4 @@ public class BookingController {
                         .result(isAvailable)
                         .build());
     }
-}
+} 

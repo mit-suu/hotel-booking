@@ -1,72 +1,76 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import DashboardLayout from './components/DashboardLayout';
+import Footer from './components/Footer';
+import Navbar from './components/Navbar';
+import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
-import DashboardLayout from './components/DashboardLayout';
-import ProtectedRoute from './components/ProtectedRoute';
+import AboutPage from './pages/AboutPage';
+import EmailVerificationPage from './pages/EmailVerificationPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import EmailVerificationPage from './pages/EmailVerificationPage';
+import OAuth2SuccessPage from './pages/OAuth2SuccessPage';
+import OAuth2TestPage from './pages/OAuth2TestPage';
 import ProfilePage from './pages/ProfilePage';
-import AboutPage from './pages/AboutPage';
-import ContactPage from './pages/ContactPage';
-import HotelsPage from './pages/HotelsPage';
-import HotelDetailPage from './pages/HotelDetailPage';
-import BookingHistoryPage from './pages/BookingHistoryPage';
-import BookingDetailPage from './pages/BookingDetailPage';
+import RegisterPage from './pages/RegisterPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
+
 import BookingConfirmationPage from './pages/BookingConfirmationPage';
+import BookingDetailPage from './pages/BookingDetailPage';
 import BookingFormPage from './pages/BookingFormPage';
-import MyReviews from './pages/MyReviews';
+import BookingHistoryPage from './pages/BookingHistoryPage';
+import HotelDetailPage from './pages/HotelDetailPage';
+import HotelsPage from './pages/HotelsPage';
 import MyBookingsPage from './pages/MyBookingsPage';
+import MyReviews from './pages/MyReviews';
+import PaymentReturnPage from './pages/PaymentReturnPage';
+import HostCheckinPage from './pages/host/HostCheckinPage';
 
 // Admin pages
-import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCommissions from './pages/admin/AdminCommissions';
-import AdminInvoices from './pages/admin/AdminInvoices';
-import AdminInvoiceDetail from './pages/admin/AdminInvoiceDetail';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPromotions from './pages/admin/AdminPromotions';
-import AdminAnalytics from './pages/admin/AdminAnalytics'; 
-import AdminCommissionPayments from './pages/admin/AdminCommissionPayments';
-import AdminCommissionPaymentDetail from './pages/admin/AdminCommissionPaymentDetail';
-import AdminCommissionPaymentCreate from './pages/admin/AdminCommissionPaymentCreate';
-import AdminBookings from './pages/admin/AdminBookings';
+import AdminRevenue from './pages/admin/AdminRevenue';
+ 
+
 import AdminBookingDetail from './pages/admin/AdminBookingDetail';
-import AdminHotels from './pages/admin/AdminHotels';
-import AdminHotelDetail from './pages/admin/AdminHotelDetail';
+import AdminBookings from './pages/admin/AdminBookings';
 import AdminHotelAdd from './pages/admin/AdminHotelAdd';
+import AdminHotelDetail from './pages/admin/AdminHotelDetail';
 import AdminHotelEdit from './pages/admin/AdminHotelEdit';
-import AdminRoomTypes from './pages/admin/AdminRoomTypes';
+import AdminHotels from './pages/admin/AdminHotels';
+import AdminReviews from './pages/admin/AdminReviews';
+import AdminRoomTypeAdd from './pages/admin/AdminRoomTypeAdd';
 import AdminRoomTypeDetail from './pages/admin/AdminRoomTypeDetail';
 import AdminRoomTypeEdit from './pages/admin/AdminRoomTypeEdit';
-import AdminRoomTypeAdd from './pages/admin/AdminRoomTypeAdd';
-import AdminUsers from './pages/admin/AdminUsers';
+import AdminRoomTypes from './pages/admin/AdminRoomTypes';
+import AdminUserAdd from './pages/admin/AdminUserAdd';
 import AdminUserDetail from './pages/admin/AdminUserDetail';
 import AdminUserEdit from './pages/admin/AdminUserEdit';
-import AdminUserAdd from './pages/admin/AdminUserAdd';
-import AdminReviews from './pages/admin/AdminReviews';
-import AdminSettings from './pages/admin/AdminSettings';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminWithdrawals from './pages/admin/AdminWithdrawals';
+
 
 // Host pages
+import HostBookingDetail from './pages/host/HostBookingDetail';
+import HostBookings from './pages/host/HostBookings';
 import HostDashboard from './pages/host/HostDashboard';
 import HostProperties from './pages/host/HostProperties';
-import HostBookings from './pages/host/HostBookings';
-import HostBookingDetail from './pages/host/HostBookingDetail';
-import HostAnalytics from './pages/host/HostAnalytics';
+
 import AddProperty from './pages/host/AddProperty';
-import PropertyDetail from './pages/host/PropertyDetail';
-import HostHotels from './pages/host/HostHotels';
 import HostHotelAdd from './pages/host/HostHotelAdd';
 import HostHotelDetail from './pages/host/HostHotelDetail';
 import HostHotelEdit from './pages/host/HostHotelEdit';
-import HostRoomTypes from './pages/host/HostRoomTypes';
+import HostHotels from './pages/host/HostHotels';
+import HostReviews from './pages/host/HostReviews';
 import HostRoomTypeAdd from './pages/host/HostRoomTypeAdd';
 import HostRoomTypeDetail from './pages/host/HostRoomTypeDetail';
 import HostRoomTypeEdit from './pages/host/HostRoomTypeEdit';
+import HostRoomTypes from './pages/host/HostRoomTypes';
+import HostVouchers from './pages/host/HostVouchers';
+import PropertyDetail from './pages/host/PropertyDetail';
 
 // Layout component for public pages
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
@@ -101,7 +105,10 @@ const hostRoutes = [
   { path: '/host/hotels/edit/:id', element: <HostHotelEdit /> },
   { path: '/host/bookings', element: <HostBookings /> },
   { path: '/host/bookings/:id', element: <HostBookingDetail /> },
-  { path: '/host/analytics', element: <HostAnalytics /> }
+  { path: '/host/vouchers', element: <HostVouchers /> },
+  { path: '/host/reviews', element: <HostReviews /> },
+  { path: '/host/checkin/:bookingId', element: <HostCheckinPage /> },
+
 ];
 
 function App() {
@@ -117,8 +124,10 @@ function App() {
             <Route path="/forgot-password" element={<PublicLayout><ForgotPasswordPage /></PublicLayout>} />
             <Route path="/reset-password" element={<PublicLayout><ResetPasswordPage /></PublicLayout>} />
             <Route path="/email-verification" element={<PublicLayout><EmailVerificationPage /></PublicLayout>} />
+            <Route path="/auth/oauth2/success" element={<OAuth2SuccessPage />} />
+            <Route path="/oauth2-test" element={<PublicLayout><OAuth2TestPage /></PublicLayout>} />
             <Route path="/about" element={<PublicLayout><AboutPage /></PublicLayout>} />
-            <Route path="/contact" element={<PublicLayout><ContactPage /></PublicLayout>} />
+
             <Route path="/hotels" element={<PublicLayout><HotelsPage /></PublicLayout>} />
             <Route path="/hotels/:id" element={<PublicLayout><HotelDetailPage /></PublicLayout>} />
 
@@ -159,6 +168,11 @@ function App() {
               </ProtectedRoute>
             } />
 
+            {/* Payment routes - public access for VNPay callbacks */}
+            <Route path="/payment/return" element={
+              <PublicLayout><PaymentReturnPage /></PublicLayout>
+            } />
+
             {/* Admin routes - require ADMIN role */}
             <Route path="/admin" element={
               <ProtectedRoute requiredRole="ADMIN">
@@ -170,14 +184,9 @@ function App() {
                 <DashboardLayout type="admin"><AdminCommissions /></DashboardLayout>
               </ProtectedRoute>
             } />
-            <Route path="/admin/invoices" element={
+            <Route path="/admin/revenue" element={
               <ProtectedRoute requiredRole="ADMIN">
-                <DashboardLayout type="admin"><AdminInvoices /></DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/invoices/:id" element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <DashboardLayout type="admin"><AdminInvoiceDetail /></DashboardLayout>
+                <DashboardLayout type="admin"><AdminRevenue /></DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="/admin/promotions" element={
@@ -185,26 +194,8 @@ function App() {
                 <DashboardLayout type="admin"><AdminPromotions /></DashboardLayout>
               </ProtectedRoute>
             } />
-            <Route path="/admin/analytics" element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <DashboardLayout type="admin"><AdminAnalytics /></DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/commission-payments" element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <DashboardLayout type="admin"><AdminCommissionPayments /></DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/commission-payments/:id" element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <DashboardLayout type="admin"><AdminCommissionPaymentDetail /></DashboardLayout>
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/commission-payments/create" element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <DashboardLayout type="admin"><AdminCommissionPaymentCreate /></DashboardLayout>
-              </ProtectedRoute>
-            } />
+
+
             <Route path="/admin/bookings" element={
               <ProtectedRoute requiredRole="ADMIN">
                 <DashboardLayout type="admin"><AdminBookings /></DashboardLayout>
@@ -213,6 +204,11 @@ function App() {
             <Route path="/admin/bookings/:id" element={
               <ProtectedRoute requiredRole="ADMIN">
                 <DashboardLayout type="admin"><AdminBookingDetail /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/withdrawals" element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <DashboardLayout type="admin"><AdminWithdrawals /></DashboardLayout>
               </ProtectedRoute>
             } />
             <Route path="/admin/hotels" element={
@@ -280,11 +276,7 @@ function App() {
                 <DashboardLayout type="admin"><AdminReviews /></DashboardLayout>
               </ProtectedRoute>
             } />
-            <Route path="/admin/settings" element={
-              <ProtectedRoute requiredRole="ADMIN">
-                <DashboardLayout type="admin"><AdminSettings /></DashboardLayout>
-              </ProtectedRoute>
-            } />
+
 
             {/* Host routes - require HOST role */}
             <Route path="/host" element={
@@ -357,11 +349,18 @@ function App() {
                 <DashboardLayout type="host"><HostBookingDetail /></DashboardLayout>
               </ProtectedRoute>
             } />
-            <Route path="/host/analytics" element={
+
+            <Route path="/host/vouchers" element={
               <ProtectedRoute requiredRole="HOST">
-                <DashboardLayout type="host"><HostAnalytics /></DashboardLayout>
+                <DashboardLayout type="host"><HostVouchers /></DashboardLayout>
               </ProtectedRoute>
             } />
+            <Route path="/host/reviews" element={
+              <ProtectedRoute requiredRole="HOST">
+                <DashboardLayout type="host"><HostReviews /></DashboardLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/host/checkin/:bookingId" element={<HostCheckinPage />} />
 
             {/* Fallback route */}
             <Route path="*" element={<Navigate to="/" replace />} />

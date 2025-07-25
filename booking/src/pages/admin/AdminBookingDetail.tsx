@@ -1,571 +1,725 @@
-"use client"
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { 
+  ArrowLeft, User, MapPin, Calendar, DollarSign, Clock, Check, X, 
+  FileText, Printer, Download, Mail, Phone, MessageSquare, Edit, 
+  Percent, Building, CreditCard, AlertTriangle, ChevronDown, ChevronUp,
+  RefreshCw, ExternalLink, Star, Copy, Eye
+} from 'lucide-react';
+import { bookingAPI, BookingResponse } from '../../services/api';
+import BookingStatusBadge, { PaymentStatusBadge } from '../../components/booking/BookingStatusBadge';
 
-import { useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import {
-  ArrowLeft,
-  User,
-  MapPin,
-  Calendar,
-  DollarSign,
-  Check,
-  X,
-  FileText,
-  Printer,
-  Download,
-  Mail,
-  Phone,
-  MessageSquare,
-  Edit,
-  Percent,
-  Building,
-  CreditCard,
-  AlertTriangle,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react"
-
-interface BookingDetail {
-  id: string
-  guestName: string
-  guestEmail: string
-  guestPhone: string
-  propertyName: string
-  propertyId: string
-  ownerId: string
-  ownerName: string
-  ownerEmail: string
-  ownerPhone: string
-  roomName: string
-  roomType: string
-  location: string
-  checkIn: string
-  checkOut: string
-  guests: {
-    adults: number
-    children: number
-  }
-  nights: number
-  basePrice: number
-  taxesAndFees: number
-  totalAmount: number
-  status: "confirmed" | "pending" | "cancelled" | "completed"
-  paymentStatus: "paid" | "pending" | "refunded"
-  paymentMethod: string
-  paymentDate?: string
-  createdAt: string
-  specialRequests?: string
-  commission: {
-    rate: number
-    amount: number
-    ownerAmount: number
-    platformAmount: number
-    status: "pending" | "paid" | "processing"
-    paidDate?: string
-  }
-  cancellationPolicy: string
-  invoiceId?: string
-  notes?: string
+interface DetailState {
+  booking: BookingResponse | null;
+  loading: boolean;
+  error: string | null;
+  updating: boolean;
 }
 
-export default function AdminBookingDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const id = params.id as string
+const AdminBookingDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  
+  const [state, setState] = useState<DetailState>({
+    booking: null,
+    loading: false,
+    error: null,
+    updating: false
+  });
 
-  const [showCommissionDetails, setShowCommissionDetails] = useState(false)
-  const [showPaymentDetails, setShowPaymentDetails] = useState(false)
-  const [notes, setNotes] = useState("")
-  const [isEditingNotes, setIsEditingNotes] = useState(false)
+  const [showPaymentDetails, setShowPaymentDetails] = useState(false);
+  const [showGuestDetails, setShowGuestDetails] = useState(true);
+  const [showHotelDetails, setShowHotelDetails] = useState(true);
+  const [notes, setNotes] = useState('');
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
 
-  // Sample booking data - in a real app, you would fetch this from an API
-  const booking: BookingDetail | null = null
-
-  // Add early return if no booking data
-  if (!booking) {
-    return (
-        <div className="min-h-screen bg-gray-50">
-          <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-            <div className="flex items-center mb-6">
-              <button onClick={() => router.push("/admin/bookings")} className="mr-4 text-gray-600 hover:text-gray-900">
-                <ArrowLeft size={24} />
-              </button>
-              <h1 className="text-xl sm:text-2xl font-bold">Chi tiết đặt phòng</h1>
-            </div>
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <h3 className="text-xl font-medium text-gray-900 mb-2">Không tìm thấy thông tin đặt phòng</h3>
-              <p className="text-gray-600">Đặt phòng với ID #{id} không tồn tại hoặc đã bị xóa.</p>
-            </div>
-          </div>
-        </div>
-    )
-  }
-
-  const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" }
-    return new Date(dateString).toLocaleDateString("vi-VN", options)
-  }
-
-  const formatCurrency = (amount: number) => {
-    return amount.toLocaleString("vi-VN") + "đ"
-  }
-
-  const handleGoBack = () => {
-    router.push("/admin/bookings")
-  }
-
-  const handleConfirmBooking = () => {
-    // Confirm booking logic would go here
-    alert(`Đã xác nhận đặt phòng có ID: ${id}`)
-  }
-
-  const handleCancelBooking = () => {
-    if (window.confirm("Bạn có chắc chắn muốn hủy đặt phòng này không?")) {
-      // Cancel booking logic would go here
-      alert(`Đã hủy đặt phòng có ID: ${id}`)
+  // Load booking details
+  const loadBookingDetail = async () => {
+    if (!id) return;
+    
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    
+    try {
+      const response = await bookingAPI.getBookingById(id);
+      if (response.data.success) {
+        setState(prev => ({
+          ...prev,
+          booking: response.data.result,
+          loading: false
+        }));
+        setNotes(response.data.result.specialRequests || '');
+      }
+    } catch (error: any) {
+      setState(prev => ({
+        ...prev,
+        error: error.response?.data?.message || 'Error occurred while loading booking details',
+        loading: false
+      }));
     }
-  }
+  };
+
+  useEffect(() => {
+    loadBookingDetail();
+  }, [id]);
+
+  // Action handlers
+  const handleGoBack = () => {
+    navigate('/admin/bookings');
+  };
+
+  const handleRefresh = () => {
+    loadBookingDetail();
+  };
+
+  const handleConfirmBooking = async () => {
+    if (!state.booking) return;
+    
+    setState(prev => ({ ...prev, updating: true }));
+    try {
+      await bookingAPI.confirmBooking(state.booking.id);
+      await loadBookingDetail();
+      alert('Booking confirmed successfully');
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Error occurred while confirming booking');
+    } finally {
+      setState(prev => ({ ...prev, updating: false }));
+    }
+  };
+
+  const handleCancelBooking = async () => {
+    if (!state.booking) return;
+    
+    const reason = prompt('Enter reason for canceling booking:');
+    if (!reason) return;
+
+    setState(prev => ({ ...prev, updating: true }));
+    try {
+      await bookingAPI.cancelBooking(state.booking.id, reason);
+      await loadBookingDetail();
+      alert('Booking cancelled successfully');
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Error occurred while canceling booking');
+    } finally {
+      setState(prev => ({ ...prev, updating: false }));
+    }
+  };
+
+  const handleCompleteBooking = async () => {
+    if (!state.booking) return;
+    
+    setState(prev => ({ ...prev, updating: true }));
+    try {
+      await bookingAPI.completeBooking(state.booking.id);
+      await loadBookingDetail();
+      alert('Booking marked as completed');
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Error occurred while completing booking');
+    } finally {
+      setState(prev => ({ ...prev, updating: false }));
+    }
+  };
+
+  const handleDeleteBooking = async () => {
+    if (!state.booking) return;
+    
+    if (!window.confirm('Are you sure you want to delete this booking? This action cannot be undone.')) {
+      return;
+    }
+
+    setState(prev => ({ ...prev, updating: true }));
+    try {
+      await bookingAPI.deleteBooking(state.booking.id);
+      alert('Booking deleted successfully');
+      navigate('/admin/bookings');
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Error occurred while deleting booking');
+      setState(prev => ({ ...prev, updating: false }));
+    }
+  };
 
   const handleSendEmail = () => {
-    // Send email logic would go here
-    alert(`Đã gửi email đến khách hàng: ${booking.guestEmail}`)
-  }
+    if (state.booking) {
+      window.location.href = `mailto:${state.booking.guestEmail}?subject=Booking information ${state.booking.bookingReference}`;
+    }
+  };
+
+  const handleCallGuest = () => {
+    if (state.booking) {
+      window.location.href = `tel:${state.booking.guestPhone}`;
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!state.booking) return;
+    
+    if (!window.confirm('Are you sure you want to confirm this payment? This action cannot be undone.')) {
+      return;
+    }
+
+    setState(prev => ({ ...prev, updating: true }));
+    try {
+      await bookingAPI.adminConfirmPayment(state.booking.id);
+      await loadBookingDetail();
+      alert('Payment confirmed successfully!');
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Error occurred while confirming payment');
+    } finally {
+      setState(prev => ({ ...prev, updating: false }));
+    }
+  };
 
   const handlePrintBooking = () => {
-    window.print()
-  }
+    window.print();
+  };
 
-  const handleDownloadInvoice = () => {
-    // Download invoice logic would go here
-    alert(`Đã tải xuống hóa đơn có ID: ${booking.invoiceId}`)
-  }
+  const handleCopyBookingId = () => {
+    if (state.booking) {
+      navigator.clipboard.writeText(state.booking.bookingReference);
+      alert('Booking code copied');
+    }
+  };
 
-  const handleViewInvoice = () => {
-    router.push(`/admin/invoices/${booking.invoiceId}`)
-  }
-
-  const handleViewProperty = () => {
-    router.push(`/admin/hotels/${booking.propertyId}`)
-  }
-
-  const handleViewOwner = () => {
-    router.push(`/admin/users/${booking.ownerId}`)
-  }
+  const handleViewHotel = () => {
+    if (state.booking) {
+      navigate(`/admin/hotels/${state.booking.hotelId}`);
+    }
+  };
 
   const handleViewGuest = () => {
-    // Navigate to guest profile
-    router.push(`/admin/users/${booking.guestName.replace(/\s+/g, "-").toLowerCase()}`)
-  }
+    if (state.booking) {
+      // Navigate to guest profile or user management
+      navigate(`/admin/users?search=${state.booking.guestEmail}`);
+    }
+  };
 
-  const handleSaveNotes = () => {
-    // Save notes logic would go here
-    alert("Đã lưu ghi chú")
-    setIsEditingNotes(false)
-  }
+  // Utility functions
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatDateOnly = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(amount);
+  };
+
+  const calculateNights = (checkIn: string, checkOut: string) => {
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const diffTime = checkOutDate.getTime() - checkInDate.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "confirmed":
-        return (
-            <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Đã xác nhận</span>
-        )
-      case "pending":
-        return (
-            <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">Chờ xác nhận</span>
-        )
-      case "cancelled":
-        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Đã hủy</span>
-      case "completed":
-        return (
-            <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Đã hoàn thành</span>
-        )
-      default:
-        return null
-    }
-  }
+    return <BookingStatusBadge status={status as any} size="md" />;
+  };
 
   const getPaymentStatusBadge = (status: string) => {
-    switch (status) {
-      case "paid":
-        return (
-            <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Đã thanh toán</span>
-        )
-      case "pending":
-        return (
-            <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
-            Chờ thanh toán
-          </span>
-        )
-      case "refunded":
-        return (
-            <span className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800">Đã hoàn tiền</span>
-        )
-      default:
-        return null
-    }
+    return <PaymentStatusBadge status={status as any} size="md" />;
+  };
+
+  if (state.loading) {
+    return (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span className="ml-2">Loading booking details...</span>
+      </div>
+    );
   }
 
-  const getCommissionStatusBadge = (status: string) => {
-    switch (status) {
-      case "paid":
-        return (
-            <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Đã thanh toán</span>
-        )
-      case "pending":
-        return (
-            <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
-            Chờ thanh toán
-          </span>
-        )
-      case "processing":
-        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Đang xử lý</span>
-      default:
-        return null
-    }
-  }
-
-  return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-          <div className="flex items-center mb-6">
-            <button onClick={handleGoBack} className="mr-4 text-gray-600 hover:text-gray-900">
-              <ArrowLeft size={24} />
-            </button>
-            <h1 className="text-xl sm:text-2xl font-bold">Chi tiết đặt phòng #{booking.id}</h1>
+  if (state.error) {
+    return (
+      <div className="w-full">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <div className="flex items-center">
+            <AlertTriangle className="h-6 w-6 text-red-400 mr-3" />
+            <div>
+              <h3 className="text-lg font-medium text-red-800">An error occurred</h3>
+              <p className="text-red-700 mt-1">{state.error}</p>
+            </div>
           </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            {booking.status === "pending" && (
-                <>
-                  <button
-                      onClick={handleConfirmBooking}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
-                  >
-                    <Check size={18} className="mr-2" />
-                    Xác nhận đặt phòng
-                  </button>
-                  <button
-                      onClick={handleCancelBooking}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center"
-                  >
-                    <X size={18} className="mr-2" />
-                    Hủy đặt phòng
-                  </button>
-                </>
-            )}
+          <div className="mt-4 flex space-x-3">
             <button
-                onClick={handleSendEmail}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+              onClick={handleGoBack}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
-              <Mail size={18} className="mr-2" />
-              Gửi email
+              Go Back
             </button>
             <button
-                onClick={handlePrintBooking}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center"
+              onClick={loadBookingDetail}
+              className="px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors"
             >
-              <Printer size={18} className="mr-2" />
-              In
+              Try Again
             </button>
-            {booking.invoiceId && (
-                <>
-                  <button
-                      onClick={handleViewInvoice}
-                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center"
-                  >
-                    <FileText size={18} className="mr-2" />
-                    Xem hóa đơn
-                  </button>
-                  <button
-                      onClick={handleDownloadInvoice}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
-                  >
-                    <Download size={18} className="mr-2" />
-                    Tải hóa đơn
-                  </button>
-                </>
-            )}
-          </div>
-
-          {/* Status Overview */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-              <div>
-                <h2 className="text-xl font-semibold mb-2">Tổng quan đặt phòng</h2>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {getStatusBadge(booking.status)}
-                  {getPaymentStatusBadge(booking.paymentStatus)}
-                </div>
-                <p className="text-gray-600">Ngày đặt: {formatDate(booking.createdAt)}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-gray-600">Tổng thanh toán</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(booking.totalAmount)}</p>
-                {booking.paymentStatus === "paid" && booking.paymentDate && (
-                    <p className="text-sm text-gray-500">Thanh toán ngày {formatDate(booking.paymentDate)}</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            {/* Guest Information */}
-            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-              <div className="flex justify-between items-start mb-4">
-                <h2 className="text-lg font-semibold flex items-center">
-                  <User size={20} className="mr-2 text-blue-600" />
-                  Thông tin khách hàng
-                </h2>
-                <button onClick={handleViewGuest} className="text-blue-600 hover:text-blue-800 text-sm">
-                  Xem hồ sơ
-                </button>
-              </div>
-              <div className="space-y-3">
-                <p className="font-medium text-gray-900">{booking.guestName}</p>
-                <p className="text-gray-600 flex items-center">
-                  <Mail size={16} className="mr-2 text-gray-400" />
-                  {booking.guestEmail}
-                </p>
-                <p className="text-gray-600 flex items-center">
-                  <Phone size={16} className="mr-2 text-gray-400" />
-                  {booking.guestPhone}
-                </p>
-              </div>
-            </div>
-
-            {/* Property Information */}
-            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-              <div className="flex justify-between items-start mb-4">
-                <h2 className="text-lg font-semibold flex items-center">
-                  <MapPin size={20} className="mr-2 text-blue-600" />
-                  Thông tin khách sạn
-                </h2>
-                <button onClick={handleViewProperty} className="text-blue-600 hover:text-blue-800 text-sm">
-                  Xem khách sạn
-                </button>
-              </div>
-              <div className="space-y-3">
-                <p className="font-medium text-gray-900">{booking.propertyName}</p>
-                <p className="text-gray-600">{booking.location}</p>
-                <p className="text-gray-600">Phòng: {booking.roomName}</p>
-                <p className="text-gray-600">Loại: {booking.roomType}</p>
-              </div>
-            </div>
-
-            {/* Owner Information */}
-            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-              <div className="flex justify-between items-start mb-4">
-                <h2 className="text-lg font-semibold flex items-center">
-                  <Building size={20} className="mr-2 text-blue-600" />
-                  Thông tin chủ khách sạn
-                </h2>
-                <button onClick={handleViewOwner} className="text-blue-600 hover:text-blue-800 text-sm">
-                  Xem hồ sơ
-                </button>
-              </div>
-              <div className="space-y-3">
-                <p className="font-medium text-gray-900">{booking.ownerName}</p>
-                <p className="text-gray-600 flex items-center">
-                  <Mail size={16} className="mr-2 text-gray-400" />
-                  {booking.ownerEmail}
-                </p>
-                <p className="text-gray-600 flex items-center">
-                  <Phone size={16} className="mr-2 text-gray-400" />
-                  {booking.ownerPhone}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Booking Details */}
-            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center">
-                <Calendar size={20} className="mr-2 text-blue-600" />
-                Chi tiết đặt phòng
-              </h2>
-              <div className="space-y-4">
-                <div className="flex justify-between border-b pb-2">
-                  <span className="text-gray-600">Ngày nhận phòng:</span>
-                  <span className="font-medium">{formatDate(booking.checkIn)}</span>
-                </div>
-                <div className="flex justify-between border-b pb-2">
-                  <span className="text-gray-600">Ngày trả phòng:</span>
-                  <span className="font-medium">{formatDate(booking.checkOut)}</span>
-                </div>
-                <div className="flex justify-between border-b pb-2">
-                  <span className="text-gray-600">Số đêm:</span>
-                  <span className="font-medium">{booking.nights} đêm</span>
-                </div>
-                <div className="flex justify-between border-b pb-2">
-                  <span className="text-gray-600">Số khách:</span>
-                  <span className="font-medium">
-                  {booking.guests.adults} người lớn, {booking.guests.children} trẻ em
-                </span>
-                </div>
-                {booking.specialRequests && (
-                    <div className="pt-2">
-                      <p className="text-gray-600 mb-1">Yêu cầu đặc biệt:</p>
-                      <p className="bg-gray-50 p-3 rounded text-gray-700">{booking.specialRequests}</p>
-                    </div>
-                )}
-              </div>
-            </div>
-
-            {/* Payment Details */}
-            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-              <button
-                  className="w-full flex justify-between items-center text-lg font-semibold mb-4"
-                  onClick={() => setShowPaymentDetails(!showPaymentDetails)}
-              >
-                <div className="flex items-center">
-                  <DollarSign size={20} className="mr-2 text-blue-600" />
-                  Chi tiết thanh toán
-                </div>
-                {showPaymentDetails ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              </button>
-
-              {showPaymentDetails && (
-                  <div className="space-y-4">
-                    <div className="flex justify-between border-b pb-2">
-                      <span className="text-gray-600">Giá phòng ({booking.nights} đêm):</span>
-                      <span className="font-medium">{formatCurrency(booking.basePrice * booking.nights)}</span>
-                    </div>
-                    <div className="flex justify-between border-b pb-2">
-                      <span className="text-gray-600">Thuế và phí:</span>
-                      <span className="font-medium">{formatCurrency(booking.taxesAndFees)}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg">
-                      <span>Tổng cộng:</span>
-                      <span>{formatCurrency(booking.totalAmount)}</span>
-                    </div>
-                    <div className="pt-2 space-y-2">
-                      <div className="flex justify-between text-gray-600">
-                        <span>Phương thức thanh toán:</span>
-                        <span className="flex items-center">
-                      <CreditCard size={16} className="mr-1" />
-                          {booking.paymentMethod}
-                    </span>
-                      </div>
-                      <div className="flex justify-between text-gray-600">
-                        <span>Trạng thái thanh toán:</span>
-                        <span>{getPaymentStatusBadge(booking.paymentStatus)}</span>
-                      </div>
-                      {booking.paymentDate && (
-                          <div className="flex justify-between text-gray-600">
-                            <span>Ngày thanh toán:</span>
-                            <span>{formatDate(booking.paymentDate)}</span>
-                          </div>
-                      )}
-                    </div>
-                  </div>
-              )}
-            </div>
-          </div>
-
-          {/* Commission Details */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <button
-                className="w-full flex justify-between items-center text-lg font-semibold mb-4"
-                onClick={() => setShowCommissionDetails(!showCommissionDetails)}
-            >
-              <div className="flex items-center">
-                <Percent size={20} className="mr-2 text-blue-600" />
-                Chi tiết hoa hồng
-              </div>
-              {showCommissionDetails ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-            </button>
-
-            {showCommissionDetails && (
-                <div className="space-y-4">
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="text-gray-600">Tỷ lệ hoa hồng:</span>
-                    <span className="font-medium">{booking.commission.rate}%</span>
-                  </div>
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="text-gray-600">Số tiền hoa hồng:</span>
-                    <span className="font-medium">{formatCurrency(booking.commission.amount)}</span>
-                  </div>
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="text-gray-600">Số tiền chủ khách sạn nhận:</span>
-                    <span className="font-medium">{formatCurrency(booking.commission.ownerAmount)}</span>
-                  </div>
-                  <div className="flex justify-between border-b pb-2">
-                    <span className="text-gray-600">Số tiền nền tảng nhận:</span>
-                    <span className="font-medium">{formatCurrency(booking.commission.platformAmount)}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>Trạng thái thanh toán hoa hồng:</span>
-                    <span>{getCommissionStatusBadge(booking.commission.status)}</span>
-                  </div>
-                  {booking.commission.paidDate && (
-                      <div className="flex justify-between text-gray-600">
-                        <span>Ngày thanh toán hoa hồng:</span>
-                        <span>{formatDate(booking.commission.paidDate)}</span>
-                      </div>
-                  )}
-                </div>
-            )}
-          </div>
-
-          {/* Cancellation Policy */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4 flex items-center">
-              <AlertTriangle size={20} className="mr-2 text-orange-600" />
-              Chính sách hủy phòng
-            </h2>
-            <p className="text-gray-700">{booking.cancellationPolicy}</p>
-          </div>
-
-          {/* Admin Notes */}
-          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold flex items-center">
-                <MessageSquare size={20} className="mr-2 text-blue-600" />
-                Ghi chú nội bộ
-              </h2>
-              {!isEditingNotes && (
-                  <button
-                      onClick={() => setIsEditingNotes(true)}
-                      className="text-blue-600 hover:text-blue-800 flex items-center"
-                  >
-                    <Edit size={16} className="mr-1" />
-                    Chỉnh sửa
-                  </button>
-              )}
-            </div>
-
-            {isEditingNotes ? (
-                <div>
-              <textarea
-                  value={notes || booking.notes || ""}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px]"
-                  placeholder="Thêm ghi chú về đặt phòng này..."
-              />
-                  <div className="flex justify-end mt-3 space-x-2">
-                    <button
-                        onClick={() => setIsEditingNotes(false)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                    >
-                      Hủy
-                    </button>
-                    <button
-                        onClick={handleSaveNotes}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                      Lưu
-                    </button>
-                  </div>
-                </div>
-            ) : (
-                <p className="text-gray-700 bg-gray-50 p-4 rounded-lg min-h-[60px]">
-                  {booking.notes || "Chưa có ghi chú nào."}
-                </p>
-            )}
           </div>
         </div>
       </div>
-  )
-}
+    );
+  }
+
+  if (!state.booking) {
+    return (
+      <div className="w-full">
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Booking not found</h3>
+          <p className="text-gray-600 mb-4">The booking with this ID does not exist or has been deleted.</p>
+          <button
+            onClick={handleGoBack}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Back to List
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const booking = state.booking;
+  const nights = calculateNights(booking.checkInDate, booking.checkOutDate);
+
+  return (
+    <div className="w-full max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <button
+            onClick={handleGoBack}
+            className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5 text-gray-600" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Booking Details</h1>
+            <div className="flex items-center mt-1 space-x-4">
+              <p className="text-sm text-gray-600">#{booking.bookingReference}</p>
+              <button
+                onClick={handleCopyBookingId}
+                className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+              >
+                <Copy className="h-3 w-3 mr-1" />
+                Copy
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleRefresh}
+            disabled={state.loading}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${state.loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </button>
+          <button
+            onClick={handlePrintBooking}
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
+          >
+            <Printer className="h-4 w-4 mr-2" />
+            Print
+          </button>
+        </div>
+      </div>
+
+      {/* Status & Actions */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Booking Status</p>
+              {getStatusBadge(booking.status)}
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Payment Status</p>
+              {getPaymentStatusBadge(booking.paymentStatus)}
+            </div>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-2">
+            {booking.status === 'PENDING' && (
+              <>
+                <button
+                  onClick={handleConfirmBooking}
+                  disabled={state.updating}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center disabled:opacity-50"
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  Confirm
+                </button>
+                <button
+                  onClick={handleCancelBooking}
+                  disabled={state.updating}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center disabled:opacity-50"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </button>
+              </>
+            )}
+            
+            {booking.status === 'CONFIRMED' && (
+              <button
+                onClick={handleCompleteBooking}
+                disabled={state.updating}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50"
+              >
+                <Check className="h-4 w-4 mr-2" />
+                Complete
+              </button>
+            )}
+            
+            <button
+              onClick={handleSendEmail}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
+            >
+              <Mail className="h-4 w-4 mr-2" />
+              Send Email
+            </button>
+            
+            <button
+              onClick={handleCallGuest}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
+            >
+              <Phone className="h-4 w-4 mr-2" />
+              Call Guest
+            </button>
+            
+            <button
+              onClick={handleDeleteBooking}
+              disabled={state.updating}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center disabled:opacity-50"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Information */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Guest Information */}
+          <div className="bg-white rounded-lg shadow-md">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <button
+                onClick={() => setShowGuestDetails(!showGuestDetails)}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <User className="h-5 w-5 mr-2" />
+                  Guest Information
+                </h3>
+                {showGuestDetails ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </button>
+            </div>
+            
+            {showGuestDetails && (
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2">{booking.guestName}</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center text-gray-600">
+                        <Mail className="h-4 w-4 mr-2" />
+                        <a href={`mailto:${booking.guestEmail}`} className="hover:text-blue-600">
+                          {booking.guestEmail}
+                        </a>
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <Phone className="h-4 w-4 mr-2" />
+                        <a href={`tel:${booking.guestPhone}`} className="hover:text-blue-600">
+                          {booking.guestPhone}
+                        </a>
+                      </div>
+                      {booking.userName && (
+                        <div className="flex items-center text-gray-600">
+                          <User className="h-4 w-4 mr-2" />
+                          <span>Account: {booking.userName}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleViewGuest}
+                      className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Profile
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Hotel Information */}
+          <div className="bg-white rounded-lg shadow-md">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <button
+                onClick={() => setShowHotelDetails(!showHotelDetails)}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Building className="h-5 w-5 mr-2" />
+                  Hotel & Room Information
+                </h3>
+                {showHotelDetails ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </button>
+            </div>
+            
+            {showHotelDetails && (
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2">{booking.hotelName}</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center text-gray-600">
+                        <MapPin className="h-4 w-4 mr-2" />
+                        <span>{booking.hotelAddress}</span>
+                      </div>
+                      {booking.hotelPhone && (
+                        <div className="flex items-center text-gray-600">
+                          <Phone className="h-4 w-4 mr-2" />
+                          <span>{booking.hotelPhone}</span>
+                        </div>
+                      )}
+                      {booking.hotelEmail && (
+                        <div className="flex items-center text-gray-600">
+                          <Mail className="h-4 w-4 mr-2" />
+                          <span>{booking.hotelEmail}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-medium text-gray-900 mb-2">Room Type</h4>
+                    <div className="space-y-2">
+                      <p className="text-gray-900">{booking.roomTypeName}</p>
+                      {booking.roomDescription && (
+                        <p className="text-gray-600 text-sm">{booking.roomDescription}</p>
+                      )}
+                      {booking.bedType && (
+                        <p className="text-gray-600 text-sm">Bed Type: {booking.bedType}</p>
+                      )}
+                      <p className="text-gray-600 text-sm">Max Occupancy: {booking.maxOccupancy}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={handleViewHotel}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    View Hotel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Booking Details */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <Calendar className="h-5 w-5 mr-2" />
+              Booking Details
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Check-in Date</p>
+                <p className="font-medium text-gray-900">{formatDateOnly(booking.checkInDate)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Check-out Date</p>
+                <p className="font-medium text-gray-900">{formatDateOnly(booking.checkOutDate)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Nights</p>
+                <p className="font-medium text-gray-900">{nights} nights</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Guests</p>
+                <p className="font-medium text-gray-900">{booking.guests} guests</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Booking Date</p>
+                <p className="font-medium text-gray-900">{formatDate(booking.createdAt)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Last Updated</p>
+                <p className="font-medium text-gray-900">{formatDate(booking.updatedAt)}</p>
+              </div>
+            </div>
+
+            {booking.specialRequests && (
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <p className="text-sm text-gray-600 mb-2">Special Requests</p>
+                <p className="text-gray-900 bg-gray-50 p-3 rounded-lg">{booking.specialRequests}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Payment Summary */}
+          <div className="bg-white rounded-lg shadow-md">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <button
+                onClick={() => setShowPaymentDetails(!showPaymentDetails)}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <DollarSign className="h-5 w-5 mr-2" />
+                  Payment Details
+                </h3>
+                {showPaymentDetails ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Room Rate ({nights} nights)</span>
+                  <span className="font-medium">{formatCurrency(booking.pricePerNight * nights)}</span>
+                </div>
+                
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Rate per Night</span>
+                  <span className="text-gray-900">{formatCurrency(booking.pricePerNight)}</span>
+                </div>
+                
+                {showPaymentDetails && (
+                  <>
+                    <div className="border-t border-gray-200 pt-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-semibold text-gray-900">Total Amount</span>
+                        <span className="text-xl font-bold text-gray-900">{formatCurrency(booking.totalAmount)}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="border-t border-gray-200 pt-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Payment Method</span>
+                        <div className="flex items-center">
+                          <CreditCard className="h-4 w-4 text-gray-400 mr-1" />
+                          <span className="text-sm text-gray-900">{booking.paymentMethod || 'Not specified'}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Payment Status</span>
+                        {getPaymentStatusBadge(booking.paymentStatus)}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+            <div className="space-y-3">
+              <button
+                onClick={handleSendEmail}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center"
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Email Guest
+              </button>
+              
+              <button
+                onClick={handleCallGuest}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center"
+              >
+                <Phone className="h-4 w-4 mr-2" />
+                Call Guest
+              </button>
+              
+              <button
+                onClick={handleViewHotel}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center"
+              >
+                <Building className="h-4 w-4 mr-2" />
+                View Hotel Details
+              </button>
+              
+              {booking.paymentStatus === 'PENDING' && (
+                <button
+                  onClick={handleConfirmPayment}
+                  disabled={state.updating}
+                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center disabled:opacity-50"
+                >
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  {state.updating ? 'Confirming...' : 'Confirm Payment'}
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Booking Timeline */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Booking Timeline</h3>
+            <div className="space-y-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Booking Created</p>
+                  <p className="text-xs text-gray-500">{formatDate(booking.createdAt)}</p>
+                  {booking.createdBy && (
+                    <p className="text-xs text-gray-500">By: {booking.createdBy}</p>
+                  )}
+                </div>
+              </div>
+              
+              {booking.updatedAt !== booking.createdAt && (
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">Last Updated</p>
+                    <p className="text-xs text-gray-500">{formatDate(booking.updatedAt)}</p>
+                    {booking.updatedBy && (
+                      <p className="text-xs text-gray-500">By: {booking.updatedBy}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminBookingDetail;
+

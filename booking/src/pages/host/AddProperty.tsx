@@ -35,26 +35,26 @@ const AddProperty: React.FC = () => {
   const totalSteps = 3;
 
   const propertyTypes = [
-    { value: 'hotel', label: 'Khách sạn' },
-    { value: 'resort', label: 'Khu nghỉ dưỡng' },
-    { value: 'apartment', label: 'Căn hộ' },
-    { value: 'villa', label: 'Biệt thự' },
+    { value: 'hotel', label: 'Hotel' },
+    { value: 'resort', label: 'Resort' },
+    { value: 'apartment', label: 'Apartment' },
+    { value: 'villa', label: 'Villa' },
     { value: 'homestay', label: 'Homestay' }
   ];
 
   const amenitiesList = [
-    { id: 'wifi', label: 'Wifi miễn phí' },
-    { id: 'pool', label: 'Hồ bơi' },
+    { id: 'wifi', label: 'Free WiFi' },
+    { id: 'pool', label: 'Swimming Pool' },
     { id: 'spa', label: 'Spa' },
-    { id: 'gym', label: 'Phòng gym' },
-    { id: 'restaurant', label: 'Nhà hàng' },
-    { id: 'parking', label: 'Bãi đỗ xe' },
-    { id: 'ac', label: 'Điều hòa' },
+    { id: 'gym', label: 'Fitness Center' },
+    { id: 'restaurant', label: 'Restaurant' },
+    { id: 'parking', label: 'Parking' },
+    { id: 'ac', label: 'Air Conditioning' },
     { id: 'tv', label: 'TV' },
-    { id: 'kitchen', label: 'Bếp' },
-    { id: 'washer', label: 'Máy giặt' },
-    { id: 'breakfast', label: 'Bữa sáng miễn phí' },
-    { id: 'workspace', label: 'Khu vực làm việc' }
+    { id: 'kitchen', label: 'Kitchen' },
+    { id: 'washer', label: 'Washing Machine' },
+    { id: 'breakfast', label: 'Free Breakfast' },
+    { id: 'workspace', label: 'Workspace' }
   ];
 
   // Sample images for demo
@@ -112,18 +112,18 @@ const AddProperty: React.FC = () => {
     const newErrors: Record<string, string> = {};
 
     if (step === 1) {
-      if (!formData.name.trim()) newErrors.name = 'Vui lòng nhập tên khách sạn';
-      if (!formData.type) newErrors.type = 'Vui lòng chọn loại hình lưu trú';
-      if (!formData.location.trim()) newErrors.location = 'Vui lòng nhập địa điểm';
-      if (!formData.address.trim()) newErrors.address = 'Vui lòng nhập địa chỉ chi tiết';
+      if (!formData.name.trim()) newErrors.name = 'Please enter hotel name';
+      if (!formData.type) newErrors.type = 'Please select accommodation type';
+      if (!formData.location.trim()) newErrors.location = 'Please enter location';
+      if (!formData.address.trim()) newErrors.address = 'Please enter detailed address';
     } else if (step === 2) {
-      if (!formData.description.trim()) newErrors.description = 'Vui lòng nhập mô tả';
-      if (formData.price <= 0) newErrors.price = 'Giá phải lớn hơn 0';
-      if (formData.rooms <= 0) newErrors.rooms = 'Số phòng phải lớn hơn 0';
-      if (formData.bathrooms <= 0) newErrors.bathrooms = 'Số phòng tắm phải lớn hơn 0';
-      if (formData.amenities.length === 0) newErrors.amenities = 'Vui lòng chọn ít nhất một tiện nghi';
+      if (!formData.description.trim()) newErrors.description = 'Please enter description';
+      if (formData.price <= 0) newErrors.price = 'Price must be greater than 0';
+      if (formData.rooms <= 0) newErrors.rooms = 'Number of rooms must be greater than 0';
+      if (formData.bathrooms <= 0) newErrors.bathrooms = 'Number of bathrooms must be greater than 0';
+      if (formData.amenities.length === 0) newErrors.amenities = 'Please select at least one amenity';
     } else if (step === 3) {
-      if (formData.images.length === 0) newErrors.images = 'Vui lòng thêm ít nhất một hình ảnh';
+      if (formData.images.length === 0) newErrors.images = 'Please add at least one image';
     }
 
     setErrors(newErrors);
@@ -144,7 +144,7 @@ const AddProperty: React.FC = () => {
     e.preventDefault();
     if (validateStep(currentStep)) {
       // In a real app, this would submit to an API
-      alert('Khách sạn đã được thêm thành công!');
+      alert('Hotel added successfully!');
       navigate('/host/properties');
     }
   };
@@ -157,13 +157,13 @@ const AddProperty: React.FC = () => {
           className="flex items-center text-blue-600 hover:text-blue-800 mb-6"
         >
           <ArrowLeft size={20} className="mr-1" />
-          Quay lại danh sách khách sạn
+          Back to Hotel List
         </button>
 
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="p-6 border-b border-gray-200">
-            <h1 className="text-2xl font-bold">Thêm khách sạn mới</h1>
-            <p className="text-gray-600">Điền đầy đủ thông tin để thêm khách sạn của bạn</p>
+            <h1 className="text-2xl font-bold">Add New Hotel</h1>
+            <p className="text-gray-600">Fill in all information to add your hotel</p>
           </div>
 
           {/* Progress Steps */}
@@ -190,7 +190,7 @@ const AddProperty: React.FC = () => {
                       )}
                     </div>
                     <span className="text-sm mt-2">
-                      {index === 0 ? 'Thông tin cơ bản' : index === 1 ? 'Chi tiết' : 'Hình ảnh'}
+                      {index === 0 ? 'Basic Information' : index === 1 ? 'Details' : 'Images'}
                     </span>
                   </div>
                   {index < totalSteps - 1 && (
@@ -212,7 +212,7 @@ const AddProperty: React.FC = () => {
                 <div className="space-y-6">
                   <div>
                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                      Tên khách sạn <span className="text-red-500">*</span>
+                      Hotel Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -223,14 +223,14 @@ const AddProperty: React.FC = () => {
                       className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         errors.name ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder="Nhập tên khách sạn"
+                      placeholder="Enter hotel name"
                     />
                     {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
                   </div>
 
                   <div>
                     <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
-                      Loại hình lưu trú <span className="text-red-500">*</span>
+                      Accommodation Type <span className="text-red-500">*</span>
                     </label>
                     <select
                       id="type"
@@ -250,7 +250,7 @@ const AddProperty: React.FC = () => {
 
                   <div>
                     <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-                      Địa điểm <span className="text-red-500">*</span>
+                      Location <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -261,14 +261,14 @@ const AddProperty: React.FC = () => {
                       className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         errors.location ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder="Ví dụ: Hà Nội, Đà Nẵng, Nha Trang..."
+                      placeholder="For example: Hanoi, Da Nang, Nha Trang..."
                     />
                     {errors.location && <p className="mt-1 text-sm text-red-500">{errors.location}</p>}
                   </div>
 
                   <div>
                     <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                      Địa chỉ chi tiết <span className="text-red-500">*</span>
+                      Detailed Address <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -279,7 +279,7 @@ const AddProperty: React.FC = () => {
                       className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         errors.address ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder="Nhập địa chỉ chi tiết"
+                      placeholder="Enter detailed address"
                     />
                     {errors.address && <p className="mt-1 text-sm text-red-500">{errors.address}</p>}
                   </div>
@@ -291,7 +291,7 @@ const AddProperty: React.FC = () => {
                 <div className="space-y-6">
                   <div>
                     <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                      Mô tả <span className="text-red-500">*</span>
+                      Description <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       id="description"
@@ -302,7 +302,7 @@ const AddProperty: React.FC = () => {
                       className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                         errors.description ? 'border-red-500' : 'border-gray-300'
                       }`}
-                      placeholder="Mô tả chi tiết về khách sạn của bạn"
+                      placeholder="Enter detailed description about your hotel"
                     ></textarea>
                     {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
                   </div>
@@ -310,7 +310,7 @@ const AddProperty: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                       <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-                        Giá phòng cơ bản (VNĐ/đêm) <span className="text-red-500">*</span>
+                        Basic Room Price (VND/night) <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
@@ -322,14 +322,14 @@ const AddProperty: React.FC = () => {
                         className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                           errors.price ? 'border-red-500' : 'border-gray-300'
                         }`}
-                        placeholder="Ví dụ: 1000000"
+                        placeholder="For example: 1000000"
                       />
                       {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
                     </div>
 
                     <div>
                       <label htmlFor="rooms" className="block text-sm font-medium text-gray-700 mb-1">
-                        Số phòng <span className="text-red-500">*</span>
+                        Number of Rooms <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
@@ -347,7 +347,7 @@ const AddProperty: React.FC = () => {
 
                     <div>
                       <label htmlFor="bathrooms" className="block text-sm font-medium text-gray-700 mb-1">
-                        Số phòng tắm <span className="text-red-500">*</span>
+                        Number of Bathrooms <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
@@ -366,7 +366,7 @@ const AddProperty: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tiện nghi <span className="text-red-500">*</span>
+                      Amenities <span className="text-red-500">*</span>
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                       {amenitiesList.map(amenity => (
@@ -393,7 +393,7 @@ const AddProperty: React.FC = () => {
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Hình ảnh khách sạn <span className="text-red-500">*</span>
+                      Hotel Images <span className="text-red-500">*</span>
                     </label>
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                       <button
@@ -402,10 +402,10 @@ const AddProperty: React.FC = () => {
                         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       >
                         <Upload className="h-5 w-5 mr-2" />
-                        Tải lên hình ảnh
+                        Upload Image
                       </button>
                       <p className="mt-2 text-sm text-gray-500">
-                        Hỗ trợ JPG, PNG, GIF. Kích thước tối đa 5MB.
+                        Supported formats: JPG, PNG, GIF. Maximum size: 5MB.
                       </p>
                     </div>
                     {errors.images && <p className="mt-1 text-sm text-red-500">{errors.images}</p>}
@@ -413,7 +413,7 @@ const AddProperty: React.FC = () => {
 
                   {formData.images.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-medium text-gray-700 mb-2">Hình ảnh đã tải lên</h3>
+                      <h3 className="text-sm font-medium text-gray-700 mb-2">Uploaded Images</h3>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {formData.images.map((image, index) => (
                           <div key={index} className="relative group">
@@ -451,7 +451,7 @@ const AddProperty: React.FC = () => {
                   onClick={handlePrevious}
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"
                 >
-                  Quay lại
+                  Previous
                 </button>
               ) : (
                 <div></div>
@@ -463,14 +463,14 @@ const AddProperty: React.FC = () => {
                   onClick={handleNext}
                   className="px-4 py-2 border border-transparent rounded-md text-white bg-blue-600 hover:bg-blue-700"
                 >
-                  Tiếp theo
+                  Next
                 </button>
               ) : (
                 <button
                   type="submit"
                   className="px-4 py-2 border border-transparent rounded-md text-white bg-green-600 hover:bg-green-700"
                 >
-                  Hoàn thành
+                  Finish
                 </button>
               )}
             </div>

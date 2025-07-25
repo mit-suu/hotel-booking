@@ -2,33 +2,38 @@ package net.blwsmartware.booking.service;
 
 import net.blwsmartware.booking.dto.request.HotelCreateRequest;
 import net.blwsmartware.booking.dto.request.HotelUpdateRequest;
+import net.blwsmartware.booking.dto.response.CityStatsResponse;
 import net.blwsmartware.booking.dto.response.DataResponse;
 import net.blwsmartware.booking.dto.response.HotelResponse;
+import net.blwsmartware.booking.dto.response.HostDashboardResponse;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
 public interface HotelService {
-
+    
     // ===== ADMIN OPERATIONS =====
     DataResponse<HotelResponse> getAllHotels(Integer pageNumber, Integer pageSize, String sortBy);
     DataResponse<HotelResponse> getAllHotelsWithFilters(
             String city, String country, Integer starRating, Boolean isActive, Boolean isFeatured,
             BigDecimal minPrice, BigDecimal maxPrice, Integer pageNumber, Integer pageSize, String sortBy);
+    HotelResponse getHotelByIdForAdmin(UUID id);
     HotelResponse createHotelByAdmin(HotelCreateRequest request);
     HotelResponse updateHotelByAdmin(UUID id, HotelUpdateRequest request);
     void deleteHotelByAdmin(UUID id);
     HotelResponse toggleHotelStatus(UUID id);
     HotelResponse toggleFeaturedStatus(UUID id);
+    HotelResponse updateCommissionRate(UUID id, BigDecimal commissionRate);
     DataResponse<HotelResponse> getHotelsByOwner(UUID ownerId, Integer pageNumber, Integer pageSize, String sortBy);
-
+    
     // Admin Statistics
     Long getTotalHotelsCount();
     Long getActiveHotelsCount();
     Long getFeaturedHotelsCount();
     Long getHotelsCountByOwner(UUID ownerId);
-
+    
     // ===== HOST OPERATIONS =====
     DataResponse<HotelResponse> getMyHotels(Integer pageNumber, Integer pageSize, String sortBy);
     DataResponse<HotelResponse> getMyHotelsWithFilters(
@@ -39,11 +44,12 @@ public interface HotelService {
     HotelResponse updateMyHotel(UUID id, HotelUpdateRequest request);
     void deleteMyHotel(UUID id);
     HotelResponse toggleMyHotelStatus(UUID id);
-
+    
     // Host Statistics
     Long getMyHotelsCount();
     Long getMyActiveHotelsCount();
-
+    List<HostDashboardResponse.HotelPerformance> getHostTopPerformingHotels(UUID hostId, int limit);
+    
     // ===== PUBLIC OPERATIONS =====
     HotelResponse getHotelById(UUID id);
     DataResponse<HotelResponse> searchHotels(String keyword, Integer pageNumber, Integer pageSize, String sortBy);
@@ -55,13 +61,21 @@ public interface HotelService {
     
     // New search with filters method
     DataResponse<HotelResponse> searchHotelsWithFilters(
-            String city, String country, Integer starRating,
+            String city, String country, Integer starRating, 
             BigDecimal minPrice, BigDecimal maxPrice, String amenities,
             Integer pageNumber, Integer pageSize, String sortBy);
-
+    
     // Get available amenities
     List<String> getAvailableAmenities();
-
+    
+    // Get top cities by hotel count for homepage
+    List<CityStatsResponse> getTopCitiesByHotelCount(int limit);
+    
     // ===== UTILITY METHODS =====
     boolean isHotelNameExistsInCity(String name, String city);
-}
+
+    /**
+     * Đếm số phòng trống thực tế của khách sạn dựa trên booking trong khoảng ngày
+     */
+    int getAvailableRoomsByHotel(UUID hotelId, LocalDate checkInDate, LocalDate checkOutDate);
+} 

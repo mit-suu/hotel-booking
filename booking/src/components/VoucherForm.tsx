@@ -9,13 +9,19 @@ interface VoucherFormProps {
   onSubmit: (data: VoucherRequest) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  isHostMode?: boolean;
+  hostHotels?: any[];
+  hotels?: any[];
 }
 
 const VoucherForm: React.FC<VoucherFormProps> = ({
   voucher,
   onSubmit,
   onCancel,
-  isLoading = false
+  isLoading = false,
+  isHostMode = false,
+  hostHotels = [],
+  hotels = []
 }) => {
   const [formData, setFormData] = useState<VoucherRequest>({
     code: voucher?.code || '',
@@ -28,7 +34,7 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
     startDate: voucher?.startDate ? voucher.startDate.substring(0, 16) : '',
     endDate: voucher?.endDate ? voucher.endDate.substring(0, 16) : '',
     usageLimit: voucher?.usageLimit || undefined,
-    applicableScope: voucher?.applicableScope || ApplicableScope.ALL_HOTELS,
+    applicableScope: isHostMode ? ApplicableScope.SPECIFIC_HOTELS : (voucher?.applicableScope || ApplicableScope.ALL_HOTELS),
     hotelIds: voucher?.hotelIds || []
   });
 
@@ -38,13 +44,13 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
     const newErrors: Record<string, string> = {};
 
     // Required fields
-    if (!formData.code) newErrors.code = 'Mã voucher là bắt buộc';
-    else if (!/^[A-Z0-9]+$/.test(formData.code)) newErrors.code = 'Mã voucher chỉ được chứa chữ in hoa và số';
+    if (!formData.code) newErrors.code = 'Voucher code is required';
+    else if (!/^[A-Z0-9]+$/.test(formData.code)) newErrors.code = 'Voucher code must contain only uppercase letters and numbers';
     
-    if (!formData.name) newErrors.name = 'Tên voucher là bắt buộc';
-    if (!formData.discountValue || formData.discountValue <= 0) newErrors.discountValue = 'Giá trị giảm giá phải lớn hơn 0';
-    if (!formData.startDate) newErrors.startDate = 'Ngày bắt đầu là bắt buộc';
-    if (!formData.endDate) newErrors.endDate = 'Ngày kết thúc là bắt buộc';
+    if (!formData.name) newErrors.name = 'Voucher name is required';
+    if (!formData.discountValue || formData.discountValue <= 0) newErrors.discountValue = 'Discount value must be greater than 0';
+    if (!formData.startDate) newErrors.startDate = 'Start date is required';
+    if (!formData.endDate) newErrors.endDate = 'End date is required';
 
     // Date validation
     if (formData.startDate && formData.endDate) {
@@ -52,19 +58,19 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
       const endDate = new Date(formData.endDate);
       const now = new Date();
 
-      if (endDate <= startDate) newErrors.endDate = 'Ngày kết thúc phải sau ngày bắt đầu';
+      if (endDate <= startDate) newErrors.endDate = 'End date must be after start date';
     }
 
     // Discount type specific validation
     if (formData.discountType === DiscountType.PERCENTAGE) {
-      if (formData.discountValue > 100) newErrors.discountValue = 'Phần trăm giảm giá không được vượt quá 100%';
-      if (!formData.maxDiscount) newErrors.maxDiscount = 'Số tiền giảm tối đa là bắt buộc cho voucher phần trăm';
+      if (formData.discountValue > 100) newErrors.discountValue = 'Discount percentage cannot exceed 100%';
+      if (!formData.maxDiscount) newErrors.maxDiscount = 'Maximum discount amount is required for percentage vouchers';
     }
 
     // Applicable scope validation
     if (formData.applicableScope === ApplicableScope.SPECIFIC_HOTELS) {
       if (!formData.hotelIds || formData.hotelIds.length === 0) {
-        newErrors.hotelIds = 'Phải chọn ít nhất một khách sạn khi áp dụng cho khách sạn cụ thể';
+        newErrors.hotelIds = 'Must select at least one hotel when applying to specific hotels';
       }
     }
 
@@ -92,13 +98,11 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
     }
   };
 
-
-
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-gray-800">
-          {voucher ? 'Chỉnh sửa voucher' : 'Tạo voucher mới'}
+          {voucher ? 'Edit Voucher' : 'Create New Voucher'}
         </h2>
         <button
           onClick={onCancel}
@@ -113,7 +117,7 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mã voucher *
+              Voucher Code *
             </label>
             <input
               type="text"
@@ -122,7 +126,7 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.code ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="VD: SUMMER2024"
+              placeholder="e.g: SUMMER2024"
             />
             {errors.code && (
               <p className="mt-1 text-sm text-red-600 flex items-center">
@@ -134,7 +138,7 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tên voucher *
+              Voucher Name *
             </label>
             <input
               type="text"
@@ -143,7 +147,7 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="VD: Khuyến mãi mùa hè"
+              placeholder="e.g: Summer Sale"
             />
             {errors.name && (
               <p className="mt-1 text-sm text-red-600 flex items-center">
@@ -156,14 +160,14 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Mô tả
+            Description
           </label>
           <textarea
             value={formData.description}
             onChange={(e) => handleInputChange('description', e.target.value)}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Mô tả chi tiết về voucher..."
+            placeholder="Detailed voucher description..."
           />
         </div>
 
@@ -171,21 +175,21 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Loại giảm giá *
+              Discount Type *
             </label>
             <select
               value={formData.discountType}
               onChange={(e) => handleInputChange('discountType', e.target.value as DiscountType)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value={DiscountType.PERCENTAGE}>Giảm theo phần trăm</option>
-              <option value={DiscountType.HOTEL_SPECIFIC}>Khách sạn cụ thể</option>
+              <option value={DiscountType.PERCENTAGE}>Percentage Discount</option>
+              <option value={DiscountType.HOTEL_SPECIFIC}>Hotel Specific</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Giá trị giảm giá * {formData.discountType === DiscountType.PERCENTAGE ? '(%)' : '(VNĐ)'}
+              Discount Value * {formData.discountType === DiscountType.PERCENTAGE ? '(%)' : '(VND)'}
             </label>
             <input
               type="number"
@@ -212,7 +216,7 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
           {formData.discountType === DiscountType.PERCENTAGE && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Số tiền giảm tối đa * (VNĐ)
+                Maximum Discount Amount * (VND)
               </label>
               <input
                 type="number"
@@ -235,7 +239,7 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Giá trị đặt phòng tối thiểu (VNĐ)
+              Minimum Booking Value (VND)
             </label>
             <input
               type="number"
@@ -249,7 +253,7 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Giới hạn sử dụng
+              Usage Limit
             </label>
             <input
               type="number"
@@ -266,7 +270,7 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ngày bắt đầu *
+              Start Date *
             </label>
             <input
               type="datetime-local"
@@ -286,7 +290,7 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ngày kết thúc *
+              End Date *
             </label>
             <input
               type="datetime-local"
@@ -308,25 +312,69 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
         {/* Applicable Scope */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Phạm vi áp dụng *
+            Applicable Scope *
           </label>
-          <select
-            value={formData.applicableScope}
-            onChange={(e) => handleInputChange('applicableScope', e.target.value as ApplicableScope)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value={ApplicableScope.ALL_HOTELS}>Tất cả khách sạn</option>
-            <option value={ApplicableScope.SPECIFIC_HOTELS}>Khách sạn cụ thể</option>
-          </select>
+          {isHostMode ? (
+            <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+              <span>Specific Hotels</span>
+              <p className="text-xs text-gray-500 mt-1">
+                Hosts can only create vouchers for their own hotels
+              </p>
+            </div>
+          ) : (
+            <select
+              value={formData.applicableScope}
+              onChange={(e) => handleInputChange('applicableScope', e.target.value as ApplicableScope)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value={ApplicableScope.ALL_HOTELS}>All Hotels</option>
+              <option value={ApplicableScope.SPECIFIC_HOTELS}>Specific Hotels</option>
+            </select>
+          )}
         </div>
 
-        {/* Hotel Selection */}
+        {/* Hotel Selection - chỉ hiển thị khi scope là SPECIFIC_HOTELS */}
         {formData.applicableScope === ApplicableScope.SPECIFIC_HOTELS && (
-          <HotelSelector
-            selectedHotelIds={formData.hotelIds || []}
-            onHotelSelectionChange={(hotelIds) => handleInputChange('hotelIds', hotelIds)}
-            error={errors.hotelIds}
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Select Hotels *
+            </label>
+            <div className="max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-3">
+              {(isHostMode ? hostHotels : hotels).map((hotel) => (
+                <label key={hotel.id} className="flex items-center space-x-2 mb-2">
+                  <input
+                    type="checkbox"
+                    checked={(formData.hotelIds || []).includes(hotel.id)}
+                    onChange={(e) => {
+                      const currentHotelIds = formData.hotelIds || [];
+                      const newHotelIds = e.target.checked
+                        ? [...currentHotelIds, hotel.id]
+                        : currentHotelIds.filter(id => id !== hotel.id);
+                      handleInputChange('hotelIds', newHotelIds);
+                    }}
+                    className="rounded border-gray-300"
+                  />
+                  <span className="text-sm">{hotel.name}</span>
+                  {isHostMode && (
+                    <span className="text-xs text-gray-500">
+                      ({hotel.address || 'No address'})
+                    </span>
+                  )}
+                </label>
+              ))}
+              {(isHostMode ? hostHotels : hotels).length === 0 && (
+                <p className="text-sm text-gray-500">
+                  {isHostMode ? 'You don\'t have any hotels yet.' : 'No hotels available.'}
+                </p>
+              )}
+            </div>
+            {errors.hotelIds && (
+              <p className="mt-1 text-sm text-red-600 flex items-center">
+                <AlertCircle size={16} className="mr-1" />
+                {errors.hotelIds}
+              </p>
+            )}
+          </div>
         )}
 
         {/* Submit Buttons */}
@@ -336,7 +384,7 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
             onClick={onCancel}
             className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
           >
-            Hủy
+            Cancel
           </button>
           <button
             type="submit"
@@ -346,12 +394,12 @@ const VoucherForm: React.FC<VoucherFormProps> = ({
             {isLoading ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                Đang xử lý...
+                Processing...
               </>
             ) : (
               <>
                 <Save size={16} className="mr-2" />
-                {voucher ? 'Cập nhật' : 'Tạo voucher'}
+                {voucher ? 'Update' : 'Create Voucher'}
               </>
             )}
           </button>

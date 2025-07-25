@@ -39,7 +39,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
     checkOutDate,
     guests,
     totalAmount,
-    paymentMethod: '',
+    paymentMethod: 'VNPAY',
     specialRequests: ''
   });
 
@@ -240,20 +240,28 @@ const BookingForm: React.FC<BookingFormProps> = ({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Payment Method <span className="text-red-500">*</span>
+            Payment Method
           </label>
-          <select
-            value={formData.paymentMethod}
+          <div className="border-2 border-blue-500 bg-blue-50 rounded-lg p-4">
+            <div className="flex items-center">
+              <div className="flex-1">
+                <div className="font-semibold text-blue-800">VNPay Digital Wallet</div>
+                <div className="text-blue-700 text-sm mt-1">
+                  Secure payment through VNPay - Fast, safe and reliable
+                </div>
+              </div>
+              <div className="text-blue-600">
+                <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <input 
+            type="hidden" 
+            value="VNPAY" 
             onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            required
-          >
-            <option value="">Select payment method</option>
-            <option value="CREDIT_CARD">Credit Card</option>
-            <option value="DEBIT_CARD">Debit Card</option>
-            <option value="BANK_TRANSFER">Bank Transfer</option>
-            <option value="CASH">Cash at Hotel</option>
-          </select>
+          />
         </div>
 
         <div>

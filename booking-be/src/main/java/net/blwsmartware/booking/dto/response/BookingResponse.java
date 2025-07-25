@@ -20,25 +20,25 @@ public class BookingResponse {
     String guestName;
     String guestEmail;
     String guestPhone;
-
+    
     // Hotel information
     UUID hotelId;
     String hotelName;
     String hotelAddress;
     String hotelPhone;
     String hotelEmail;
-
+    
     // Room type information
     UUID roomTypeId;
     String roomTypeName;
     String roomDescription;
     Integer maxOccupancy;
     String bedType;
-
+    
     // User information (if registered user)
     UUID userId;
     String userName;
-
+    
     LocalDate checkInDate;
     LocalDate checkOutDate;
     Integer guests;
@@ -48,14 +48,16 @@ public class BookingResponse {
     String paymentMethod;
     String bookingReference;
     String specialRequests;
-
+    
     // Calculated fields
     Integer numberOfNights;
     BigDecimal pricePerNight;
-
+    
     // Audit fields
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
     UUID createdBy;
     UUID updatedBy;
-}
+    String qrCode;
+    boolean qrCodeUsed;
+} 

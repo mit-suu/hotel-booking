@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface ReviewService {
-
+    
     // Admin operations
     DataResponse<ReviewResponse> getAllReviews(Integer pageNumber, Integer pageSize, String sortBy);
     DataResponse<ReviewResponse> getAllReviewsWithFilters(
@@ -20,14 +20,14 @@ public interface ReviewService {
     
     // Hotel-specific operations
     DataResponse<ReviewResponse> getReviewsByHotel(UUID hotelId, Integer pageNumber, Integer pageSize, String sortBy);
-
+    
     // User operations
     ReviewResponse createReview(ReviewCreateRequest request);
     ReviewResponse updateReview(UUID id, ReviewUpdateRequest request);
     void deleteMyReview(UUID id);
     DataResponse<ReviewResponse> getMyReviews(Integer pageNumber, Integer pageSize, String sortBy);
     DataResponse<ReviewResponse> getReviewsByUser(UUID userId, Integer pageNumber, Integer pageSize, String sortBy);
-
+    
     // Search and filter operations
     DataResponse<ReviewResponse> getReviewsByRating(Integer rating, Integer pageNumber, Integer pageSize, String sortBy);
     DataResponse<ReviewResponse> searchReviews(String keyword, Integer pageNumber, Integer pageSize, String sortBy);

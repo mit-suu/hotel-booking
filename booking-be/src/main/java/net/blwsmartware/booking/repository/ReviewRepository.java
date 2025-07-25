@@ -17,29 +17,25 @@ import java.util.UUID;
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, UUID> {
 
-    // Find reviews by hotel
     Page<Review> findByHotel(Hotel hotel, Pageable pageable);
     List<Review> findByHotel(Hotel hotel);
 
-    // Find reviews by hotel ID
     Page<Review> findByHotelId(UUID hotelId, Pageable pageable);
     List<Review> findByHotelId(UUID hotelId);
 
-    // Find reviews by user
     Page<Review> findByUser(User user, Pageable pageable);
     List<Review> findByUser(User user);
 
-    // Find reviews by user ID
     Page<Review> findByUserId(UUID userId, Pageable pageable);
     List<Review> findByUserId(UUID userId);
+    
 
+    
 
-
-    // Find reviews by rating
     Page<Review> findByRating(Integer rating, Pageable pageable);
     List<Review> findByRating(Integer rating);
+    
 
-    // Search reviews by comment
     @Query("SELECT r FROM Review r WHERE LOWER(r.comment) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Review> searchByComment(@Param("keyword") String keyword, Pageable pageable);
     

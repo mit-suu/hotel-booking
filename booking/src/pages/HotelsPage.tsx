@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Search, MapPin, Star, Filter, ChevronLeft, ChevronRight, Calendar, Users, CreditCard } from 'lucide-react';
 import { hotelAPI, HotelFilterParams, HotelResponse, roomTypeAPI } from '../services/api';
+import { getImageProps } from '../utils/imageUtils';
 
 interface FiltersState {
   priceRange: string;
@@ -170,44 +171,19 @@ const HotelsPage: React.FC = () => {
 
     for (const hotel of hotelsData) {
       try {
-        // Get room types for this hotel
-        const roomTypesResponse = await roomTypeAPI.getRoomTypesByHotel(hotel.id, 0, 50);
-        if (roomTypesResponse.data.success) {
-          const roomTypes = roomTypesResponse.data.result.content || [];
-          let hasAvailableRooms = false;
-          let lowestPrice = Infinity;
-          let availableRoomCount = 0;
-
-          // Check each room type for availability and find lowest price
-          for (const roomType of roomTypes) {
-            if (roomType.availableRooms > 0 && roomType.maxOccupancy >= guestCount) {
-              hasAvailableRooms = true;
-              availableRoomCount += roomType.availableRooms;
-              
-              // Calculate total price for the stay
-              const totalPrice = roomType.pricePerNight * numberOfNights;
-              if (totalPrice < lowestPrice) {
-                lowestPrice = totalPrice;
-              }
-            }
-          }
-
-          hotelsWithAvailability.push({
-            ...hotel,
-            hasAvailableRooms,
-            lowestPrice: lowestPrice === Infinity ? undefined : lowestPrice,
-            availableRoomCount
-          });
-        } else {
-          // If can't get room types, include hotel but mark as no availability info
-          hotelsWithAvailability.push({
-            ...hotel,
-            hasAvailableRooms: undefined
-          });
+        // Gọi API mới lấy số phòng trống thực tế
+        const availableRoomsRes = await hotelAPI.getAvailableRooms(hotel.id, checkInDate, checkOutDate);
+        let availableRoomCount = 0;
+        if (availableRoomsRes.data.success) {
+          availableRoomCount = availableRoomsRes.data.result;
         }
+        hotelsWithAvailability.push({
+          ...hotel,
+          hasAvailableRooms: availableRoomCount > 0,
+          availableRoomCount
+        });
       } catch (error) {
         console.error(`Error checking availability for hotel ${hotel.id}:`, error);
-        // Include hotel but mark as no availability info
         hotelsWithAvailability.push({
           ...hotel,
           hasAvailableRooms: undefined
@@ -295,10 +271,7 @@ const HotelsPage: React.FC = () => {
     ));
   };
 
-  // Get image URL with fallback
-  const getImageUrl = (imageUrl?: string) => {
-    return imageUrl || 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg';
-  };
+
 
   // Handle booking button click
   const handleBookNow = (hotel: HotelWithAvailability) => {
@@ -385,10 +358,10 @@ const HotelsPage: React.FC = () => {
       {/* Page Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-4">Khách sạn & Resort</h1>
-          <p className="text-xl text-blue-100">
-            Khám phá hàng ngàn khách sạn tuyệt vời trên khắp Việt Nam
-          </p>
+                          <h1 className="text-4xl font-bold mb-4">Hotels & Resorts</h1>
+                <p className="text-xl text-blue-100">
+                  Explore thousands of amazing hotels across Vietnam
+                </p>
         </div>
       </div>
 
@@ -670,13 +643,8 @@ const HotelsPage: React.FC = () => {
                 <div key={hotel.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="relative">
                     <img
-                        src={getImageUrl(hotel.imageUrl)}
-                      alt={hotel.name}
+                      {...getImageProps(hotel.imageUrl, 'hotel', hotel.name)}
                       className="w-full h-48 object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg';
-                        }}
                     />
                       {hotel.featured && (
                         <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">

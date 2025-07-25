@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Trash, Star, MapPin, Home, BedDouble, Bath, Users, Calendar, DollarSign, Clock } from 'lucide-react';
+import { ArrowLeft, Edit, Trash, Star, MapPin, Home, BedDouble, Bath, Users, Calendar, DollarSign, Clock, Plus } from 'lucide-react';
 
 interface Room {
   id: string;
@@ -203,19 +203,19 @@ const PropertyDetail: React.FC = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'available':
-        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Có sẵn</span>;
+        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Available</span>;
       case 'booked':
-        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Đã đặt</span>;
+        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Booked</span>;
       case 'maintenance':
-        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">Bảo trì</span>;
+        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">Maintenance</span>;
       case 'confirmed':
-        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Đã xác nhận</span>;
+        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">Confirmed</span>;
       case 'pending':
-        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">Chờ xác nhận</span>;
+        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">Pending</span>;
       case 'cancelled':
-        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Đã hủy</span>;
+        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">Cancelled</span>;
       case 'completed':
-        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Đã hoàn thành</span>;
+        return <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">Completed</span>;
       default:
         return null;
     }
@@ -226,7 +226,7 @@ const PropertyDetail: React.FC = () => {
   };
 
   const handleDeleteProperty = () => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa khách sạn này không?')) {
+    if (window.confirm('Are you sure you want to delete this hotel?')) {
       navigate('/host/properties');
     }
   };
@@ -243,7 +243,7 @@ const PropertyDetail: React.FC = () => {
           className="flex items-center text-blue-600 hover:text-blue-800 mb-6"
         >
           <ArrowLeft size={20} className="mr-1" />
-          Quay lại danh sách khách sạn
+          Back to Hotel List
         </button>
 
         {/* Property Header */}
@@ -291,7 +291,7 @@ const PropertyDetail: React.FC = () => {
                   <div className="flex mr-2">
                     {renderRatingStars(property.rating)}
                   </div>
-                  <span className="text-gray-700">{property.rating} ({property.reviewCount} đánh giá)</span>
+                  <span className="text-gray-700">{property.rating} ({property.reviewCount} reviews)</span>
                 </div>
               </div>
               <div className="flex space-x-2">
@@ -300,54 +300,54 @@ const PropertyDetail: React.FC = () => {
                   className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors flex items-center"
                 >
                   <Edit size={18} className="mr-2" />
-                  Chỉnh sửa
+                  Edit
                 </button>
                 <button
                   onClick={handleDeleteProperty}
                   className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center"
                 >
                   <Trash size={18} className="mr-2" />
-                  Xóa
+                  Delete
                 </button>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <h2 className="text-xl font-semibold mb-2">Thông tin cơ bản</h2>
+                <h2 className="text-xl font-semibold mb-2">Basic Information</h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center">
                     <Home className="h-5 w-5 mr-2 text-blue-600" />
-                    <div>
-                      <p className="text-sm text-gray-500">Loại hình</p>
-                      <p className="font-medium">{property.type}</p>
+                                          <div>
+                        <p className="text-sm text-gray-500">Type</p>
+                        <p className="font-medium">{property.type}</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center">
-                    <BedDouble className="h-5 w-5 mr-2 text-blue-600" />
-                    <div>
-                      <p className="text-sm text-gray-500">Số phòng</p>
-                      <p className="font-medium">{property.rooms} phòng</p>
+                    <div className="flex items-center">
+                      <BedDouble className="h-5 w-5 mr-2 text-blue-600" />
+                      <div>
+                        <p className="text-sm text-gray-500">Rooms</p>
+                        <p className="font-medium">{property.rooms} rooms</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center">
-                    <Bath className="h-5 w-5 mr-2 text-blue-600" />
-                    <div>
-                      <p className="text-sm text-gray-500">Số phòng tắm</p>
-                      <p className="font-medium">{property.bathrooms} phòng</p>
+                    <div className="flex items-center">
+                      <Bath className="h-5 w-5 mr-2 text-blue-600" />
+                      <div>
+                        <p className="text-sm text-gray-500">Bathrooms</p>
+                        <p className="font-medium">{property.bathrooms} bathrooms</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center">
-                    <DollarSign className="h-5 w-5 mr-2 text-blue-600" />
-                    <div>
-                      <p className="text-sm text-gray-500">Giá cơ bản</p>
-                      <p className="font-medium">{formatCurrency(property.price)}/đêm</p>
-                    </div>
+                    <div className="flex items-center">
+                      <DollarSign className="h-5 w-5 mr-2 text-blue-600" />
+                      <div>
+                        <p className="text-sm text-gray-500">Base Price</p>
+                        <p className="font-medium">{formatCurrency(property.price)}/night</p>
+                      </div>
                   </div>
                 </div>
               </div>
               <div>
-                <h2 className="text-xl font-semibold mb-2">Tiện nghi</h2>
+                <h2 className="text-xl font-semibold mb-2">Amenities</h2>
                 <div className="grid grid-cols-2 gap-2">
                   {property.amenities.map((amenity, index) => (
                     <div key={index} className="flex items-center">
@@ -362,7 +362,7 @@ const PropertyDetail: React.FC = () => {
             </div>
 
             <div>
-              <h2 className="text-xl font-semibold mb-2">Mô tả</h2>
+              <h2 className="text-xl font-semibold mb-2">Description</h2>
               <p className="text-gray-700">{property.description}</p>
             </div>
           </div>
@@ -380,7 +380,7 @@ const PropertyDetail: React.FC = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Danh sách phòng
+                Room List
               </button>
               <button
                 onClick={() => setActiveTab('bookings')}
@@ -390,7 +390,7 @@ const PropertyDetail: React.FC = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Đặt phòng
+                Bookings
               </button>
               <button
                 onClick={() => setActiveTab('reviews')}
@@ -400,7 +400,7 @@ const PropertyDetail: React.FC = () => {
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Đánh giá
+                Reviews
               </button>
             </nav>
           </div>
@@ -410,13 +410,13 @@ const PropertyDetail: React.FC = () => {
             {activeTab === 'rooms' && (
               <div>
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold">Danh sách phòng</h2>
+                  <h2 className="text-xl font-semibold">Room List</h2>
                   <button
                     onClick={handleAddRoom}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center"
                   >
                     <Plus size={18} className="mr-2" />
-                    Thêm phòng mới
+                    Add New Room
                   </button>
                 </div>
 
@@ -441,7 +441,7 @@ const PropertyDetail: React.FC = () => {
                         <div className="flex flex-wrap gap-4 mb-3 text-gray-600 text-sm">
                           <div className="flex items-center">
                             <Users className="h-4 w-4 mr-1" />
-                            <span>{room.capacity} khách</span>
+                            <span>{room.capacity} guests</span>
                           </div>
                           <div className="flex items-center">
                             <BedDouble className="h-4 w-4 mr-1" />
@@ -473,18 +473,18 @@ const PropertyDetail: React.FC = () => {
                         <div className="flex justify-between items-center">
                           <span className="text-lg font-bold text-blue-600">
                             {formatCurrency(room.price)}
-                            <span className="text-sm text-gray-500 font-normal">/đêm</span>
+                            <span className="text-sm text-gray-500 font-normal">/night</span>
                           </span>
                           <div className="flex space-x-2">
                             <button 
                               className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-full"
-                              title="Chỉnh sửa"
+                              title="Edit"
                             >
                               <Edit size={18} />
                             </button>
                             <button 
                               className="p-2 text-red-600 hover:bg-red-50 rounded-full"
-                              title="Xóa"
+                              title="Delete"
                             >
                               <Trash size={18} />
                             </button>
@@ -500,7 +500,7 @@ const PropertyDetail: React.FC = () => {
             {/* Bookings Tab */}
             {activeTab === 'bookings' && (
               <div>
-                <h2 className="text-xl font-semibold mb-6">Đặt phòng gần đây</h2>
+                <h2 className="text-xl font-semibold mb-6">Recent Bookings</h2>
                 
                 <div className="space-y-4">
                   {bookings.map((booking) => (
@@ -508,51 +508,51 @@ const PropertyDetail: React.FC = () => {
                       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4">
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                            <span className="mr-2">Đặt phòng #{booking.id}</span>
+                            <span className="mr-2">Booking #{booking.id}</span>
                             {getStatusBadge(booking.status)}
                           </h3>
-                          <p className="text-gray-500 text-sm">Đặt ngày: {formatDate(booking.createdAt)}</p>
+                          <p className="text-gray-500 text-sm">Booked on: {formatDate(booking.createdAt)}</p>
                         </div>
-                        <button
-                          className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                        >
-                          Xem chi tiết
-                        </button>
+                                                  <button
+                            className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                          >
+                            View Details
+                          </button>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Guest Info */}
-                        <div className="space-y-1">
-                          <h4 className="font-medium text-gray-700 flex items-center">
-                            <Users size={16} className="mr-2" />
-                            Thông tin khách hàng
-                          </h4>
-                          <p className="text-gray-900">{booking.guestName}</p>
-                          <p className="text-gray-600">{booking.guests} khách</p>
-                        </div>
+                                                  <div className="space-y-1">
+                            <h4 className="font-medium text-gray-700 flex items-center">
+                              <Users size={16} className="mr-2" />
+                              Guest Information
+                            </h4>
+                            <p className="text-gray-900">{booking.guestName}</p>
+                            <p className="text-gray-600">{booking.guests} guests</p>
+                          </div>
 
-                        {/* Booking Details */}
-                        <div className="space-y-1">
-                          <h4 className="font-medium text-gray-700 flex items-center">
-                            <Calendar size={16} className="mr-2" />
-                            Chi tiết đặt phòng
-                          </h4>
-                          <p className="text-gray-900">{booking.roomName}</p>
-                          <p className="text-gray-600">
-                            {formatDate(booking.checkIn)} - {formatDate(booking.checkOut)}
-                          </p>
-                        </div>
+                          {/* Booking Details */}
+                          <div className="space-y-1">
+                            <h4 className="font-medium text-gray-700 flex items-center">
+                              <Calendar size={16} className="mr-2" />
+                              Booking Details
+                            </h4>
+                            <p className="text-gray-900">{booking.roomName}</p>
+                            <p className="text-gray-600">
+                              {formatDate(booking.checkIn)} - {formatDate(booking.checkOut)}
+                            </p>
+                          </div>
 
-                        {/* Payment Info */}
-                        <div className="space-y-1">
-                          <h4 className="font-medium text-gray-700 flex items-center">
-                            <DollarSign size={16} className="mr-2" />
-                            Thông tin thanh toán
-                          </h4>
-                          <p className="text-gray-900 font-medium">
-                            {formatCurrency(booking.totalAmount)}
-                          </p>
-                        </div>
+                          {/* Payment Info */}
+                          <div className="space-y-1">
+                            <h4 className="font-medium text-gray-700 flex items-center">
+                              <DollarSign size={16} className="mr-2" />
+                              Payment Information
+                            </h4>
+                            <p className="text-gray-900 font-medium">
+                              {formatCurrency(booking.totalAmount)}
+                            </p>
+                          </div>
                       </div>
                     </div>
                   ))}
@@ -564,12 +564,12 @@ const PropertyDetail: React.FC = () => {
             {activeTab === 'reviews' && (
               <div>
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold">Đánh giá từ khách hàng</h2>
+                  <h2 className="text-xl font-semibold">Customer Reviews</h2>
                   <div className="flex items-center">
                     <div className="flex mr-2">
                       {renderRatingStars(property.rating)}
                     </div>
-                    <span className="text-gray-700">{property.rating} ({property.reviewCount} đánh giá)</span>
+                                          <span className="text-gray-700">{property.rating} ({property.reviewCount} reviews)</span>
                   </div>
                 </div>
 

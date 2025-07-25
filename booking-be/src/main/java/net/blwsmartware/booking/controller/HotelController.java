@@ -1,16 +1,22 @@
 package net.blwsmartware.booking.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import io.swagger.v3.oas.annotations.Operation;
 import net.blwsmartware.booking.constant.PagePrepare;
 import net.blwsmartware.booking.dto.request.HotelCreateRequest;
 import net.blwsmartware.booking.dto.request.HotelUpdateRequest;
+import net.blwsmartware.booking.dto.response.CityStatsResponse;
 import net.blwsmartware.booking.dto.response.DataResponse;
 import net.blwsmartware.booking.dto.response.HotelResponse;
 import net.blwsmartware.booking.dto.response.MessageResponse;
+import net.blwsmartware.booking.dto.response.UploadResponse;
+import net.blwsmartware.booking.service.CloudinaryService;
 import net.blwsmartware.booking.service.HotelService;
 import net.blwsmartware.booking.validator.IsAdmin;
 import net.blwsmartware.booking.validator.IsHost;
@@ -18,23 +24,26 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 import java.util.List;
 import java.util.UUID;
 
 /**
  * Hotel Management Controller
- *
+ * 
  * URL Structure (Fixed conflicts):
  * - Admin URLs:     /hotels/admin/...
- * - Host URLs:      /hotels/host/...
+ * - Host URLs:      /hotels/host/...  
  * - Public URLs:    /hotels/{staticPath} (search, city, country, etc.)
  * - Public Details: /hotels/{id} (hotel details by ID)
- *
+ * 
  * This structure avoids URL conflicts and provides clear separation between:
  * - Admin: Full management of ALL hotels
- * - Host: Management of OWNED hotels only
+ * - Host: Management of OWNED hotels only 
  * - Public: Read-only access to active hotels
  */
 @RestController
@@ -43,9 +52,10 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class HotelController {
-
+    
     HotelService hotelService;
-
+    CloudinaryService cloudinaryService;
+    
     // ===== ADMIN ENDPOINTS =====
     @GetMapping("/admin")
     @IsAdmin
@@ -53,20 +63,20 @@ public class HotelController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = PagePrepare.SORT_BY) String sortBy) {
-
+        
         DataResponse<HotelResponse> response = hotelService.getAllHotels(pageNumber, pageSize, sortBy);
-
+        
         // Debug logging
         log.info("=== HOTEL RESPONSE DEBUG ===");
         log.info("Total hotels returned: {}", response.getContent().size());
-
+        
         response.getContent().forEach((hotel) -> {
             log.info("Hotel {}:", hotel.getName());
             log.info("  - ID: {}", hotel.getId());
             log.info("  - isActive: {}", hotel.isActive());
             log.info("  - isFeatured: {} ", hotel.isFeatured());
         });
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<HotelResponse>>builder()
@@ -100,6 +110,19 @@ public class HotelController {
                         .build());
     }
     
+    @GetMapping("/admin/{id}")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<HotelResponse>> getHotelByIdForAdmin(@PathVariable UUID id) {
+        HotelResponse response = hotelService.getHotelByIdForAdmin(id);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<HotelResponse>builder()
+                        .message("Hotel details retrieved successfully for admin")
+                        .result(response)
+                        .build());
+    }
+    
     @PostMapping("/admin")
     @IsAdmin
     public ResponseEntity<MessageResponse<HotelResponse>> createHotelByAdmin(@Valid @RequestBody HotelCreateRequest request) {
@@ -109,6 +132,32 @@ public class HotelController {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<HotelResponse>builder()
                         .message("Hotel created successfully by admin")
+                        .result(response)
+                        .build());
+    }
+
+    @PostMapping(value = "/admin/with-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @IsAdmin
+    @Operation(summary = "Admin create hotel with image", description = "Admin create hotel and upload image in one request")
+    public ResponseEntity<MessageResponse<HotelResponse>> createHotelByAdminWithImage(
+            @RequestPart("hotel") @Valid HotelCreateRequest request,
+            @RequestPart("image") MultipartFile imageFile) {
+        
+        log.info("Admin creating hotel with image upload: {}", request.getName());
+        
+        // Upload image first
+        String imageUrl = cloudinaryService.uploadImageWithTransformation(imageFile, "hotels", 1200, 800);
+        
+        // Set image URL to request
+        request.setImageUrl(imageUrl);
+        
+        // Create hotel with image URL
+        HotelResponse response = hotelService.createHotelByAdmin(request);
+        
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<HotelResponse>builder()
+                        .message("Hotel created successfully by admin with image")
                         .result(response)
                         .build());
     }
@@ -166,6 +215,23 @@ public class HotelController {
                         .build());
     }
     
+    @PutMapping("/admin/{id}/commission-rate")
+    @IsAdmin
+    public ResponseEntity<MessageResponse<HotelResponse>> updateCommissionRate(
+            @PathVariable UUID id, 
+            @RequestParam @DecimalMin(value = "0.00", message = "Commission rate must be at least 0%")
+                         @DecimalMax(value = "100.00", message = "Commission rate cannot exceed 100%")
+                         BigDecimal commissionRate) {
+        HotelResponse response = hotelService.updateCommissionRate(id, commissionRate);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<HotelResponse>builder()
+                        .message("Hotel commission rate updated successfully")
+                        .result(response)
+                        .build());
+    }
+    
     @GetMapping("/admin/owner/{ownerId}")
     @IsAdmin
     public ResponseEntity<MessageResponse<DataResponse<HotelResponse>>> getHotelsByOwner(
@@ -173,9 +239,9 @@ public class HotelController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = PagePrepare.SORT_BY) String sortBy) {
-
+        
         DataResponse<HotelResponse> response = hotelService.getHotelsByOwner(ownerId, pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<HotelResponse>>builder()
@@ -244,9 +310,9 @@ public class HotelController {
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = PagePrepare.SORT_BY) String sortBy) {
-
+        
         DataResponse<HotelResponse> response = hotelService.getMyHotels(pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<HotelResponse>>builder()
@@ -281,7 +347,7 @@ public class HotelController {
     @IsHost
     public ResponseEntity<MessageResponse<HotelResponse>> getMyHotelById(@PathVariable UUID id) {
         HotelResponse response = hotelService.getMyHotelById(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<HotelResponse>builder()
@@ -289,12 +355,12 @@ public class HotelController {
                         .result(response)
                         .build());
     }
-
+    
     @PostMapping("/host")
     @IsHost
     public ResponseEntity<MessageResponse<HotelResponse>> createMyHotel(@Valid @RequestBody HotelCreateRequest request) {
         HotelResponse response = hotelService.createMyHotel(request);
-
+        
         return ResponseEntity.status(HttpStatus.CREATED)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<HotelResponse>builder()
@@ -303,13 +369,39 @@ public class HotelController {
                         .build());
     }
 
+    @PostMapping(value = "/host/with-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @IsHost
+    @Operation(summary = "Create hotel with image upload", description = "Create a new hotel and upload image in one request")
+    public ResponseEntity<MessageResponse<HotelResponse>> createMyHotelWithImage(
+            @RequestPart("hotel") @Valid HotelCreateRequest request,
+            @RequestPart("image") MultipartFile imageFile) {
+        
+        log.info("Creating hotel with image upload: {}", request.getName());
+        
+        // Upload image first
+        String imageUrl = cloudinaryService.uploadImageWithTransformation(imageFile, "hotels", 1200, 800);
+        
+        // Set image URL to request
+        request.setImageUrl(imageUrl);
+        
+        // Create hotel with image URL
+        HotelResponse response = hotelService.createMyHotel(request);
+        
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<HotelResponse>builder()
+                        .message("Hotel created successfully with image")
+                        .result(response)
+                        .build());
+    }
+    
     @PutMapping("/host/{id}")
     @IsHost
     public ResponseEntity<MessageResponse<HotelResponse>> updateMyHotel(
             @PathVariable UUID id,
             @Valid @RequestBody HotelUpdateRequest request) {
         HotelResponse response = hotelService.updateMyHotel(id, request);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<HotelResponse>builder()
@@ -318,11 +410,110 @@ public class HotelController {
                         .build());
     }
 
+    @PutMapping(value = "/host/{id}/with-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @IsHost
+    @Operation(summary = "Update hotel with image upload", description = "Update hotel and upload new image in one request")
+    public ResponseEntity<MessageResponse<HotelResponse>> updateMyHotelWithImage(
+            @PathVariable UUID id,
+            @RequestPart("hotel") @Valid HotelUpdateRequest request,
+            @RequestPart("image") MultipartFile imageFile) {
+        
+        log.info("Updating hotel {} with new image", id);
+        
+        // Get current hotel to possibly delete old image
+        HotelResponse currentHotel = hotelService.getMyHotelById(id);
+        String oldImageUrl = currentHotel.getImageUrl();
+        
+        // Upload new image
+        String newImageUrl = cloudinaryService.uploadImageWithTransformation(imageFile, "hotels", 1200, 800);
+        
+        // Set new image URL to request
+        request.setImageUrl(newImageUrl);
+        
+        // Update hotel with new image URL
+        HotelResponse response = hotelService.updateMyHotel(id, request);
+        
+        // Delete old image if exists and different from new one
+        if (oldImageUrl != null && !oldImageUrl.equals(newImageUrl)) {
+            try {
+                String publicId = cloudinaryService.extractPublicIdFromUrl(oldImageUrl);
+                if (publicId != null) {
+                    cloudinaryService.deleteImage(publicId);
+                    log.info("Deleted old hotel image: {}", publicId);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to delete old hotel image: {}", e.getMessage());
+                // Continue execution, don't fail the update because of image deletion failure
+            }
+        }
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<HotelResponse>builder()
+                        .message("Hotel updated successfully with new image")
+                        .result(response)
+                                                 .build());
+    }
+
+    @PatchMapping(value = "/host/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @IsHost
+    @Operation(summary = "Update only hotel image", description = "Update only the hotel image without changing other details")
+    public ResponseEntity<MessageResponse<UploadResponse>> updateMyHotelImage(
+            @PathVariable UUID id,
+            @RequestPart("image") MultipartFile imageFile) {
+        
+        log.info("Updating image for hotel {}", id);
+        
+        // Verify hotel ownership (this will throw exception if not owned by current user)
+        HotelResponse currentHotel = hotelService.getMyHotelById(id);
+        String oldImageUrl = currentHotel.getImageUrl();
+        
+        // Upload new image
+        String newImageUrl = cloudinaryService.uploadImageWithTransformation(imageFile, "hotels", 1200, 800);
+        
+        // Update only the image URL
+        HotelUpdateRequest updateRequest = HotelUpdateRequest.builder()
+                .imageUrl(newImageUrl)
+                .build();
+        
+        hotelService.updateMyHotel(id, updateRequest);
+        
+        // Delete old image if exists
+        if (oldImageUrl != null && !oldImageUrl.equals(newImageUrl)) {
+            try {
+                String publicId = cloudinaryService.extractPublicIdFromUrl(oldImageUrl);
+                if (publicId != null) {
+                    cloudinaryService.deleteImage(publicId);
+                    log.info("Deleted old hotel image: {}", publicId);
+                }
+            } catch (Exception e) {
+                log.warn("Failed to delete old hotel image: {}", e.getMessage());
+            }
+        }
+        
+        // Return upload response
+        UploadResponse uploadResponse = UploadResponse.builder()
+                .imageUrl(newImageUrl)
+                .fileName(imageFile.getOriginalFilename())
+                .fileSize(imageFile.getSize())
+                .folder("hotels")
+                .dimensions("1200x800")
+                .optimized(true)
+                .build();
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<UploadResponse>builder()
+                        .message("Hotel image updated successfully")
+                        .result(uploadResponse)
+                        .build());
+    }
+    
     @DeleteMapping("/host/{id}")
     @IsHost
     public ResponseEntity<?> deleteMyHotel(@PathVariable UUID id) {
         hotelService.deleteMyHotel(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.builder()
@@ -348,7 +539,7 @@ public class HotelController {
     @IsHost
     public ResponseEntity<MessageResponse<Long>> getMyHotelsCount() {
         Long count = hotelService.getMyHotelsCount();
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<Long>builder()
@@ -374,7 +565,7 @@ public class HotelController {
     @GetMapping("/{id}")
     public ResponseEntity<MessageResponse<HotelResponse>> getHotelById(@PathVariable UUID id) {
         HotelResponse response = hotelService.getHotelById(id);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<HotelResponse>builder()
@@ -382,16 +573,16 @@ public class HotelController {
                         .result(response)
                         .build());
     }
-
+    
     @GetMapping("/search")
     public ResponseEntity<MessageResponse<DataResponse<HotelResponse>>> searchHotels(
             @RequestParam String keyword,
             @RequestParam(defaultValue = PagePrepare.PAGE_NUMBER) Integer pageNumber,
             @RequestParam(defaultValue = PagePrepare.PAGE_SIZE) Integer pageSize,
             @RequestParam(defaultValue = "name") String sortBy) {
-
+        
         DataResponse<HotelResponse> response = hotelService.searchHotels(keyword, pageNumber, pageSize, sortBy);
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<DataResponse<HotelResponse>>builder()
@@ -509,7 +700,7 @@ public class HotelController {
     @GetMapping("/amenities")
     public ResponseEntity<MessageResponse<List<String>>> getAvailableAmenities() {
         List<String> amenities = hotelService.getAvailableAmenities();
-
+        
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(MessageResponse.<List<String>>builder()
@@ -517,4 +708,34 @@ public class HotelController {
                         .result(amenities)
                         .build());
     }
-}
+
+    @GetMapping("/top-cities")
+    public ResponseEntity<MessageResponse<List<CityStatsResponse>>> getTopCities(
+            @RequestParam(defaultValue = "4") int limit) {
+        List<CityStatsResponse> topCities = hotelService.getTopCitiesByHotelCount(limit);
+        
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<List<CityStatsResponse>>builder()
+                        .message("Top cities retrieved successfully")
+                        .result(topCities)
+                        .build());
+    }
+
+    /**
+     * API trả về số phòng trống thực tế của khách sạn dựa trên booking
+     */
+    @GetMapping("/{id}/available-rooms")
+    public ResponseEntity<MessageResponse<Integer>> getAvailableRoomsByHotel(
+            @PathVariable UUID id,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkInDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate checkOutDate) {
+        int availableRooms = hotelService.getAvailableRoomsByHotel(id, checkInDate, checkOutDate);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(MessageResponse.<Integer>builder()
+                        .message("Available rooms calculated successfully")
+                        .result(availableRooms)
+                        .build());
+    }
+} 

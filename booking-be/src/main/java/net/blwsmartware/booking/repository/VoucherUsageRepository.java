@@ -16,26 +16,13 @@ import java.util.UUID;
 
 @Repository
 public interface VoucherUsageRepository extends JpaRepository<VoucherUsage, UUID> {
-    
-    // Find usage by voucher
+
     List<VoucherUsage> findByVoucherId(UUID voucherId);
-    
-    // Find usage by user
     List<VoucherUsage> findByUserId(UUID userId);
-    
-    // Find usage by booking
     Optional<VoucherUsage> findByBookingId(UUID bookingId);
-    
-    // Delete usage by booking ID
     void deleteByBookingId(UUID bookingId);
-    
-    // Find usage by voucher and user
     List<VoucherUsage> findByVoucherIdAndUserId(UUID voucherId, UUID userId);
-    
-    // Check if user has used specific voucher
     boolean existsByVoucherIdAndUserId(UUID voucherId, UUID userId);
-    
-    // Count usage by voucher
     long countByVoucherId(UUID voucherId);
     
     // Find usage in date range

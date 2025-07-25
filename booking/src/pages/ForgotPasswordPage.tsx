@@ -28,14 +28,14 @@ const ForgotPasswordPage: React.FC = () => {
 
     try {
       await authAPI.forgotPassword(formData);
-      setSuccess('Mã xác nhận đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.');
+      setSuccess('Verification code has been sent to your email. Please check your inbox.');
       
       // Chuyển hướng đến trang reset password sau 2 giây
       setTimeout(() => {
         navigate('/reset-password', { state: { email: formData.email } });
       }, 2000);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+      setError(err.response?.data?.message || 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -50,15 +50,15 @@ const ForgotPasswordPage: React.FC = () => {
             className="flex items-center text-blue-600 hover:text-blue-500 transition-colors"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
-            Quay lại đăng nhập
+            Back to login
           </Link>
         </div>
         
         <h2 className="text-center text-3xl font-bold text-gray-900">
-          Quên mật khẩu?
+          Forgot Password?
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Nhập email của bạn để nhận mã xác nhận đặt lại mật khẩu
+          Enter your email to receive a password reset verification code
         </p>
       </div>
 
@@ -93,7 +93,7 @@ const ForgotPasswordPage: React.FC = () => {
                   value={formData.email}
                   onChange={handleChange}
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Nhập email của bạn"
+                  placeholder="Enter your email"
                 />
               </div>
             </div>
@@ -104,16 +104,16 @@ const ForgotPasswordPage: React.FC = () => {
                 disabled={loading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Đang gửi...' : 'Gửi mã xác nhận'}
+                {loading ? 'Sending...' : 'Send Verification Code'}
               </button>
             </div>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Nhớ mật khẩu?{' '}
+              Remember your password?{' '}
               <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                Đăng nhập ngay
+                Login now
               </Link>
             </p>
           </div>

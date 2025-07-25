@@ -1,5 +1,7 @@
 package net.blwsmartware.booking.mapper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.blwsmartware.booking.dto.request.BookingCreateRequest;
 import net.blwsmartware.booking.dto.request.BookingUpdateRequest;
 import net.blwsmartware.booking.dto.response.BookingResponse;
@@ -13,7 +15,7 @@ import java.time.temporal.ChronoUnit;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface BookingMapper {
-
+    
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "hotel", ignore = true)
     @Mapping(target = "roomType", ignore = true)
@@ -26,7 +28,7 @@ public interface BookingMapper {
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
     Booking toEntity(BookingCreateRequest request);
-
+    
     @Mapping(target = "hotelId", source = "hotel.id")
     @Mapping(target = "hotelName", source = "hotel.name")
     @Mapping(target = "hotelAddress", source = "hotel.address")
@@ -41,8 +43,10 @@ public interface BookingMapper {
     @Mapping(target = "userName", source = "user.name")
     @Mapping(target = "numberOfNights", expression = "java(calculateNumberOfNights(booking))")
     @Mapping(target = "pricePerNight", source = "roomType.pricePerNight")
+    @Mapping(target = "qrCode", expression = "java(\"http://localhost:5173/host/checkin/\" + booking.getId())")
+    @Mapping(target = "qrCodeUsed", source = "qrCodeUsed")
     BookingResponse toResponse(Booking booking);
-
+    
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "hotel", ignore = true)
     @Mapping(target = "roomType", ignore = true)
@@ -52,11 +56,17 @@ public interface BookingMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     void updateEntity(@MappingTarget Booking booking, BookingUpdateRequest request);
-
+    
     default Integer calculateNumberOfNights(Booking booking) {
         if (booking.getCheckInDate() != null && booking.getCheckOutDate() != null) {
             return (int) ChronoUnit.DAYS.between(booking.getCheckInDate(), booking.getCheckOutDate());
         }
         return null;
     }
-}
+
+    // Serialize toàn bộ thông tin booking (trừ qrCode) thành JSON cho QR code
+    static String serializeBookingToJson(Booking booking) {
+        // Deprecated: QR code now contains check-in URL
+        return "";
+    }
+} 

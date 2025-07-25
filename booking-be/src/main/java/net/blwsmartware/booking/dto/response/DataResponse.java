@@ -17,5 +17,4 @@ public class DataResponse<T> {
     int totalPages;
     boolean isLastPage;
     List<T> content;
-
 }

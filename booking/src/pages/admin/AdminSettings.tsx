@@ -4,7 +4,7 @@ import { Save, Bell, Shield, Database, Mail, Globe } from 'lucide-react';
 const AdminSettings: React.FC = () => {
   const [settings, setSettings] = useState({
     siteName: 'FBooking',
-    siteDescription: 'Nền tảng đặt phòng khách sạn hàng đầu Việt Nam',
+    siteDescription: 'Leading hotel booking platform in Vietnam',
     contactEmail: 'admin@fbooking.com',
     supportPhone: '1900-1234',
     maintenanceMode: false,
@@ -104,114 +104,6 @@ const AdminSettings: React.FC = () => {
           </div>
         </div>
 
-        {/* System Settings */}
-        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-          <div className="flex items-center mb-4">
-            <Database className="mr-3 text-green-600" size={24} />
-            <h2 className="text-lg sm:text-xl font-semibold">Cài đặt hệ thống</h2>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between py-2">
-              <span className="text-sm font-medium text-gray-700">Chế độ bảo trì</span>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.maintenanceMode}
-                  onChange={(e) => handleInputChange('maintenanceMode', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-            
-            <div className="flex items-center justify-between py-2">
-              <span className="text-sm font-medium text-gray-700">Tự động duyệt đặt phòng</span>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.autoApproveBookings}
-                  onChange={(e) => handleInputChange('autoApproveBookings', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-            
-            <div className="flex items-center justify-between py-2">
-              <span className="text-sm font-medium text-gray-700">Yêu cầu xác thực email</span>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.requireEmailVerification}
-                  onChange={(e) => handleInputChange('requireEmailVerification', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Số ngày đặt phòng tối đa
-              </label>
-              <input
-                type="number"
-                value={settings.maxBookingDays}
-                onChange={(e) => handleInputChange('maxBookingDays', parseInt(e.target.value))}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Thời hạn hủy đặt phòng (giờ)
-              </label>
-              <input
-                type="number"
-                value={settings.cancellationDeadline}
-                onChange={(e) => handleInputChange('cancellationDeadline', parseInt(e.target.value))}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Notification Settings */}
-        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-          <div className="flex items-center mb-4">
-            <Bell className="mr-3 text-yellow-600" size={24} />
-            <h2 className="text-lg sm:text-xl font-semibold">Cài đặt thông báo</h2>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between py-2">
-              <span className="text-sm font-medium text-gray-700">Thông báo email</span>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.emailNotifications}
-                  onChange={(e) => handleInputChange('emailNotifications', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-            
-            <div className="flex items-center justify-between py-2">
-              <span className="text-sm font-medium text-gray-700">Thông báo SMS</span>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.smsNotifications}
-                  onChange={(e) => handleInputChange('smsNotifications', e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
-            </div>
-          </div>
-        </div>
 
         {/* Business Settings */}
         <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">

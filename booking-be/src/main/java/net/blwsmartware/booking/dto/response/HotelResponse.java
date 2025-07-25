@@ -34,28 +34,29 @@ public class HotelResponse {
     String amenities;
     String cancellationPolicy;
     String petPolicy;
-
+    BigDecimal commissionRate;
+    
     // Owner information
     UUID ownerId;
     String ownerName;
     String ownerEmail;
-
+    
     // Statistics
     Integer totalRoomTypes;
     Integer totalRooms;
     Integer availableRooms;
     Double averageRating;
     Integer totalReviews;
-
+    
     // Room types (optional, for detailed view)
     List<RoomTypeResponse> roomTypes;
-
+    
     // Recent reviews (optional, for detailed view)
     List<ReviewResponse> recentReviews;
-
+    
     // Audit fields
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
     UUID createdBy;
     UUID updatedBy;
-}
+} 

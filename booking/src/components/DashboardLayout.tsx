@@ -2,7 +2,7 @@ import React, { ReactNode, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { 
-  Users, Hotel, BookOpen, Settings, Star, BarChart2, Tag, Home, 
+  Users, Hotel, BookOpen, Star, BarChart2, Tag, Home, 
   FileText, Percent, CreditCard, LogOut, ChevronDown, ChevronRight,
   Menu, X, FolderOpen, DollarSign, Calendar, MessageSquare, BedDouble, TrendingUp
 } from 'lucide-react';
@@ -44,14 +44,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, type }) => 
       label: 'Finance',
       icon: <DollarSign size={20} />,
       subItems: [
+        { path: '/admin/revenue', label: 'Revenue', icon: <TrendingUp size={20} /> },
         { path: '/admin/commissions', label: 'Commissions', icon: <Percent size={20} /> },
-        { path: '/admin/invoices', label: 'Invoices', icon: <FileText size={20} /> },
-        { path: '/admin/commission-payments', label: 'Payments', icon: <CreditCard size={20} /> },
+        { path: '/admin/withdrawals', label: 'Withdrawals', icon: <CreditCard size={20} /> },
       ],
     },
     { path: '/admin/promotions', label: 'Promotions', icon: <Tag size={20} /> },
-    { path: '/admin/analytics', label: 'Analytics', icon: <BarChart2 size={20} /> }, 
-    { path: '/admin/settings', label: 'Settings', icon: <Settings size={20} /> },
   ];
 
   const hostMenuItems = [
@@ -59,16 +57,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, type }) => 
     { path: '/host/hotels', label: 'Hotels', icon: <Hotel size={20} /> },
     { path: '/host/room-types', label: 'Room Types', icon: <BedDouble size={20} /> },
     { path: '/host/bookings', label: 'Bookings', icon: <BookOpen size={20} /> },
-    { path: '/host/calendar', label: 'Booking Calendar', icon: <Calendar size={20} /> },
+    { path: '/host/vouchers', label: 'Vouchers', icon: <Tag size={20} /> },
     { path: '/host/reviews', label: 'Reviews', icon: <Star size={20} /> },
-    { path: '/host/messages', label: 'Messages', icon: <MessageSquare size={20} /> },
-    { path: '/host/analytics', label: 'Analytics', icon: <BarChart2 size={20} /> },
-    { path: '/host/settings', label: 'Settings', icon: <Settings size={20} /> },
   ];
 
   const menuItems = isAdmin ? adminMenuItems : hostMenuItems;
 
   const isActive = (path: string) => {
+    // Special handling for Overview pages to avoid matching all sub-paths
+    if (path === '/admin' || path === '/host') {
+      return location.pathname === path;
+    }
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
@@ -172,6 +171,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, type }) => 
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-white truncate">{user?.name}</p>
             <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+            {user?.roles && user.roles.length > 0 && (
+              <div className="flex items-center mt-1">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                  user.roles[0].name === 'ADMIN' ? 'bg-red-100 text-red-800' :
+                  user.roles[0].name === 'HOST' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                }`}>
+                  {user.roles[0].name === 'ADMIN' ? 'Admin' :
+                   user.roles[0].name === 'HOST' ? 'Host' : 'User'}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -34,7 +34,7 @@ const VoucherDeleteConfirmModal: React.FC<VoucherDeleteConfirmModalProps> = ({
             </div>
             <div className="ml-3">
               <h3 className="text-lg font-semibold text-gray-900">
-                {hasUsageRecords ? 'Không thể xóa voucher' : 'Xác nhận xóa voucher'}
+                {hasUsageRecords ? 'Cannot Delete Voucher' : 'Confirm Voucher Deletion'}
               </h3>
             </div>
           </div>
@@ -48,22 +48,22 @@ const VoucherDeleteConfirmModal: React.FC<VoucherDeleteConfirmModalProps> = ({
               <div className="space-y-3">
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
                   <p className="text-sm text-orange-800">
-                    <strong>Voucher này đã được sử dụng trong các booking!</strong>
+                    <strong>This voucher has been used in bookings!</strong>
                   </p>
                   <p className="text-sm text-orange-700 mt-1">
-                    Để bảo vệ tính toàn vẹn dữ liệu, bạn nên <strong>tắt voucher</strong> thay vì xóa.
+                    To protect data integrity, you should <strong>disable the voucher</strong> instead of deleting it.
                   </p>
                 </div>
                 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <p className="text-sm text-blue-800">
-                    <strong>Khuyến nghị:</strong> Tắt voucher để ngừng sử dụng nhưng vẫn giữ lại lịch sử.
+                    <strong>Recommendation:</strong> Disable the voucher to stop usage while preserving history.
                   </p>
                 </div>
               </div>
             ) : (
               <p className="text-sm text-gray-600">
-                Bạn có chắc chắn muốn xóa voucher này? Hành động này không thể hoàn tác.
+                Are you sure you want to delete this voucher? This action cannot be undone.
               </p>
             )}
           </div>
@@ -73,7 +73,7 @@ const VoucherDeleteConfirmModal: React.FC<VoucherDeleteConfirmModalProps> = ({
               onClick={onClose}
               className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Hủy
+              Cancel
             </button>
             
             {hasUsageRecords ? (
@@ -83,24 +83,24 @@ const VoucherDeleteConfirmModal: React.FC<VoucherDeleteConfirmModalProps> = ({
                   className="flex-1 px-4 py-2 text-sm font-medium text-white bg-orange-600 border border-transparent rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 flex items-center justify-center"
                 >
                   <Eye className="h-4 w-4 mr-2" />
-                  Tắt voucher
+                  Disable Voucher
                 </button>
                 <button
                   onClick={onConfirmDelete}
                   className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center justify-center"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Vẫn xóa
+                  Force Delete
                 </button>
               </>
             ) : (
-              <button
-                onClick={onConfirmDelete}
-                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center justify-center"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Xóa voucher
-              </button>
+                              <button
+                  onClick={onConfirmDelete}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 flex items-center justify-center"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Voucher
+                </button>
             )}
           </div>
         </div>

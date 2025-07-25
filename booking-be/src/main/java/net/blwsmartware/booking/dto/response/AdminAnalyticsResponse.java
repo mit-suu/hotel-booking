@@ -54,8 +54,9 @@ public class AdminAnalyticsResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class TopLocationData {
-        private String name;
-        private Long bookings;
-        private BigDecimal revenue;
+        private String name; // City name
+        private Long hotelCount; // Number of hotels in this city
+        private Long bookings; // Keep for backward compatibility (optional)
+        private BigDecimal revenue; // Keep for backward compatibility (optional)
     }
 } 

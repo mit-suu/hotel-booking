@@ -13,7 +13,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class HotelUpdateRequest {
-
+    
     @Size(min = 2, max = 100, message = "Hotel name must be between 2 and 100 characters")
     String name;
 
@@ -35,8 +35,8 @@ public class HotelUpdateRequest {
     @Email(message = "Invalid email format")
     String email;
 
-    @Pattern(regexp = "^$|^(https?://)?(www\\.)?[a-zA-Z0-9\\-\\.]+\\.[a-zA-Z]{2,}(/.*)?$",
-            message = "Invalid website URL format")
+    @Pattern(regexp = "^$|^(https?://)?(www\\.)?[a-zA-Z0-9\\-\\.]+\\.[a-zA-Z]{2,}(/.*)?$", 
+             message = "Invalid website URL format")
     String website;
 
     @Min(value = 1, message = "Star rating must be at least 1")
@@ -63,8 +63,13 @@ public class HotelUpdateRequest {
     @Size(max = 1000, message = "Pet policy cannot exceed 1000 characters")
     String petPolicy;
 
+    @DecimalMin(value = "0.00", message = "Commission rate must be at least 0%")
+    @DecimalMax(value = "100.00", message = "Commission rate cannot exceed 100%")
+    @Digits(integer = 3, fraction = 2, message = "Commission rate format is invalid")
+    BigDecimal commissionRate;
+
     UUID ownerId; // Optional - only admin can change owner
 
     boolean isActive;
     boolean isFeatured;
-}
+} 

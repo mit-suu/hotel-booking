@@ -17,19 +17,16 @@ import java.util.UUID;
 @Repository
 public interface HotelRepository extends JpaRepository<Hotel, UUID> {
 
-    // Find hotels by owner
     Page<Hotel> findByOwner(User owner, Pageable pageable);
     List<Hotel> findByOwner(User owner);
 
-    // Find hotels by owner ID
     Page<Hotel> findByOwnerId(UUID ownerId, Pageable pageable);
     List<Hotel> findByOwnerId(UUID ownerId);
 
-    // Find active hotels
     Page<Hotel> findByIsActiveTrue(Pageable pageable);
     List<Hotel> findByIsActiveTrue();
-
-    // Find featured hotels
+    
+    // Find featured hotels - ADMIN ONLY (all featured regardless of status)
     Page<Hotel> findByIsFeaturedTrue(Pageable pageable);
     List<Hotel> findByIsFeaturedTrue();
     
@@ -84,80 +81,78 @@ public interface HotelRepository extends JpaRepository<Hotel, UUID> {
     
     // Find hotels with comprehensive filters
     @Query("SELECT h FROM Hotel h WHERE " +
-            "(:city IS NULL OR LOWER(h.city) = LOWER(:city)) AND " +
-            "(:country IS NULL OR LOWER(h.country) = LOWER(:country)) AND " +
-            "(:starRating IS NULL OR h.starRating = :starRating) AND " +
-            "(:isActive IS NULL OR h.isActive = :isActive) AND " +
-            "(:isFeatured IS NULL OR h.isFeatured = :isFeatured) AND " +
-            "(:minPrice IS NULL OR h.pricePerNight >= :minPrice) AND " +
-            "(:maxPrice IS NULL OR h.pricePerNight <= :maxPrice)")
+           "(:city IS NULL OR LOWER(h.city) = LOWER(:city)) AND " +
+           "(:country IS NULL OR LOWER(h.country) = LOWER(:country)) AND " +
+           "(:starRating IS NULL OR h.starRating = :starRating) AND " +
+           "(:isActive IS NULL OR h.isActive = :isActive) AND " +
+           "(:isFeatured IS NULL OR h.isFeatured = :isFeatured) AND " +
+           "(:minPrice IS NULL OR h.pricePerNight >= :minPrice) AND " +
+           "(:maxPrice IS NULL OR h.pricePerNight <= :maxPrice)")
     Page<Hotel> findWithFilters(@Param("city") String city,
-                                @Param("country") String country,
-                                @Param("starRating") Integer starRating,
-                                @Param("isActive") Boolean isActive,
-                                @Param("isFeatured") Boolean isFeatured,
-                                @Param("minPrice") BigDecimal minPrice,
-                                @Param("maxPrice") BigDecimal maxPrice,
-                                Pageable pageable);
-
+                               @Param("country") String country,
+                               @Param("starRating") Integer starRating,
+                               @Param("isActive") Boolean isActive,
+                               @Param("isFeatured") Boolean isFeatured,
+                               @Param("minPrice") BigDecimal minPrice,
+                               @Param("maxPrice") BigDecimal maxPrice,
+                               Pageable pageable);
+    
     // Find my hotels with filters (for Host)
     @Query("SELECT h FROM Hotel h WHERE " +
-            "h.owner.id = :ownerId AND " +
-            "(:city IS NULL OR LOWER(h.city) = LOWER(:city)) AND " +
-            "(:country IS NULL OR LOWER(h.country) = LOWER(:country)) AND " +
-            "(:starRating IS NULL OR h.starRating = :starRating) AND " +
-            "(:isActive IS NULL OR h.isActive = :isActive)")
+           "h.owner.id = :ownerId AND " +
+           "(:city IS NULL OR LOWER(h.city) = LOWER(:city)) AND " +
+           "(:country IS NULL OR LOWER(h.country) = LOWER(:country)) AND " +
+           "(:starRating IS NULL OR h.starRating = :starRating) AND " +
+           "(:isActive IS NULL OR h.isActive = :isActive)")
     Page<Hotel> findMyHotelsWithFilters(@Param("ownerId") UUID ownerId,
-                                        @Param("city") String city,
-                                        @Param("country") String country,
-                                        @Param("starRating") Integer starRating,
-                                        @Param("isActive") Boolean isActive,
-                                        Pageable pageable);
-
+                                       @Param("city") String city,
+                                       @Param("country") String country,
+                                       @Param("starRating") Integer starRating,
+                                       @Param("isActive") Boolean isActive,
+                                       Pageable pageable);
+    
     // Legacy method for backward compatibility (if needed)
     @Query("SELECT h FROM Hotel h WHERE " +
-            "(:isActive IS NULL OR h.isActive = :isActive) AND " +
-            "(:isFeatured IS NULL OR h.isFeatured = :isFeatured) AND " +
-            "(:starRating IS NULL OR h.starRating = :starRating) AND " +
-            "(:city IS NULL OR LOWER(h.city) = LOWER(:city)) AND " +
-            "(:ownerId IS NULL OR h.owner.id = :ownerId)")
+           "(:isActive IS NULL OR h.isActive = :isActive) AND " +
+           "(:isFeatured IS NULL OR h.isFeatured = :isFeatured) AND " +
+           "(:starRating IS NULL OR h.starRating = :starRating) AND " +
+           "(:city IS NULL OR LOWER(h.city) = LOWER(:city)) AND " +
+           "(:ownerId IS NULL OR h.owner.id = :ownerId)")
     Page<Hotel> findWithBasicFilters(@Param("isActive") Boolean isActive,
-                                     @Param("isFeatured") Boolean isFeatured,
-                                     @Param("starRating") Integer starRating,
-                                     @Param("city") String city,
-                                     @Param("ownerId") UUID ownerId,
-                                     Pageable pageable);
-
+                                    @Param("isFeatured") Boolean isFeatured,
+                                    @Param("starRating") Integer starRating,
+                                    @Param("city") String city,
+                                    @Param("ownerId") UUID ownerId,
+                                    Pageable pageable);
+    
     // Count hotels by owner
     long countByOwner(User owner);
     long countByOwnerId(UUID ownerId);
     long countByOwnerIdAndIsActiveTrue(UUID ownerId);
-
+    
     // Count active hotels
     long countByIsActiveTrue();
-
+    
     // Count featured hotels
     long countByIsFeaturedTrue();
-
+    
     // Check if hotel name exists
     boolean existsByNameAndOwner(String name, User owner);
     boolean existsByNameAndOwnerId(String name, UUID ownerId);
     boolean existsByNameAndCity(String name, String city);
 
-    // Get hotel statistics
     @Query("SELECT COUNT(h) FROM Hotel h WHERE h.isActive = true")
     long countActiveHotels();
-
+    
     @Query("SELECT COUNT(h) FROM Hotel h WHERE h.isFeatured = true")
     long countFeaturedHotels();
-
+    
     @Query("SELECT AVG(r.rating) FROM Review r WHERE r.hotel.id = :hotelId")
     Optional<Double> getAverageRating(@Param("hotelId") UUID hotelId);
-
+    
     @Query("SELECT COUNT(r) FROM Review r WHERE r.hotel.id = :hotelId")
     long getReviewCount(@Param("hotelId") UUID hotelId);
 
-    // Find hotels with filters including amenities
     @Query("SELECT h FROM Hotel h WHERE " +
            "h.isActive = true AND " +
            "(:city IS NULL OR LOWER(h.city) = LOWER(:city)) AND " +
@@ -180,7 +175,7 @@ public interface HotelRepository extends JpaRepository<Hotel, UUID> {
 
     // Get all unique amenities from hotels - simplified approach
     @Query("SELECT DISTINCT h.amenities FROM Hotel h " +
-            "WHERE h.amenities IS NOT NULL AND h.amenities != '' AND h.isActive = true")
+           "WHERE h.amenities IS NOT NULL AND h.amenities != '' AND h.isActive = true")
     List<String> findAllAmenitiesRaw();
 
     // Count active featured hotels
@@ -189,4 +184,37 @@ public interface HotelRepository extends JpaRepository<Hotel, UUID> {
     // Get hotel statistics - count active featured hotels 
     @Query("SELECT COUNT(h) FROM Hotel h WHERE h.isFeatured = true AND h.isActive = true")
     long countActiveFeaturedHotels();
-} 
+
+    // ===== REVENUE ANALYSIS QUERIES =====
+    @Query("SELECT AVG(h.commissionRate) FROM Hotel h WHERE h.isActive = true")
+    Optional<BigDecimal> getAverageCommissionRate();
+
+    @Query("SELECT h FROM Hotel h WHERE " +
+           "(:searchTerm IS NULL OR :searchTerm = '' OR " +
+           "LOWER(h.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(h.owner.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(h.city) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           "LOWER(h.country) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) AND " +
+           "(:isActive IS NULL OR h.isActive = :isActive)")
+    Page<Hotel> findHotelsForRevenue(@Param("searchTerm") String searchTerm, 
+                                     @Param("isActive") Boolean isActive, 
+                                     Pageable pageable);
+    
+    @Query("SELECT COALESCE(SUM(h.totalRevenue), 0) FROM Hotel h WHERE h.isActive = true")
+    BigDecimal getTotalRevenue();
+    
+    @Query("SELECT COALESCE(SUM(h.commissionEarned), 0) FROM Hotel h WHERE h.isActive = true")
+    BigDecimal getTotalCommissionEarned();
+    
+    // Host specific queries
+    List<Hotel> findByOwnerIdAndIsActiveTrueOrderByCreatedAtDesc(UUID ownerId);
+    
+    // ===== CITY STATISTICS QUERIES =====
+    @Query("SELECT h.city as cityName, COUNT(h) as hotelCount " +
+           "FROM Hotel h " +
+           "WHERE h.isActive = true AND h.city IS NOT NULL AND h.city != '' " +
+           "GROUP BY h.city " +
+           "ORDER BY COUNT(h) DESC")
+    List<Object[]> findTopCitiesByHotelCount(Pageable pageable);
+
+}

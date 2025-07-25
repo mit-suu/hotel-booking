@@ -12,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import net.blwsmartware.booking.constant.TokenType;
 import net.blwsmartware.booking.enums.ErrorResponse;
-import net.blwsmartware.booking.exception.IdentityRuntimeException;
+import net.blwsmartware.booking.exception.AppRuntimeException;
 import net.blwsmartware.booking.exception.JwtAuthException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -48,7 +48,7 @@ public class JwtTokenProvider {
             return createJWT(userDetails, new Date(System.currentTimeMillis() + refreshTokenExpr * 60 * 60 * 24 * 1000), TokenType.refresh);
         } catch (JOSEException e) {
             log.error("createRefreshToken error");
-            throw new IdentityRuntimeException(ErrorResponse.JWT_INVALID);
+            throw new AppRuntimeException(ErrorResponse.JWT_INVALID);
         }
     }
 
@@ -86,7 +86,7 @@ public class JwtTokenProvider {
             return createJWT(userDetails, new Date(System.currentTimeMillis() + accessTokenExpr * 60 * 1000), TokenType.access);
         } catch (JOSEException e) {
             log.error("createAccessToken error");
-            throw new IdentityRuntimeException(ErrorResponse.JWT_INVALID);
+            throw new AppRuntimeException(ErrorResponse.JWT_INVALID);
         }
     }
 
@@ -109,7 +109,7 @@ public class JwtTokenProvider {
 
         } catch (ParseException | JOSEException e) {
             log.info("Exception parse: {}", e.getMessage());
-            throw new IdentityRuntimeException(ErrorResponse.JWT_INVALID);
+            throw new AppRuntimeException(ErrorResponse.JWT_INVALID);
         }
     }
 
@@ -147,7 +147,7 @@ public class JwtTokenProvider {
             JWTClaimsSet claimsSet = SignedJWT.parse(token).getJWTClaimsSet();
             return claimsResolver.apply(claimsSet);
         } catch (ParseException e) {
-            throw new IdentityRuntimeException(ErrorResponse.JWT_INVALID);
+            throw new AppRuntimeException(ErrorResponse.JWT_INVALID);
         }
 
 

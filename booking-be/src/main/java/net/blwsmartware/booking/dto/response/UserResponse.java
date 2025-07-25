@@ -2,11 +2,11 @@ package net.blwsmartware.booking.dto.response;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import net.blwsmartware.booking.entity.Role;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -18,9 +18,11 @@ public class UserResponse {
     String email;
     boolean isActive;
     boolean emailVerified;
+    boolean hostRequested;
+    BigDecimal walletBalance;
     String tel,address;
     LocalDate dob;
     Instant createAt;
     Instant updateAt;
-    Set<Role> roles;
+    List<RoleResponse> roles;
 }

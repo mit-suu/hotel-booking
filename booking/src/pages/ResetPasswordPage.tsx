@@ -21,7 +21,7 @@ const ResetPasswordPage: React.FC = () => {
   const location = useLocation();
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Lấy email từ state hoặc localStorage
+  // Get email from state or localStorage
   useEffect(() => {
     const email = location.state?.email || localStorage.getItem('resetEmail') || '';
     setFormData(prev => ({ ...prev, email }));
@@ -30,7 +30,7 @@ const ResetPasswordPage: React.FC = () => {
     }
   }, [location.state]);
 
-  // Countdown timer cho resend code
+  // Countdown timer for resend code
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -39,23 +39,23 @@ const ResetPasswordPage: React.FC = () => {
   }, [countdown]);
 
   const handleCodeChange = (index: number, value: string) => {
-    if (value.length > 1) return; // Chỉ cho phép 1 ký tự
+    if (value.length > 1) return; // Only allow 1 character
     
     const newCode = [...verificationCode];
     newCode[index] = value;
     setVerificationCode(newCode);
     
-    // Cập nhật formData
+    // Update formData
     setFormData(prev => ({ ...prev, code: newCode.join('') }));
     
-    // Tự động focus vào ô tiếp theo
+    // Auto focus to next field
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    // Xử lý phím Backspace
+    // Handle Backspace key
     if (e.key === 'Backspace' && !verificationCode[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -79,10 +79,10 @@ const ResetPasswordPage: React.FC = () => {
     try {
       const resendData: ResendCodeRequest = { email: formData.email };
       await authAPI.resendCode(resendData);
-      setSuccess('Mã xác nhận mới đã được gửi đến email của bạn.');
-      setCountdown(60); // 60 giây countdown
+      setSuccess('A new verification code has been sent to your email.');
+      setCountdown(60); // 60 second countdown
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Không thể gửi lại mã. Vui lòng thử lại.');
+      setError(err.response?.data?.message || 'Unable to resend code. Please try again.');
     } finally {
       setResendLoading(false);
     }
@@ -93,20 +93,20 @@ const ResetPasswordPage: React.FC = () => {
     setError('');
     setSuccess('');
 
-    // Kiểm tra mã xác nhận
+    // Check verification code
     if (formData.code.length !== 6) {
-      setError('Vui lòng nhập đầy đủ mã xác nhận 6 ký tự.');
+      setError('Please enter the complete 6-digit verification code.');
       return;
     }
 
-    // Kiểm tra mật khẩu
+    // Check password
     if (formData.password.length < 8) {
-      setError('Mật khẩu phải có ít nhất 8 ký tự.');
+      setError('Password must be at least 8 characters.');
       return;
     }
 
     if (formData.password !== confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp.');
+      setError('Password confirmation does not match.');
       return;
     }
 
@@ -114,19 +114,19 @@ const ResetPasswordPage: React.FC = () => {
 
     try {
       await authAPI.newPassword(formData);
-      setSuccess('Đặt lại mật khẩu thành công!');
+      setSuccess('Password reset successful!');
       
-      // Xóa email khỏi localStorage
+      // Remove email from localStorage
       localStorage.removeItem('resetEmail');
       
-      // Chuyển hướng đến trang đăng nhập sau 2 giây
+      // Redirect to login page after 2 seconds
       setTimeout(() => {
         navigate('/login', { 
-          state: { message: 'Mật khẩu đã được đặt lại thành công. Vui lòng đăng nhập.' }
+          state: { message: 'Password has been reset successfully. Please log in.' }
         });
       }, 2000);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+      setError(err.response?.data?.message || 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -141,19 +141,19 @@ const ResetPasswordPage: React.FC = () => {
             className="flex items-center text-blue-600 hover:text-blue-500 transition-colors"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
-            Quay lại
+            Back
           </Link>
         </div>
         
         <h2 className="text-center text-3xl font-bold text-gray-900">
-          Đặt lại mật khẩu
+          Reset Password
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Nhập mã xác nhận 6 ký tự và mật khẩu mới
+          Enter the 6-digit verification code and new password
         </p>
         {formData.email && (
           <p className="mt-1 text-center text-xs text-gray-500">
-            Mã đã được gửi đến: {formData.email}
+            Code sent to: {formData.email}
           </p>
         )}
       </div>
@@ -173,10 +173,10 @@ const ResetPasswordPage: React.FC = () => {
           )}
           
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Mã xác nhận 6 ký tự */}
+            {/* 6-digit verification code */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mã xác nhận
+                Verification Code
               </label>
               <div className="flex space-x-2 justify-center">
                 {verificationCode.map((digit, index) => (
@@ -204,19 +204,19 @@ const ResetPasswordPage: React.FC = () => {
                 >
                   <RefreshCw className={`h-4 w-4 mr-1 ${resendLoading ? 'animate-spin' : ''}`} />
                   {countdown > 0 
-                    ? `Gửi lại sau ${countdown}s` 
+                    ? `Resend in ${countdown}s` 
                     : resendLoading 
-                      ? 'Đang gửi...' 
-                      : 'Gửi lại mã'
+                      ? 'Sending...' 
+                      : 'Resend Code'
                   }
                 </button>
               </div>
             </div>
 
-            {/* Mật khẩu mới */}
+            {/* New password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Mật khẩu mới
+                New Password
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -231,15 +231,15 @@ const ResetPasswordPage: React.FC = () => {
                   value={formData.password}
                   onChange={handlePasswordChange}
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Nhập mật khẩu mới"
+                  placeholder="Enter new password"
                 />
               </div>
             </div>
 
-            {/* Xác nhận mật khẩu */}
+            {/* Confirm password */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Xác nhận mật khẩu
+                Confirm Password
               </label>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -254,7 +254,7 @@ const ResetPasswordPage: React.FC = () => {
                   value={confirmPassword}
                   onChange={handlePasswordChange}
                   className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Xác nhận mật khẩu mới"
+                  placeholder="Confirm new password"
                 />
               </div>
             </div>
@@ -265,16 +265,16 @@ const ResetPasswordPage: React.FC = () => {
                 disabled={loading}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
+                {loading ? 'Processing...' : 'Reset Password'}
               </button>
             </div>
           </form>
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-600">
-              Nhớ mật khẩu?{' '}
+              Remember your password?{' '}
               <Link to="/login" className="font-medium text-blue-600 hover:text-blue-500">
-                Đăng nhập ngay
+                Sign in now
               </Link>
             </p>
           </div>

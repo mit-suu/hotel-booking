@@ -81,7 +81,9 @@ public class Booking {
     @Column(name = "refund_amount", precision = 10, scale = 2)
     BigDecimal refundAmount;
 
-    // Audit fields
+    @Column(name = "commission_rate_at_booking", precision = 5, scale = 2)
+    BigDecimal commissionRateAtBooking;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     LocalDateTime createdAt;
@@ -95,4 +97,7 @@ public class Booking {
 
     @Column(name = "updated_by")
     UUID updatedBy;
-}
+
+    @Column(name = "qr_code_used")
+    boolean qrCodeUsed = false;
+} 

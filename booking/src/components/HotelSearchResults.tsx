@@ -74,13 +74,13 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
   const getAmenityIcon = (amenity: string) => {
     switch (amenity.toLowerCase()) {
       case 'wifi':
-      case 'wifi miễn phí':
+      case 'free wifi':
         return <Wifi size={16} />;
-      case 'bãi đỗ xe':
+      case 'parking':
         return <Car size={16} />;
-      case 'nhà hàng':
+      case 'restaurant':
         return <Coffee size={16} />;
-      case 'hồ bơi':
+      case 'swimming pool':
         return <Waves size={16} />;
       default:
         return null;
@@ -101,7 +101,7 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
             <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
               <div className="flex items-center">
                 <Users size={14} className="mr-1" />
-                {roomType.capacity} khách
+                {roomType.capacity} guests
               </div>
               <div className="flex items-center">
                 <BedDouble size={14} className="mr-1" />
@@ -111,7 +111,7 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
             </div>
 
             <div className="mt-2">
-              <div className="text-xs text-gray-600 mb-1">Tiện ích phòng:</div>
+              <div className="text-xs text-gray-600 mb-1">Room amenities:</div>
               <div className="flex flex-wrap gap-1">
                 {roomType.amenities.map((amenity, index) => (
                   <span key={index} className="inline-flex items-center px-2 py-1 bg-green-50 text-green-700 text-xs rounded border border-green-200">
@@ -128,11 +128,11 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
               {formatCurrency(pricePerNight)}
             </div>
             <div className="text-sm text-gray-500">
-              /đêm
+              /night
             </div>
             {nights > 1 && (
               <div className="text-sm text-gray-600 mt-1">
-                Tổng {nights} đêm: <span className="font-semibold">{formatCurrency(totalPrice)}</span>
+                Total {nights} nights: <span className="font-semibold">{formatCurrency(totalPrice)}</span>
               </div>
             )}
             
@@ -140,18 +140,18 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
               {isAvailable ? (
                 <div>
                   <div className="text-sm text-green-600 mb-2">
-                    Còn {availableRooms} phòng
+                    {availableRooms} rooms available
                   </div>
                   <button
                     onClick={() => handleBookRoom(hotelId, roomType.id)}
                     className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                   >
-                    Đặt ngay
+                    Book now
                   </button>
                 </div>
               ) : (
                 <div className="text-sm text-red-600">
-                  Hết phòng
+                  No rooms available
                 </div>
               )}
             </div>
@@ -187,10 +187,10 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
           <BedDouble size={48} className="mx-auto" />
         </div>
         <h3 className="text-xl font-medium text-gray-900 mb-2">
-          Không tìm thấy khách sạn phù hợp
+          No hotels found
         </h3>
         <p className="text-gray-600">
-          Thử thay đổi ngày hoặc điều kiện tìm kiếm của bạn
+          Try changing the date or search criteria
         </p>
       </div>
     );
@@ -207,16 +207,16 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
                 <div className="flex items-center">
                   <Calendar size={16} className="mr-1 text-blue-600" />
                   <span>{formatDate(checkIn)} - {formatDate(checkOut)}</span>
-                  <span className="ml-1 text-gray-600">({calculateNights()} đêm)</span>
+                  <span className="ml-1 text-gray-600">({calculateNights()} nights)</span>
                 </div>
               )}
               <div className="flex items-center">
                 <Users size={16} className="mr-1 text-blue-600" />
-                <span>{guests} khách, {rooms} phòng</span>
+                <span>{guests} guests, {rooms} rooms</span>
               </div>
             </div>
             <div className="text-blue-700 font-medium">
-              {results.length} khách sạn tìm thấy
+              {results.length} hotels found
             </div>
           </div>
         </div>
@@ -256,7 +256,7 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
                         <div className="flex items-center">
                           <Star size={16} className="text-yellow-400 fill-current mr-1" />
                           <span className="font-medium">{hotel.rating}</span>
-                          <span className="text-gray-500 ml-1">({hotel.reviewCount} đánh giá)</span>
+                          <span className="text-gray-500 ml-1">({hotel.reviewCount} reviews)</span>
                         </div>
                         <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
                           {hotel.type}
@@ -266,17 +266,17 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
 
                     <div className="text-right">
                       <div className="text-sm text-gray-500 mb-1">
-                        Từ
+                        From
                       </div>
                       <div className="text-2xl font-bold text-blue-600">
                         {formatCurrency(minPrice)}
                       </div>
                       <div className="text-sm text-gray-500">
-                        /đêm
+                        /night
                       </div>
                       {maxPrice > minPrice && (
                         <div className="text-xs text-gray-400 mt-1">
-                          Đến {formatCurrency(maxPrice)}
+                          To {formatCurrency(maxPrice)}
                         </div>
                       )}
                     </div>
@@ -288,7 +288,7 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
 
                   {/* Hotel Amenities */}
                   <div className="mb-4">
-                    <div className="text-xs text-gray-600 mb-1">Tiện ích khách sạn:</div>
+                    <div className="text-xs text-gray-600 mb-1">Hotel amenities:</div>
                     <div className="flex flex-wrap gap-2">
                       {hotel.amenities.map((amenity, index) => (
                         <span key={index} className="inline-flex items-center px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded border border-blue-200">
@@ -306,7 +306,7 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
                         onClick={() => handleViewHotel(hotel.id)}
                         className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                       >
-                        Xem chi tiết
+                        View details
                       </button>
                       
                       {availableRoomTypes.length > 1 && (
@@ -316,11 +316,11 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
                         >
                           {isExpanded ? (
                             <>
-                              Ẩn phòng <ChevronUp size={16} className="ml-1" />
+                              Hide rooms <ChevronUp size={16} className="ml-1" />
                             </>
                           ) : (
                             <>
-                              Xem {availableRoomTypes.length} loại phòng <ChevronDown size={16} className="ml-1" />
+                              View {availableRoomTypes.length} room types <ChevronDown size={16} className="ml-1" />
                             </>
                           )}
                         </button>
@@ -332,7 +332,7 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
                         onClick={() => handleBookRoom(hotel.id, availableRoomTypes[0].roomType.id)}
                         className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
                       >
-                        Đặt ngay
+                        Book now
                       </button>
                     )}
                   </div>
@@ -343,7 +343,7 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
               {availableRoomTypes.length > 0 && (
                 <div className="mt-6 border-t pt-6">
                   <h4 className="font-semibold text-gray-900 mb-4">
-                    Loại phòng có sẵn
+                    Available room types
                   </h4>
                   
                   <div className="space-y-4">
@@ -363,12 +363,12 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
                 <div className="mt-6 border-t pt-6">
                   <div className="text-center py-4 text-gray-500">
                     <BedDouble size={24} className="mx-auto mb-2 text-gray-400" />
-                    <p>Không có phòng trống cho ngày đã chọn</p>
+                    <p>No rooms available for the selected date</p>
                     <button
                       onClick={() => handleViewHotel(hotel.id)}
                       className="mt-2 text-blue-600 hover:text-blue-700 text-sm"
                     >
-                      Xem thông tin khách sạn
+                      View hotel details
                     </button>
                   </div>
                 </div>

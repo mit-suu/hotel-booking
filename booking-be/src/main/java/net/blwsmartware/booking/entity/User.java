@@ -9,10 +9,10 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Date;
-import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -46,23 +46,62 @@ public class User {
 
     LocalDate dob;
 
+    // OAuth2 related fields
+    @Column(name = "google_id")
+    String googleId;
+
+    @Column(name = "avatar_url")
+    String avatarUrl;
+
+    @Column(name = "provider")
+    @Builder.Default
+    String provider = "local"; // local, google
+
     @Builder.Default
     boolean isActive=true;
 
     @Builder.Default
     boolean emailVerified=false;
 
+    @Builder.Default
+    boolean hostRequested=false;
+
+    @Column(name = "wallet_balance", precision = 12, scale = 2)
+    @Builder.Default
+    BigDecimal walletBalance = BigDecimal.ZERO;
+
     String code;
 
     Date codeExpr;
+
     @CreationTimestamp
     Instant createAt;
 
     @UpdateTimestamp
     Instant updateAt;
 
-    @ManyToMany
-    Set<Role> roles;
+    @ManyToOne
+    @JoinColumn(name = "role_id")
+    Role role;
 
+    public boolean hasPermission(String roleName) {
+        if (this.role == null) return false;
+        return this.role.getName().equals(roleName);
+    }
 
+    public boolean isAdmin() {
+        return hasPermission("ADMIN");
+    }
+
+    public boolean isHost() {
+        return hasPermission("HOST") || hasPermission("ADMIN");
+    }
+
+    public boolean isUser() {
+        return hasPermission("USER") || hasPermission("HOST") || hasPermission("ADMIN");
+    }
+
+    public boolean hasRole(String roleName) {
+        return hasPermission(roleName);
+    }
 }

@@ -8,4 +8,4 @@ public enum BookingStatus {
     CANCELLED_BY_HOST,   // Hủy bởi host (không hoàn tiền)
     COMPLETED,           // Đã hoàn thành (check-out)
     NO_SHOW              // Khách không đến
-}
+} 

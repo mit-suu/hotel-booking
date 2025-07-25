@@ -16,14 +16,17 @@ public class ReviewResponse {
     Integer rating;
     String comment;
     Integer helpfulCount;
-
+    
+    // Hotel information
     UUID hotelId;
     String hotelName;
-
+    
+    // User information
     UUID userId;
     String userName;
     String userEmail;
-
+    
+    // Audit fields
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
-}
+} 

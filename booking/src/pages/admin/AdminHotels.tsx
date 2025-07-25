@@ -12,8 +12,9 @@ interface ApiResponse {
     content: HotelResponse[];
     totalElements: number;
     totalPages: number;
-    size: number;
-    number: number;
+    pageSize: number;
+    pageNumber: number;
+    isLastPage: boolean;
   };
 }
 
@@ -37,8 +38,32 @@ const AdminHotels: React.FC = () => {
   const [isSelectAll, setIsSelectAll] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [inactiveHotels, setInactiveHotels] = useState<HotelResponse[]>([]);
+  const [inactiveLoading, setInactiveLoading] = useState(true);
 
   const itemsPerPage = 10;
+
+  // Fetch inactive hotels for approval
+  const fetchInactiveHotels = async () => {
+    try {
+      setInactiveLoading(true);
+      const response = await hotelAPI.getAdminHotelsWithFilters({
+        pageNumber: 0,
+        pageSize: 50,
+        sortBy: 'createdAt',
+        isActive: false
+      });
+      
+      const data = response.data as ApiResponse;
+      if (data.success) {
+        setInactiveHotels(data.result.content);
+      }
+    } catch (error: any) {
+      console.error('Error fetching inactive hotels:', error);
+    } finally {
+      setInactiveLoading(false);
+    }
+  };
 
   // Fetch hotels from API
   const fetchHotels = async (page = 0, size = itemsPerPage, sortBy = 'createdAt') => {
@@ -55,33 +80,41 @@ const AdminHotels: React.FC = () => {
       if (cityFilter) filterParams.city = cityFilter;
       if (countryFilter) filterParams.country = countryFilter;
       if (starRatingFilter !== undefined) filterParams.starRating = starRatingFilter;
-      if (statusFilter !== undefined) filterParams.active = statusFilter;
-      if (featuredFilter !== undefined) filterParams.featured = featuredFilter;
+      if (statusFilter !== undefined) filterParams.isActive = statusFilter;
+      if (featuredFilter !== undefined) filterParams.isFeatured = featuredFilter;
       if (minPrice !== undefined) filterParams.minPrice = minPrice;
       if (maxPrice !== undefined) filterParams.maxPrice = maxPrice;
 
+      console.log('🔍 Filter params:', filterParams);
+
       let response;
       if (searchTerm) {
+        console.log('🔍 Using search API with term:', searchTerm);
         response = await hotelAPI.searchHotels(searchTerm, page, size, sortBy);
       } else if (Object.keys(filterParams).length > 3) { // More than just pagination params
-        response = await hotelAPI.getAllHotelsWithFilters(filterParams);
+        console.log('🔍 Using admin filter API');
+        response = await hotelAPI.getAdminHotelsWithFilters(filterParams);
       } else {
-        response = await hotelAPI.getAllHotels(page, size, sortBy);
+        console.log('🔍 Using admin get all API');
+        response = await hotelAPI.getAdminHotels(page, size, sortBy);
       }
 
+      console.log('📡 API Response:', response.data);
       const data = response.data as ApiResponse;
       
       if (data.success) {
+        console.log('✅ Hotels loaded:', data.result.content.length);
         setHotels(data.result.content);
         setTotalPages(data.result.totalPages);
         setTotalElements(data.result.totalElements);
-        setCurrentPage(data.result.number);
+        setCurrentPage(data.result.pageNumber);
       } else {
-        showToast('error', 'Lỗi', data.message || 'Không thể tải danh sách khách sạn');
+        console.error('❌ API Error:', data.message);
+        showToast('error', 'Error', data.message || 'Unable to load hotel list');
       }
     } catch (error: any) {
-      console.error('Error fetching hotels:', error);
-      showToast('error', 'Lỗi', 'Không thể kết nối đến server');
+      console.error('💥 Error fetching hotels:', error);
+              showToast('error', 'Error', 'Unable to connect to server');
     } finally {
       setLoading(false);
     }
@@ -89,10 +122,12 @@ const AdminHotels: React.FC = () => {
 
   useEffect(() => {
     fetchHotels();
+    fetchInactiveHotels();
   }, [searchTerm, cityFilter, countryFilter, starRatingFilter, statusFilter, featuredFilter, minPrice, maxPrice]);
 
   const handleRefresh = () => {
     fetchHotels(currentPage);
+    fetchInactiveHotels();
   };
 
   const handlePageChange = (page: number) => {
@@ -132,23 +167,25 @@ const AdminHotels: React.FC = () => {
   };
 
   const handleEditHotel = (hotelId: string) => {
+    console.log('🔧 Navigating to edit hotel:', hotelId);
     navigate(`/admin/hotels/edit/${hotelId}`);
   };
 
   const handleViewHotel = (hotelId: string) => {
+    console.log('👁️ Navigating to view hotel:', hotelId);
     navigate(`/admin/hotels/${hotelId}`);
   };
 
   const handleDeleteHotel = async (hotelId: string) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa khách sạn này?')) {
+          if (window.confirm('Are you sure you want to delete this hotel?')) {
       try {
         setActionLoading(hotelId);
-        await hotelAPI.deleteHotel(hotelId);
-        showToast('success', 'Thành công', 'Đã xóa khách sạn');
+        await hotelAPI.deleteHotelByAdmin(hotelId);
+                  showToast('success', 'Success', 'Hotel deleted successfully');
         fetchHotels(currentPage);
       } catch (error: any) {
         console.error('Error deleting hotel:', error);
-        showToast('error', 'Lỗi', 'Không thể xóa khách sạn');
+                  showToast('error', 'Error', 'Unable to delete hotel');
       } finally {
         setActionLoading(null);
       }
@@ -158,17 +195,17 @@ const AdminHotels: React.FC = () => {
   const handleDeleteSelected = async () => {
     if (selectedHotels.length === 0) return;
     
-    if (window.confirm(`Bạn có chắc chắn muốn xóa ${selectedHotels.length} khách sạn đã chọn?`)) {
+          if (window.confirm(`Are you sure you want to delete ${selectedHotels.length} selected hotels?`)) {
       try {
         setActionLoading('bulk-delete');
-        await Promise.all(selectedHotels.map(id => hotelAPI.deleteHotel(id)));
-        showToast('success', 'Thành công', `Đã xóa ${selectedHotels.length} khách sạn`);
+        await Promise.all(selectedHotels.map(id => hotelAPI.deleteHotelByAdmin(id)));
+                  showToast('success', 'Success', `${selectedHotels.length} hotels deleted successfully`);
         setSelectedHotels([]);
         setIsSelectAll(false);
         fetchHotels(currentPage);
       } catch (error: any) {
         console.error('Error deleting hotels:', error);
-        showToast('error', 'Lỗi', 'Không thể xóa một số khách sạn');
+                  showToast('error', 'Error', 'Unable to delete some hotels');
       } finally {
         setActionLoading(null);
       }
@@ -178,12 +215,23 @@ const AdminHotels: React.FC = () => {
   const handleToggleStatus = async (hotelId: string) => {
     try {
       setActionLoading(hotelId);
-      await hotelAPI.toggleHotelStatus(hotelId);
-      showToast('success', 'Thành công', 'Đã cập nhật trạng thái khách sạn');
+      console.log('🔄 Toggling status for hotel:', hotelId);
+      
+      const response = await hotelAPI.toggleHotelStatus(hotelId);
+      console.log('✅ Toggle status response:', response.data);
+      
+      showToast('success', 'Success', 'Hotel status updated successfully');
+      
+      // Reset any status filter to ensure updated hotel appears
+      if (statusFilter !== undefined) {
+        console.log('🔄 Clearing status filter to show updated hotel');
+        setStatusFilter(undefined);
+      }
+      
       fetchHotels(currentPage);
     } catch (error: any) {
-      console.error('Error toggling hotel status:', error);
-      showToast('error', 'Lỗi', 'Không thể cập nhật trạng thái khách sạn');
+      console.error('💥 Error toggling hotel status:', error);
+              showToast('error', 'Error', 'Unable to update hotel status');
     } finally {
       setActionLoading(null);
     }
@@ -192,12 +240,23 @@ const AdminHotels: React.FC = () => {
   const handleToggleFeatured = async (hotelId: string) => {
     try {
       setActionLoading(hotelId);
-      await hotelAPI.toggleFeaturedStatus(hotelId);
-      showToast('success', 'Thành công', 'Đã cập nhật trạng thái nổi bật');
+      console.log('🔄 Toggling featured for hotel:', hotelId);
+      
+      const response = await hotelAPI.toggleHotelFeatured(hotelId);
+      console.log('✅ Toggle featured response:', response.data);
+      
+      showToast('success', 'Success', 'Featured status updated successfully');
+      
+      // Reset any featured filter to ensure updated hotel appears
+      if (featuredFilter !== undefined) {
+        console.log('🔄 Clearing featured filter to show updated hotel');
+        setFeaturedFilter(undefined);
+      }
+      
       fetchHotels(currentPage);
     } catch (error: any) {
-      console.error('Error toggling featured status:', error);
-      showToast('error', 'Lỗi', 'Không thể cập nhật trạng thái nổi bật');
+      console.error('💥 Error toggling featured status:', error);
+              showToast('error', 'Error', 'Unable to update featured status');
     } finally {
       setActionLoading(null);
     }
@@ -208,14 +267,14 @@ const AdminHotels: React.FC = () => {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
           <Check size={12} className="mr-1" />
-          Hoạt động
+          Active
         </span>
       );
     } else {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
           <X size={12} className="mr-1" />
-          Không hoạt động
+          Inactive
         </span>
       );
     }
@@ -225,8 +284,7 @@ const AdminHotels: React.FC = () => {
     if (featured) {
       return (
         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-          <Award size={12} className="mr-1" />
-          Nổi bật
+          <Award size={12} className="mr-1" /> 
         </span>
       );
     }
@@ -244,30 +302,61 @@ const AdminHotels: React.FC = () => {
     setSearchTerm('');
   };
 
+  const handleApproveHotel = async (hotelId: string) => {
+    try {
+      setActionLoading(hotelId);
+      await hotelAPI.toggleHotelStatus(hotelId);
+      showToast('success', 'Success', 'Hotel approved and activated successfully');
+      fetchInactiveHotels();
+      fetchHotels(currentPage);
+    } catch (error: any) {
+      console.error('Error approving hotel:', error);
+      showToast('error', 'Error', 'Unable to approve hotel');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeleteInactiveHotel = async (hotelId: string) => {
+    if (window.confirm('Are you sure you want to delete this pending hotel?')) {
+      try {
+        setActionLoading(hotelId);
+        await hotelAPI.deleteHotelByAdmin(hotelId);
+        showToast('success', 'Success', 'Hotel deleted successfully');
+        fetchInactiveHotels();
+      } catch (error: any) {
+        console.error('Error deleting hotel:', error);
+        showToast('error', 'Error', 'Unable to delete hotel');
+      } finally {
+        setActionLoading(null);
+      }
+    }
+  };
+
   return (
     <div className="w-full">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Quản lý khách sạn</h1>
-          <p className="text-gray-600 mt-1">Tổng cộng {totalElements} khách sạn</p>
+          <h1 className="text-xl sm:text-2xl font-bold">Hotel Management</h1>
+          <p className="text-gray-600 mt-1">Total {totalElements} hotels</p>
         </div>
-        <div className="flex space-x-3">
+        {/* <div className="flex space-x-3">
           <button
             onClick={handleRefresh}
             disabled={loading}
             className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center disabled:opacity-50"
           >
             <RefreshCw size={20} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Làm mới
+                          Refresh
           </button> 
           <button
             onClick={handleAddHotel}
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
           >
             <Plus size={20} className="mr-2" />
-            Thêm khách sạn
+                          Add Hotel
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Search and Filters */}
@@ -278,7 +367,7 @@ const AdminHotels: React.FC = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Tìm kiếm theo tên khách sạn, địa chỉ..."
+                placeholder="Search by hotel name, address..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -291,7 +380,7 @@ const AdminHotels: React.FC = () => {
             className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center"
           >
             <Filter size={20} className="mr-2" />
-            Bộ lọc
+                          Filters
           </button>
         </div>
 
@@ -322,49 +411,49 @@ const AdminHotels: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Xếp hạng sao</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Star Rating</label>
                 <select
                   value={starRatingFilter || ''}
                   onChange={(e) => setStarRatingFilter(e.target.value ? Number(e.target.value) : undefined)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Tất cả</option>
-                  <option value="1">1 sao</option>
-                  <option value="2">2 sao</option>
-                  <option value="3">3 sao</option>
-                  <option value="4">4 sao</option>
-                  <option value="5">5 sao</option>
+                  <option value="">All</option>
+                  <option value="1">1 star</option>
+                  <option value="2">2 stars</option>
+                  <option value="3">3 stars</option>
+                  <option value="4">4 stars</option>
+                  <option value="5">5 stars</option>
                 </select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select
                   value={statusFilter === undefined ? '' : statusFilter.toString()}
                   onChange={(e) => setStatusFilter(e.target.value === '' ? undefined : e.target.value === 'true')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Tất cả</option>
-                  <option value="true">Hoạt động</option>
-                  <option value="false">Không hoạt động</option>
+                  <option value="">All</option>
+                  <option value="true">Active</option>
+                  <option value="false">Inactive</option>
                 </select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nổi bật</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Featured</label>
                 <select
                   value={featuredFilter === undefined ? '' : featuredFilter.toString()}
                   onChange={(e) => setFeaturedFilter(e.target.value === '' ? undefined : e.target.value === 'true')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Tất cả</option>
-                  <option value="true">Nổi bật</option>
-                  <option value="false">Không nổi bật</option>
+                  <option value="">All</option>
+                  <option value="true">Featured</option>
+                  <option value="false">Not Featured</option>
                 </select>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Giá tối thiểu</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Min Price</label>
                 <input
                   type="number"
                   placeholder="VND"
@@ -375,7 +464,7 @@ const AdminHotels: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Giá tối đa</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Max Price</label>
                 <input
                   type="number"
                   placeholder="VND"
@@ -390,7 +479,7 @@ const AdminHotels: React.FC = () => {
                   onClick={clearFilters}
                   className="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
                 >
-                  Xóa bộ lọc
+                  Clear Filters
                 </button>
               </div>
             </div>
@@ -398,12 +487,136 @@ const AdminHotels: React.FC = () => {
         )}
       </div>
 
+      {/* Pending Hotels Approval Table */}
+      {inactiveHotels.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-orange-200 mb-6 overflow-hidden">
+          <div className="bg-orange-50 px-6 py-4 border-b border-orange-200">
+            <h3 className="text-lg font-semibold text-orange-800 flex items-center">
+              <HotelIcon size={20} className="mr-2" />
+              Pending Hotel Approvals ({inactiveHotels.length})
+            </h3>
+            <p className="text-sm text-orange-600 mt-1">Hotels waiting for approval to be activated</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Hotel
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Location
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Owner
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Created Date
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {inactiveLoading ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center">
+                      <div className="flex justify-center items-center">
+                        <RefreshCw className="animate-spin mr-2" size={20} />
+                        Loading pending hotels...
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  inactiveHotels.map((hotel) => (
+                    <tr key={hotel.id} className="hover:bg-orange-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10">
+                            <img
+                              className="h-10 w-10 rounded-lg object-cover"
+                              src={hotel.imageUrl || 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg'}
+                              alt={hotel.name}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg';
+                              }}
+                            />
+                          </div>
+                          <div className="ml-3">
+                            <div className="text-sm font-medium text-gray-900">{hotel.name}</div>
+                            <div className="text-sm text-gray-500 flex items-center">
+                              {hotel.starRating && (
+                                <div className="flex items-center">
+                                  {[...Array(hotel.starRating)].map((_, i) => (
+                                    <Star key={i} size={12} className="text-yellow-400 fill-current" />
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900 flex items-center">
+                          <MapPin size={14} className="mr-1 text-gray-400" />
+                          {hotel.city && hotel.country ? `${hotel.city}, ${hotel.country}` : hotel.address}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{hotel.ownerName || 'N/A'}</div>
+                        <div className="text-sm text-gray-500">{hotel.ownerEmail || ''}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900 flex items-center">
+                          <Calendar size={14} className="mr-1 text-gray-400" />
+                          {hotel.createdAt ? formatDate(hotel.createdAt) : 'N/A'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-2">
+                          <button
+                            onClick={() => handleViewHotel(hotel.id)}
+                            className="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition-colors flex items-center"
+                            title="View Details"
+                          >
+                            <Eye size={14} className="mr-1" />
+                            View
+                          </button>
+                          <button
+                            onClick={() => handleApproveHotel(hotel.id)}
+                            disabled={actionLoading === hotel.id}
+                            className="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 transition-colors flex items-center disabled:opacity-50"
+                          >
+                            <Check size={14} className="mr-1" />
+                            {actionLoading === hotel.id ? 'Approving...' : 'Approve'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteInactiveHotel(hotel.id)}
+                            disabled={actionLoading === hotel.id}
+                            className="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700 transition-colors flex items-center disabled:opacity-50"
+                          >
+                            <Trash size={14} className="mr-1" />
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Bulk Actions */}
       {selectedHotels.length > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
           <div className="flex items-center justify-between">
             <span className="text-blue-800 font-medium">
-              Đã chọn {selectedHotels.length} khách sạn
+              Selected {selectedHotels.length} hotels
             </span>
             <div className="flex space-x-2">
               <button
@@ -412,7 +625,7 @@ const AdminHotels: React.FC = () => {
                 className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center disabled:opacity-50"
               >
                 <Trash size={16} className="mr-2" />
-                {actionLoading === 'bulk-delete' ? 'Đang xóa...' : 'Xóa đã chọn'}
+                {actionLoading === 'bulk-delete' ? 'Deleting...' : 'Delete Selected'}
               </button>
             </div>
           </div>
@@ -421,6 +634,13 @@ const AdminHotels: React.FC = () => {
 
       {/* Hotels Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+            <HotelIcon size={20} className="mr-2" />
+            Active Hotels ({totalElements})
+          </h3>
+          <p className="text-sm text-gray-600 mt-1">Approved and active hotels in the system</p>
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -434,28 +654,25 @@ const AdminHotels: React.FC = () => {
                   />
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Khách sạn
+                  Hotel
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Địa điểm
+                  Location
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Chủ sở hữu
+                  Owner
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Giá/đêm
+                  Price/night
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Đánh giá
+                  Rating
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Trạng thái
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ngày tạo
-                </th>
+                  Status
+                </th> 
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Thao tác
+                  Actions
                 </th>
               </tr>
             </thead>
@@ -465,14 +682,14 @@ const AdminHotels: React.FC = () => {
                   <td colSpan={9} className="px-6 py-12 text-center">
                     <div className="flex justify-center items-center">
                       <RefreshCw className="animate-spin mr-2" size={20} />
-                      Đang tải...
+                      Loading...
                     </div>
                   </td>
                 </tr>
               ) : hotels.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
-                    Không tìm thấy khách sạn nào
+                    No hotels found
                   </td>
                 </tr>
               ) : (
@@ -489,17 +706,15 @@ const AdminHotels: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-12 w-12">
-                          {hotel.imageUrl ? (
-                            <img
-                              className="h-12 w-12 rounded-lg object-cover"
-                              src={hotel.imageUrl}
-                              alt={hotel.name}
-                            />
-                          ) : (
-                            <div className="h-12 w-12 rounded-lg bg-gray-200 flex items-center justify-center">
-                              <HotelIcon size={20} className="text-gray-400" />
-                            </div>
-                          )}
+                          <img
+                            className="h-12 w-12 rounded-lg object-cover"
+                            src={hotel.imageUrl || 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg'}
+                            alt={hotel.name}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg';
+                            }}
+                          />
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">{hotel.name}</div>
@@ -546,10 +761,7 @@ const AdminHotels: React.FC = () => {
                       <div className="space-y-1">
                         {getStatusBadge(hotel.active)}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(hotel.createdAt)}
-                    </td>
+                    </td> 
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
