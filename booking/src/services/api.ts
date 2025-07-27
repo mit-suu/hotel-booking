@@ -657,10 +657,6 @@ export const hostRoomTypeAPI = {
   deleteMyRoomType: (id: string) => api.delete(`/room-types/host/${id}`)
 };
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 8fe2b9802e31b8e5bb25e9eaf65024ecf8a38a71
 // Review Types
 export interface ReviewCreateRequest {
   rating: number;
