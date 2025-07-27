@@ -119,21 +119,96 @@ const HotelSelector: React.FC<HotelSelectorProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Selected Hotels */}
-      {selectedHotels.length > 0 && (
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Selected hotels ({selectedHotels.length})
-          </label>
-          <div className="space-y-2 max-h-40 overflow-y-auto">
-            {selectedHotels.map(hotel => (
-              <div key={hotel.id} className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3">
+ <div className="space-y-4">
+  {/* Selected Hotels */}
+  {selectedHotels.length > 0 && (
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        Selected hotels ({selectedHotels.length})
+      </label>
+      <div className="space-y-2 max-h-40 overflow-y-auto">
+        {selectedHotels.map(hotel => (
+          <div
+            key={hotel.id}
+            className="flex items-center justify-between bg-blue-50 dark:bg-blue-900 border border-blue-200 dark:border-blue-700 rounded-lg p-3"
+          >
+            <div className="flex items-center space-x-3">
+              <Building size={16} className="text-blue-600 dark:text-blue-400" />
+              <div>
+                <p className="font-medium text-gray-900 dark:text-gray-100">{hotel.name}</p>
+                <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+                  {hotel.starRating && (
+                    <div className="flex items-center">
+                      <Star size={12} className="text-yellow-400 fill-current mr-1" />
+                      <span>{hotel.starRating}</span>
+                    </div>
+                  )}
+                  {formatHotelInfo(hotel) && (
+                    <div className="flex items-center">
+                      <MapPin size={12} className="mr-1" />
+                      <span>{formatHotelInfo(hotel)}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => handleRemoveHotel(hotel.id)}
+              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 p-1"
+              title="Remove from list"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
+  {/* Search Input */}
+  <div className="relative">
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+      Search and add hotels
+    </label>
+    <div className="relative">
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <Search size={16} className="text-gray-400" />
+      </div>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={handleSearchChange}
+        onFocus={() => searchTerm.length >= 2 && setIsDropdownOpen(true)}
+        className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+          error
+            ? 'border-red-500 dark:border-red-400'
+            : 'border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100'
+        }`}
+        placeholder="Enter hotel name to search (minimum 2 characters)..."
+      />
+      {loading && (
+        <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+        </div>
+      )}
+    </div>
+
+    {/* Search Results Dropdown */}
+    {isDropdownOpen && (
+      <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        {searchResults.length > 0 ? (
+          <div className="py-1">
+            {searchResults.map(hotel => (
+              <button
+                key={hotel.id}
+                onClick={() => handleSelectHotel(hotel)}
+                className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none"
+              >
                 <div className="flex items-center space-x-3">
-                  <Building size={16} className="text-blue-600" />
-                  <div>
-                    <p className="font-medium text-gray-900">{hotel.name}</p>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <Building size={16} className="text-gray-400" />
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{hotel.name}</p>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                       {hotel.starRating && (
                         <div className="flex items-center">
                           <Star size={12} className="text-yellow-400 fill-current mr-1" />
@@ -149,115 +224,45 @@ const HotelSelector: React.FC<HotelSelectorProps> = ({
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleRemoveHotel(hotel.id)}
-                  className="text-red-600 hover:text-red-800 p-1"
-                  title="Remove from list"
-                >
-                  <X size={16} />
-                </button>
-              </div>
+              </button>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Search Input */}
-      <div className="relative">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Search and add hotels
-        </label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search size={16} className="text-gray-400" />
+        ) : searchTerm.length >= 2 && !loading ? (
+          <div className="px-4 py-6 text-center text-gray-500 dark:text-gray-400">
+            <Building size={24} className="mx-auto text-gray-400 mb-2" />
+            <p>No hotels found</p>
+            <p className="text-sm">Try searching with a different keyword</p>
           </div>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            onFocus={() => searchTerm.length >= 2 && setIsDropdownOpen(true)}
-            className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              error ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Enter hotel name to search (minimum 2 characters)..."
-          />
-          {loading && (
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-            </div>
-          )}
-        </div>
-
-        {/* Search Results Dropdown */}
-        {isDropdownOpen && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-            {searchResults.length > 0 ? (
-              <div className="py-1">
-                {searchResults.map(hotel => (
-                  <button
-                    key={hotel.id}
-                    onClick={() => handleSelectHotel(hotel)}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <Building size={16} className="text-gray-400" />
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-900">{hotel.name}</p>
-                        <div className="flex items-center space-x-2 text-sm text-gray-600">
-                          {hotel.starRating && (
-                            <div className="flex items-center">
-                              <Star size={12} className="text-yellow-400 fill-current mr-1" />
-                              <span>{hotel.starRating}</span>
-                            </div>
-                          )}
-                          {formatHotelInfo(hotel) && (
-                            <div className="flex items-center">
-                              <MapPin size={12} className="mr-1" />
-                              <span>{formatHotelInfo(hotel)}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            ) : searchTerm.length >= 2 && !loading ? (
-              <div className="px-4 py-6 text-center text-gray-500">
-                <Building size={24} className="mx-auto text-gray-400 mb-2" />
-                <p>No hotels found</p>
-                <p className="text-sm">Try searching with a different keyword</p>
-              </div>
-            ) : searchTerm.length < 2 ? (
-              <div className="px-4 py-4 text-center text-gray-500 text-sm">
-                Enter at least 2 characters to search
-              </div>
-            ) : null}
+        ) : searchTerm.length < 2 ? (
+          <div className="px-4 py-4 text-center text-gray-500 dark:text-gray-400 text-sm">
+            Enter at least 2 characters to search
           </div>
-        )}
+        ) : null}
       </div>
+    )}
+  </div>
 
-      {/* Click outside to close dropdown */}
-      {isDropdownOpen && (
-        <div 
-          className="fixed inset-0 z-40" 
-          onClick={() => setIsDropdownOpen(false)}
-        />
-      )}
+  {/* Click outside to close dropdown */}
+  {isDropdownOpen && (
+    <div
+      className="fixed inset-0 z-40"
+      onClick={() => setIsDropdownOpen(false)}
+    />
+  )}
 
-      {/* Error Message */}
-      {error && (
-        <p className="text-sm text-red-600 flex items-center mt-1">
-          <X size={16} className="mr-1" />
-          {error}
-        </p>
-      )}
+  {/* Error Message */}
+  {error && (
+    <p className="text-sm text-red-600 dark:text-red-400 flex items-center mt-1">
+      <X size={16} className="mr-1" />
+      {error}
+    </p>
+  )}
 
-      {/* Help Text */}
-      <p className="text-sm text-gray-500">
-          💡 Enter hotel name to search and select multiple hotels at once
-      </p>
-    </div>
+  {/* Help Text */}
+  <p className="text-sm text-gray-500 dark:text-gray-400">
+    💡 Enter hotel name to search and select multiple hotels at once
+  </p>
+</div>
   );
 };
 

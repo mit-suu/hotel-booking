@@ -92,72 +92,69 @@ const HotelSearchResults: React.FC<HotelSearchResultsProps> = ({
     const nights = calculateNights();
 
     return (
-      <div key={roomType.id} className="border rounded-lg p-4 bg-gray-50">
-        <div className="flex justify-between items-start mb-3">
-          <div className="flex-1">
-            <h4 className="font-semibold text-gray-900">{roomType.name}</h4>
-            <p className="text-sm text-gray-600 mt-1">{roomType.description}</p>
-            
-            <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-              <div className="flex items-center">
-                <Users size={14} className="mr-1" />
-                {roomType.capacity} guests
-              </div>
-              <div className="flex items-center">
-                <BedDouble size={14} className="mr-1" />
-                {roomType.bedType}
-              </div>
-              <span>{roomType.size}</span>
-            </div>
+      <div key={roomType.id} className="border rounded-lg p-4 bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+  <div className="flex justify-between items-start mb-3">
+    <div className="flex-1">
+      <h4 className="font-semibold text-gray-900 dark:text-gray-100">{roomType.name}</h4>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{roomType.description}</p>
 
-            <div className="mt-2">
-              <div className="text-xs text-gray-600 mb-1">Room amenities:</div>
-              <div className="flex flex-wrap gap-1">
-                {roomType.amenities.map((amenity, index) => (
-                  <span key={index} className="inline-flex items-center px-2 py-1 bg-green-50 text-green-700 text-xs rounded border border-green-200">
-                    {getAmenityIcon(amenity)}
-                    <span className="ml-1">{amenity}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
+      <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex items-center">
+          <Users size={14} className="mr-1" />
+          {roomType.capacity} guests
+        </div>
+        <div className="flex items-center">
+          <BedDouble size={14} className="mr-1" />
+          {roomType.bedType}
+        </div>
+        <span>{roomType.size}</span>
+      </div>
 
-          <div className="text-right ml-4">
-            <div className="text-lg font-bold text-blue-600">
-              {formatCurrency(pricePerNight)}
-            </div>
-            <div className="text-sm text-gray-500">
-              /night
-            </div>
-            {nights > 1 && (
-              <div className="text-sm text-gray-600 mt-1">
-                Total {nights} nights: <span className="font-semibold">{formatCurrency(totalPrice)}</span>
-              </div>
-            )}
-            
-            <div className="mt-2">
-              {isAvailable ? (
-                <div>
-                  <div className="text-sm text-green-600 mb-2">
-                    {availableRooms} rooms available
-                  </div>
-                  <button
-                    onClick={() => handleBookRoom(hotelId, roomType.id)}
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                  >
-                    Book now
-                  </button>
-                </div>
-              ) : (
-                <div className="text-sm text-red-600">
-                  No rooms available
-                </div>
-              )}
-            </div>
-          </div>
+      <div className="mt-2">
+        <div className="text-xs text-gray-600 dark:text-gray-400 mb-1">Room amenities:</div>
+        <div className="flex flex-wrap gap-1">
+          {roomType.amenities.map((amenity, index) => (
+            <span key={index} className="inline-flex items-center px-2 py-1 bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs rounded border border-green-200 dark:border-green-700">
+              {getAmenityIcon(amenity)}
+              <span className="ml-1">{amenity}</span>
+            </span>
+          ))}
         </div>
       </div>
+    </div>
+
+    <div className="text-right ml-4">
+      <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+        {formatCurrency(pricePerNight)}
+      </div>
+      <div className="text-sm text-gray-500 dark:text-gray-400">/night</div>
+      {nights > 1 && (
+        <div className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+          Total {nights} nights: <span className="font-semibold">{formatCurrency(totalPrice)}</span>
+        </div>
+      )}
+
+      <div className="mt-2">
+        {isAvailable ? (
+          <div>
+            <div className="text-sm text-green-600 dark:text-green-400 mb-2">
+              {availableRooms} rooms available
+            </div>
+            <button
+              onClick={() => handleBookRoom(hotelId, roomType.id)}
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              Book now
+            </button>
+          </div>
+        ) : (
+          <div className="text-sm text-red-600 dark:text-red-400">No rooms available</div>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
+
     );
   };
 
