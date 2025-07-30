@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { ArrowLeft, Clock, FileText, Image, MapPin, Phone, RefreshCw, Save, User } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, MapPin, Star, Clock, Globe, Phone, Mail, DollarSign, Image, FileText, Users, Bed, User, RefreshCw } from 'lucide-react';
-import { hotelAPI, HotelResponse, HotelUpdateRequest, userAPI } from '../../services/api';
-import { useToast } from '../../contexts/ToastContext';
 import ImageUploadSection from '../../components/ui/ImageUploadSection';
+import { useToast } from '../../contexts/ToastContext';
+import { hotelAPI, HotelResponse, userAPI } from '../../services/api';
 
 interface HostOption {
   id: string;
@@ -347,12 +347,12 @@ const AdminHotelEdit: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
             <Clock size={20} className="mr-2 text-orange-500" />
-            Thông tin đặt phòng
+            Booking Information
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Giờ nhận phòng
+                Check-in Time
               </label>
               <input
                 type="time"
@@ -364,7 +364,7 @@ const AdminHotelEdit: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Giờ trả phòng
+                Check-out Time
               </label>
               <input
                 type="time"
@@ -393,7 +393,7 @@ const AdminHotelEdit: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
             <Image size={20} className="mr-2 text-indigo-500" />
-            Thông tin bổ sung
+            Additional Information
           </h2>
           <div className="space-y-4">
             <div>

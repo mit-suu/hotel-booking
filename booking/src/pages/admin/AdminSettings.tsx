@@ -29,7 +29,7 @@ const AdminSettings: React.FC = () => {
 
   const handleSave = () => {
     // Save settings logic would go here
-    alert('Cài đặt đã được lưu thành công!');
+            alert('Settings saved successfully!');
   };
 
   return (

@@ -29,7 +29,7 @@ const VoucherInput: React.FC<VoucherInputProps> = ({
 
   const validateVoucher = async () => {
     if (!voucherCode.trim()) {
-      setError('Vui lòng nhập mã voucher');
+              setError('Please enter a voucher code');
       return;
     }
 

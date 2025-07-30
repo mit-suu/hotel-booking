@@ -179,7 +179,7 @@ const AdminUsers: React.FC = () => {
       } catch (error: any) {
         console.error('Error deleting user:', error);
                   const errorMessage = error.response?.data?.message || 'An error occurred while deleting user';
-        showToast('error', 'Lỗi', errorMessage);
+        showToast('error', 'Error', errorMessage);
       } finally {
         setActionLoading(null);
       }
@@ -242,7 +242,7 @@ const AdminUsers: React.FC = () => {
     } catch (error: any) {
       console.error('Error approving host request:', error);
               const errorMessage = error.response?.data?.message || 'An error occurred while approving the request';
-      showToast('error', 'Lỗi', errorMessage);
+              showToast('error', 'Error', errorMessage);
     } finally {
       setActionLoading(null);
     }

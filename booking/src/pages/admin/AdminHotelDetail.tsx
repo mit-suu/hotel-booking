@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Trash, Plus, Star, MapPin, Users, BedDouble, Calendar, DollarSign, Settings, Eye, Check, X, RefreshCw, ToggleLeft, ToggleRight, Award, Phone, Mail, Globe, Clock, Shield, Heart } from 'lucide-react';
-import { hotelAPI, HotelResponse, roomTypeAPI, RoomTypeResponse } from '../../services/api';
+import { ArrowLeft, Award, BedDouble, Calendar, Check, Clock, Edit, Eye, Globe, Heart, Mail, MapPin, Phone, Plus, RefreshCw, Shield, Star, ToggleLeft, ToggleRight, Trash, Users, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useToast } from '../../contexts/ToastContext';
+import { hotelAPI, HotelResponse, roomTypeAPI, RoomTypeResponse } from '../../services/api';
 
 interface ApiResponse {
   code: number;
@@ -503,7 +503,7 @@ const AdminHotelDetail: React.FC = () => {
 
                 <div className="flex items-center text-gray-600">
                   <Calendar size={16} className="mr-2" />
-                  <span className="text-sm">{roomType.totalRooms} phòng</span>
+                                      <span className="text-sm">{roomType.totalRooms} rooms</span>
                 </div>
 
                 <div className="flex items-center text-green-600">

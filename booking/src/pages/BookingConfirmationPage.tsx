@@ -81,8 +81,8 @@ const BookingConfirmationPage: React.FC = () => {
   const getPaymentMethodDisplay = (method?: string) => {
     switch (method) {
       case 'VNPAY': return 'VNPay';
-      case 'CASH_ON_CHECKIN': return 'Thanh toán khi đặt phòng';
-      default: return 'Thanh toán khi đặt phòng';
+      case 'CASH_ON_CHECKIN': return 'Cash on check-in';
+      default: return 'Cash on check-in';
     }
   };
 
@@ -316,16 +316,27 @@ const BookingConfirmationPage: React.FC = () => {
           </div>
         </div>
 
-        {booking?.qrCodeUsed ? (
+        {booking?.qrCode && booking.status === 'CONFIRMED' && (
           <div className="my-8 flex flex-col items-center">
-            <h3 className="font-semibold mb-2 text-red-600">This QR code has already been used for check-in!</h3>
-            <p className="text-xs text-gray-500 mt-2">Please contact the front desk if you have any issues.</p>
-          </div>
-        ) : booking?.qrCode && (
-          <div className="my-8 flex flex-col items-center">
-            <h3 className="font-semibold mb-2">Check-in QR Code</h3>
-            <QRCodeSVG value={booking.qrCode} size={200} />
-            <p className="text-xs text-gray-500 mt-2">Please present this code at check-in</p>
+            <h3 className={`font-semibold mb-2 ${booking?.qrCodeUsed ? 'text-red-600' : ''}`}>
+              {booking?.qrCodeUsed ? 'Check-in QR Code (Already Used)' : 'Check-in QR Code'}
+            </h3>
+            <div className={`relative ${booking?.qrCodeUsed ? 'opacity-50' : ''}`}>
+              <QRCodeSVG value={booking.qrCode} size={200} />
+              {booking?.qrCodeUsed && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                    Already Used
+                  </div>
+                </div>
+              )}
+            </div>
+            <p className={`text-xs text-gray-500 mt-2 ${booking?.qrCodeUsed ? 'text-red-500' : ''}`}>
+              {booking?.qrCodeUsed 
+                ? 'This QR code has already been used for check-in. Please contact the front desk if you have any issues.'
+                : 'Please present this code at check-in'
+              }
+            </p>
           </div>
         )}
 

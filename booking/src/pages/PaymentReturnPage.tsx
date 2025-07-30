@@ -60,7 +60,7 @@ const PaymentReturnPage: React.FC = () => {
     
     return {
       isSuccess,
-      message: VNPAY_RESPONSE_CODES[responseCode] || 'Lỗi không xác định',
+              message: VNPAY_RESPONSE_CODES[responseCode] || 'Unknown error',
       code: responseCode
     };
   };
@@ -88,10 +88,10 @@ const PaymentReturnPage: React.FC = () => {
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <h2 className="text-xl font-semibold text-gray-900 mt-4">
-              Đang xử lý kết quả thanh toán...
+              Processing payment result...
             </h2>
             <p className="text-gray-600 mt-2">
-              Vui lòng đợi trong giây lát
+              Please wait a moment
             </p>
           </div>
         </div>
@@ -106,7 +106,7 @@ const PaymentReturnPage: React.FC = () => {
           <div className="text-center">
             <XCircle className="h-16 w-16 text-red-500 mx-auto" />
             <h2 className="text-xl font-semibold text-gray-900 mt-4">
-              Có lỗi xảy ra
+              An error occurred
             </h2>
             <p className="text-gray-600 mt-2">{error}</p>
             <div className="mt-6 space-y-3">
@@ -114,7 +114,7 @@ const PaymentReturnPage: React.FC = () => {
                 onClick={handleGoHome}
                 className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Về trang chủ
+                Go to Home
               </button>
             </div>
           </div>
@@ -134,7 +134,7 @@ const PaymentReturnPage: React.FC = () => {
           className="flex items-center text-gray-600 hover:text-gray-900 mb-6"
         >
           <ArrowLeft className="h-5 w-5 mr-2" />
-          Quay lại
+          Back
         </button>
 
         {/* Payment Result Card */}
@@ -149,17 +149,17 @@ const PaymentReturnPage: React.FC = () => {
               <>
                 <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
                 <h1 className="text-2xl font-bold text-green-800 mt-4">
-                  Thanh toán thành công!
+                  Payment Successful!
                 </h1>
                 <p className="text-green-700 mt-2">
-                  Đặt phòng của bạn đã được xác nhận
+                  Your booking has been confirmed
                 </p>
               </>
             ) : (
               <>
                 <XCircle className="h-16 w-16 text-red-500 mx-auto" />
                 <h1 className="text-2xl font-bold text-red-800 mt-4">
-                  Thanh toán thất bại
+                  Payment Failed
                 </h1>
                 <p className="text-red-700 mt-2">
                   {paymentStatus?.message}
@@ -171,20 +171,20 @@ const PaymentReturnPage: React.FC = () => {
           {/* Payment Details */}
           <div className="p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Chi tiết giao dịch
+              Transaction Details
             </h2>
             
             <div className="space-y-3 text-sm">
               {paymentResult?.vnp_OrderInfo && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Nội dung:</span>
+                  <span className="text-gray-600">Description:</span>
                   <span className="font-medium">{paymentResult.vnp_OrderInfo}</span>
                 </div>
               )}
               
               {paymentResult?.vnp_Amount && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Số tiền:</span>
+                  <span className="text-gray-600">Amount:</span>
                   <span className="font-medium text-lg">
                     {formatCurrency(paymentResult.vnp_Amount)}
                   </span>
@@ -231,7 +231,7 @@ const PaymentReturnPage: React.FC = () => {
               )}
               
               <div className="flex justify-between pt-2 border-t">
-                <span className="text-gray-600">Trạng thái:</span>
+                <span className="text-gray-600">Status:</span>
                 <span className={`font-medium ${
                   paymentStatus?.isSuccess ? 'text-green-600' : 'text-red-600'
                 }`}>
@@ -251,14 +251,14 @@ const PaymentReturnPage: React.FC = () => {
                     className="w-full flex items-center justify-center bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <Receipt className="h-5 w-5 mr-2" />
-                    Xem đặt phòng của tôi
+                    View My Booking
                   </button>
                   <button
                     onClick={handleGoHome}
                     className="w-full flex items-center justify-center bg-gray-200 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors"
                   >
                     <Home className="h-5 w-5 mr-2" />
-                    Về trang chủ
+                    Go to Home
                   </button>
                 </>
               ) : (
@@ -271,7 +271,7 @@ const PaymentReturnPage: React.FC = () => {
                         className="w-full flex items-center justify-center bg-orange-600 text-white py-3 px-4 rounded-lg hover:bg-orange-700 transition-colors"
                       >
                         <RefreshCcw className="h-5 w-5 mr-2" />
-                        Thử lại thanh toán
+                        Retry Payment
                       </button>
                       <button
                         onClick={handleGoHome}
@@ -288,14 +288,14 @@ const PaymentReturnPage: React.FC = () => {
                         onClick={handleGoToBookings}
                         className="w-full flex items-center justify-center bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
                       >
-                        Thử lại đặt phòng
+                        Retry Booking
                       </button>
                       <button
                         onClick={handleGoHome}
                         className="w-full flex items-center justify-center bg-gray-200 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors"
                       >
                         <Home className="h-5 w-5 mr-2" />
-                        Về trang chủ
+                        Go to Home
                       </button>
                     </>
                   )}
@@ -310,10 +310,10 @@ const PaymentReturnPage: React.FC = () => {
               <div className="flex items-start">
                 <AlertCircle className="h-5 w-5 text-blue-600 mr-3 mt-0.5" />
                 <div className="text-sm text-blue-800">
-                  <p className="font-medium">Thông báo quan trọng:</p>
+                  <p className="font-medium">Important Notice:</p>
                   <p className="mt-1">
-                    Email xác nhận đặt phòng đã được gửi đến địa chỉ email của bạn. 
-                    Vui lòng kiểm tra hộp thư để biết thêm chi tiết về đặt phòng.
+                    A booking confirmation email has been sent to your email address. 
+                    Please check your inbox for more details about your booking.
                   </p>
                 </div>
               </div>
