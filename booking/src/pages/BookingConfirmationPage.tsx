@@ -316,7 +316,7 @@ const BookingConfirmationPage: React.FC = () => {
           </div>
         </div>
 
-        {booking?.qrCode && booking.status === 'CONFIRMED' && (
+        {booking?.qrCode && booking.status === 'COMPLETED' && (
           <div className="my-8 flex flex-col items-center">
             <h3 className={`font-semibold mb-2 ${booking?.qrCodeUsed ? 'text-red-600' : ''}`}>
               {booking?.qrCodeUsed ? 'Check-in QR Code (Already Used)' : 'Check-in QR Code'}
