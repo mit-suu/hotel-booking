@@ -576,7 +576,7 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
               {/* Booking Summary with Discount */}
               {originalAmount > 0 && (
                 <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-semibold mb-3">Chi tiết thanh toán</h4>
+                  <h4 className="font-semibold mb-3">Payment Details</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span>Giá phòng ({numberOfNights} đêm):</span>

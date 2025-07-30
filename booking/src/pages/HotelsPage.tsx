@@ -158,7 +158,7 @@ const HotelsPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Error fetching hotels:', err);
-      setError('Có lỗi xảy ra khi tải dữ liệu');
+              setError('An error occurred while loading data');
     } finally {
       setLoading(false);
     }

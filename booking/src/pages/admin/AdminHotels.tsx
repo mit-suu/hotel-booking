@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { Award, Calendar, Check, Edit, Eye, Filter, Hotel as HotelIcon, MapPin, RefreshCw, Search, Star, ToggleLeft, ToggleRight, Trash, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Edit, Trash, Eye, MapPin, Star, Filter, Check, X, Calendar, BedDouble, Users, Hotel as HotelIcon, RefreshCw, ToggleLeft, ToggleRight, Award } from 'lucide-react';
-import { hotelAPI, HotelResponse } from '../../services/api';
 import { useToast } from '../../contexts/ToastContext';
+import { hotelAPI, HotelResponse } from '../../services/api';
 
 interface ApiResponse {
   code: number;
@@ -767,7 +767,7 @@ const AdminHotels: React.FC = () => {
                         <button
                           onClick={() => handleViewHotel(hotel.id)}
                           className="text-blue-600 hover:text-blue-900 p-1 rounded"
-                          title="Xem chi tiết"
+                          title="View Details"
                         >
                           <Eye size={16} />
                         </button>
@@ -845,7 +845,7 @@ const AdminHotels: React.FC = () => {
                   <span className="font-medium">
                     {Math.min((currentPage + 1) * itemsPerPage, totalElements)}
                   </span>{' '}
-                  trong tổng số <span className="font-medium">{totalElements}</span> khách sạn
+                  of <span className="font-medium">{totalElements}</span> hotels
                 </p>
               </div>
               <div>

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, DollarSign, TrendingUp, Users, Star, BarChart2, PieChart, Activity, RefreshCw } from 'lucide-react';
-import { hostAPI, hotelAPI, HostDashboardResponse, HotelResponse } from '../../services/api';
+import { Activity, BarChart2, Calendar, DollarSign, PieChart, RefreshCw, Star, TrendingUp, Users } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { useToast } from '../../contexts/ToastContext';
+import { hostAPI, hotelAPI, HotelResponse } from '../../services/api';
 
 const HostAnalytics: React.FC = () => {
   const { showToast } = useToast();
@@ -117,7 +117,7 @@ const HostAnalytics: React.FC = () => {
 
     } catch (error: any) {
       console.error('Error fetching analytics data:', error);
-      showToast('error', 'Lỗi', 'Không thể tải dữ liệu thống kê');
+              showToast('error', 'Error', 'Unable to load analytics data');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -187,7 +187,7 @@ const HostAnalytics: React.FC = () => {
               onChange={(e) => setPropertyFilter(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="all">Tất cả khách sạn</option>
+                              <option value="all">All Hotels</option>
               {analyticsData.properties.map((property) => (
                 <option key={property.id} value={property.id}>{property.name}</option>
               ))}
@@ -217,7 +217,7 @@ const HostAnalytics: React.FC = () => {
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-500">Số lượng đặt phòng</p>
+                <p className="text-gray-500">Number of Bookings</p>
                 <h3 className="text-2xl font-bold mt-2">{analyticsData.bookingsCount}</h3>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
@@ -282,7 +282,7 @@ const HostAnalytics: React.FC = () => {
                 <div className="text-center">
                   <BarChart2 className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                   <p>Chưa có dữ liệu doanh thu</p>
-                  <p className="text-sm">Dữ liệu sẽ hiển thị khi có đặt phòng</p>
+                  <p className="text-sm">Data will be displayed when there are bookings</p>
                 </div>
               </div>
             ) : (
@@ -315,7 +315,7 @@ const HostAnalytics: React.FC = () => {
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold flex items-center">
                 <PieChart className="h-5 w-5 mr-2 text-purple-600" />
-                Nguồn đặt phòng
+                Booking Sources
               </h3>
             </div>
             
@@ -323,7 +323,7 @@ const HostAnalytics: React.FC = () => {
               <div className="flex items-center justify-center text-gray-500 h-48">
                 <div className="text-center">
                   <PieChart className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p>Chưa có dữ liệu đặt phòng</p>
+                  <p>No booking data available</p>
                 </div>
               </div>
             ) : (
@@ -332,7 +332,7 @@ const HostAnalytics: React.FC = () => {
                   <div key={index}>
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-gray-700">{item.source}</span>
-                      <span className="text-gray-900 font-medium">{item.count} đặt phòng</span>
+                      <span className="text-gray-900 font-medium">{item.count} bookings</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
                       <div 
@@ -357,18 +357,18 @@ const HostAnalytics: React.FC = () => {
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-semibold flex items-center">
               <Activity className="h-5 w-5 mr-2 text-green-600" />
-              Đặt phòng gần đây
+              Recent Bookings
             </h3>
             <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-              Xem tất cả
+                              View All
             </button>
           </div>
           
           {analyticsData.recentBookings.length === 0 ? (
             <div className="text-center py-12">
               <Activity className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Chưa có đặt phòng nào</h3>
-              <p className="text-gray-600">Đặt phòng gần đây sẽ hiển thị ở đây</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No bookings yet</h3>
+              <p className="text-gray-600">Recent bookings will be displayed here</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -376,19 +376,19 @@ const HostAnalytics: React.FC = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Mã đặt phòng
+                      Booking ID
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Khách hàng
+                      Customer
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Khách sạn
+                      Hotel
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ngày
+                      Date
                     </th>
                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Số tiền
+                      Amount
                     </th>
                   </tr>
                 </thead>

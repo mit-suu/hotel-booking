@@ -17,12 +17,6 @@ import {
     VoucherValidationRequest,
     VoucherValidationResponse
 } from '../types/voucher';
-import {
-  VNPayPaymentRequest,
-  VNPayPaymentResponse,
-  VNPayCallbackRequest,
-  VNPayReturnParams
-} from '../types/vnpay';
 
 //const API_URL = 'https://bk.blwsmartware.net';
 const API_URL = 'http://localhost:8080'; // Direct API endpoint

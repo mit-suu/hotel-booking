@@ -89,28 +89,28 @@ const PaymentSuccessNotification: React.FC<PaymentSuccessNotificationProps> = ({
 
             {/* Title */}
             <h3 className="text-lg leading-6 font-medium text-gray-900 mb-2">
-              Thanh toán thành công!
+              Payment Successful!
             </h3>
 
             {/* Description */}
             <div className="text-sm text-gray-600 mb-4">
-              <p>Đặt phòng của bạn đã được xác nhận và thanh toán thành công.</p>
+              <p>Your booking has been confirmed and payment completed successfully.</p>
             </div>
 
             {/* Booking details */}
             {(bookingId || amount) && (
               <div className="bg-gray-50 rounded-lg p-3 mb-4 text-left">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Chi tiết đặt phòng</h4>
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Booking Details</h4>
                 <div className="space-y-1 text-xs text-gray-600">
                   {bookingId && (
                     <div className="flex justify-between">
-                      <span>Mã đặt phòng:</span>
+                      <span>Booking ID:</span>
                       <span className="font-mono font-medium">{bookingId}</span>
                     </div>
                   )}
                   {amount && (
                     <div className="flex justify-between">
-                      <span>Số tiền:</span>
+                      <span>Amount:</span>
                       <span className="font-medium">{formatCurrency(amount)}</span>
                     </div>
                   )}
@@ -123,9 +123,9 @@ const PaymentSuccessNotification: React.FC<PaymentSuccessNotificationProps> = ({
               <div className="flex items-start">
                 <AlertCircle className="h-4 w-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
                 <div className="text-xs text-blue-800 text-left">
-                  <p className="font-medium">Email xác nhận đã được gửi</p>
+                  <p className="font-medium">Confirmation email sent</p>
                   <p className="mt-1">
-                    Vui lòng kiểm tra email để xem chi tiết đặt phòng và hướng dẫn check-in.
+                    Please check your email for booking details and check-in instructions.
                   </p>
                 </div>
               </div>
@@ -138,7 +138,7 @@ const PaymentSuccessNotification: React.FC<PaymentSuccessNotificationProps> = ({
               onClick={handleClose}
             >
               <Receipt className="h-4 w-4 mr-2" />
-              Xem đặt phòng
+              View Booking
             </button>
           </div>
         </div>
