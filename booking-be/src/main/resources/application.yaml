@@ -8,7 +8,7 @@ spring:
   datasource:
     url: ${DB_MYSQL_URL:jdbc:mysql://localhost:3306/booking26_10?createDatabaseIfNotExist=true}
     username: ${MYSQL_USERNAME:root}
-    password: ${MYSQL_PASSWORD:30082004}
+    password: ${MYSQL_PASSWORD:Ngu123456}
   jpa:
     hibernate:
       ddl-auto: update

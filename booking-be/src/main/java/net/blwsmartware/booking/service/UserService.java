@@ -25,6 +25,7 @@ public interface UserService {
     UserResponse requestHost(UUID id);
     UserResponse approveHostRequest(UUID id);
     void deleteUser(UUID id);
+    UserResponse updateAvatar(UUID userId, String avatarUrl);
     
     // Statistics
     Long getTotalUsersCount();
