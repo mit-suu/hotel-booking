@@ -24,6 +24,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import org.springframework.web.multipart.MultipartFile;
+import net.blwsmartware.booking.service.CloudinaryService;
 
 @RestController
 @RequestMapping("/users")
@@ -33,6 +35,7 @@ import java.util.UUID;
 public class UserController {
 
     UserService userService;
+    CloudinaryService cloudinaryService;
 
     @PostMapping
     public ResponseEntity<MessageResponse<UserResponse>> createUser(@RequestBody @Valid  UserRequest request) {
@@ -95,6 +98,21 @@ public class UserController {
                     .result(userService.getUserByID(UUID.fromString(authentication.getName())))
                     .build()
                 );
+    }
+
+    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<MessageResponse<UserResponse>> uploadAvatar(@RequestParam("file") MultipartFile file) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        UUID userId = UUID.fromString(authentication.getName());
+        log.info("===================user/me/avatar");
+        // Upload avatar to Cloudinary (resize to 300x300, folder 'avatars')
+        String avatarUrl = cloudinaryService.uploadImageWithTransformation(file, "avatars", 300, 300);
+        UserResponse updatedUser = userService.updateAvatar(userId, avatarUrl);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(MessageResponse.<UserResponse>builder()
+                        .result(updatedUser)
+                        .message("Avatar updated successfully")
+                        .build());
     }
 
     @PutMapping("/profile")

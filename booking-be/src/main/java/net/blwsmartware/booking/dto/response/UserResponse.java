@@ -25,4 +25,5 @@ public class UserResponse {
     Instant createAt;
     Instant updateAt;
     List<RoleResponse> roles;
+    String avatarUrl;
 }

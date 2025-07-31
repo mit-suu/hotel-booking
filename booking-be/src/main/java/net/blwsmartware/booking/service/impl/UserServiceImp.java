@@ -331,4 +331,12 @@ public class UserServiceImp implements UserService {
     public Long getTotalUsersCount() {
         return userRepository.count();
     }
+
+    @Override
+    public UserResponse updateAvatar(UUID userId, String avatarUrl) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppRuntimeException(ErrorResponse.USER_NOT_FOUND));
+        user.setAvatarUrl(avatarUrl);
+        return userMapper.toUserResponse(userRepository.save(user));
+    }
 }
